@@ -66,7 +66,7 @@ export default function Ranking() {
               <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">{t('ranking.top10.title')}</h2>
             </div>
             
-            {/* 总积分和参考说明 */}
+            {/* 总Flipprints和参考说明 */}
             <div className="mb-8 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-700">
               <div className="flex justify-between items-center">
                 <div className="text-lg font-semibold text-gray-900 dark:text-white">
