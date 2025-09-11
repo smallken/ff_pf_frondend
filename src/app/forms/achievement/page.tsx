@@ -1,24 +1,30 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
+import CustomDateInput from '../../components/CustomDateInput';
 
 export default function AchievementForm() {
   const { t, language } = useLanguage();
+  const router = useRouter();
   
   // Force re-render when language changes
   useEffect(() => {
     // This will trigger a re-render when language changes
   }, [language]);
   const [formData, setFormData] = useState({
-    projectName: '',
-    activityType: '',
+    name: '',
+    email: '',
+    twitterUsername: '',
+    telegramUsername: '',
+    walletAddress: '',
+    submissionCategory: '',
+    taskType: '',
+    contentLink: '',
+    screenshot: null,
     completionDate: '',
-    hoursSpent: '',
-    achievements: '',
-    challenges: '',
-    lessons: '',
-    attachments: ''
+    description: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,6 +38,10 @@ export default function AchievementForm() {
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleCancel = () => {
+    router.push('/forms');
   };
 
   return (
@@ -57,173 +67,246 @@ export default function AchievementForm() {
             {t('forms.achievement.title')}
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            {t('forms.achievement.subtitle')}
           </p>
         </div>
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-green-100 dark:border-gray-700 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-200 to-emerald-300 dark:from-green-800 dark:to-emerald-900 opacity-20 rounded-full -translate-y-16 translate-x-16"></div>
           <div className="relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <label htmlFor="projectName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('forms.field.projectname')} {t('forms.field.required')}
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('forms.field.name')} <span className="text-red-500">{t('forms.required')}</span>
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  value={formData.name}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('forms.field.email')} <span className="text-red-500">{t('forms.required')}</span>
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="twitterUsername" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('forms.field.twitter')} <span className="text-red-500">{t('forms.required')}</span>
+                </label>
+                <input
+                  type="text"
+                  id="twitterUsername"
+                  name="twitterUsername"
+                  required
+                  placeholder={t('forms.placeholder.username')}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  value={formData.twitterUsername}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="telegramUsername" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('forms.field.telegram')} <span className="text-red-500">{t('forms.required')}</span>
+                </label>
+                <input
+                  type="text"
+                  id="telegramUsername"
+                  name="telegramUsername"
+                  required
+                  placeholder={t('forms.placeholder.username')}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  value={formData.telegramUsername}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label htmlFor="walletAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('forms.field.wallet.both')} <span className="text-red-500">{t('forms.required')}</span>
+                </label>
+                <input
+                  type="text"
+                  id="walletAddress"
+                  name="walletAddress"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  value={formData.walletAddress}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                {t('forms.achievement.category')} <span className="text-red-500">{t('forms.required')}</span>
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { key: 'promotion', value: 'forms.category.promotion' },
+                  { key: 'creation', value: 'forms.category.creation' },
+                  { key: 'community', value: 'forms.category.community' }
+                ].map((category) => (
+                  <label key={category.key} className="flex items-center">
+                    <input
+                      type="radio"
+                      name="submissionCategory"
+                      value={category.key}
+                      checked={formData.submissionCategory === category.key}
+                      onChange={handleChange}
+                      className="mr-2 text-green-600 focus:ring-green-500"
+                      required
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{t(category.value)}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                {t('forms.achievement.tasktype')} <span className="text-red-500">{t('forms.required')}</span>
+              </label>
+              <div className="space-y-2">
+                {[
+                  { key: 'like', value: 'forms.task.like' },
+                  { key: 'content', value: 'forms.task.content' },
+                  { key: 'article', value: 'forms.task.article' },
+                  { key: 'video', value: 'forms.task.video' },
+                  { key: 'ama', value: 'forms.task.ama' },
+                  { key: 'recap', value: 'forms.task.recap' },
+                  { key: 'telegram', value: 'forms.task.telegram' },
+                  { key: 'offline', value: 'forms.task.offline' }
+                ].map((task) => (
+                  <label key={task.key} className="flex items-start">
+                    <input
+                      type="radio"
+                      name="taskType"
+                      value={task.key}
+                      checked={formData.taskType === task.key}
+                      onChange={handleChange}
+                      className="mr-2 mt-1 text-green-600 focus:ring-green-500"
+                      required
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{t(task.value)}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label htmlFor="contentLink" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('forms.achievement.contentlink')} <span className="text-red-500">{t('forms.required')}</span>
               </label>
               <input
-                type="text"
-                id="projectName"
-                name="projectName"
+                type="url"
+                id="contentLink"
+                name="contentLink"
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder={t('forms.placeholder.projectname')}
-                value={formData.projectName}
+                placeholder={t('forms.placeholder.contentlink')}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={formData.contentLink}
                 onChange={handleChange}
               />
             </div>
 
-            <div>
-              <label htmlFor="activityType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('forms.field.activitytype')} {t('forms.field.required')}
+            <div className="mb-6">
+              <label htmlFor="screenshot" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('forms.achievement.screenshot')} <span className="text-red-500">{t('forms.required')}</span>
               </label>
-              <select
-                id="activityType"
-                name="activityType"
-                required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData.activityType}
-                onChange={handleChange}
-              >
-                <option value="">{t('forms.placeholder.select')}</option>
-                <option value="技术开发">{t('forms.achievement.type.development')}</option>
-                <option value="社区贡献">{t('forms.achievement.type.community')}</option>
-                <option value="内容创作">{t('forms.achievement.type.content')}</option>
-                <option value="活动组织">{t('forms.achievement.type.organization')}</option>
-                <option value="其他">{t('forms.activity.type.other')}</option>
-              </select>
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+                <div className="mb-4">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div className="flex text-sm text-gray-600 dark:text-gray-400">
+                  <label htmlFor="screenshot" className="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
+                    <span className="px-2">{t('forms.upload.text')}</span>
+                    <input 
+                      id="screenshot" 
+                      name="screenshot" 
+                      type="file" 
+                      className="sr-only" 
+                      accept="image/*"
+                      required
+                      onChange={handleChange}
+                    />
+                  </label>
+                  <p className="pl-1">{t('forms.upload.drag')}</p>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('forms.upload.format')}</p>
+              </div>
             </div>
 
-            <div>
-              <label htmlFor="completionDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('forms.field.completiondate')} {t('forms.field.required')}
-              </label>
-              <input
-                type="date"
-                id="completionDate"
-                name="completionDate"
-                required
-                placeholder={language === 'zh' ? '年/月/日' : 'mm/dd/yyyy'}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData.completionDate}
-                onChange={handleChange}
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {language === 'zh' ? '注：日期选择器显示语言由浏览器系统语言决定' : 'Note: Date picker display language is determined by browser system language'}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label htmlFor="completionDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('forms.achievement.completion')} <span className="text-red-500">{t('forms.required')}</span>
+                </label>
+                <CustomDateInput
+                  id="completionDate"
+                  name="completionDate"
+                  type="date"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  value={formData.completionDate}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('forms.achievement.description')}
+                </label>
+                <input
+                  type="text"
+                  id="description"
+                  name="description"
+                  placeholder={t('forms.placeholder.description')}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  value={formData.description}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 mb-6 border border-yellow-200 dark:border-yellow-700">
+              <h3 className="font-medium text-yellow-900 dark:text-yellow-200 mb-2">📝 {t('forms.submit.achievement')}</h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                {t('forms.optional.note')}
               </p>
             </div>
 
-            <div>
-              <label htmlFor="hoursSpent" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('forms.field.hoursspent')} {t('forms.field.required')}
-              </label>
-              <input
-                type="number"
-                id="hoursSpent"
-                name="hoursSpent"
-                required
-                min="1"
-                max="1000"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData.hoursSpent}
-                onChange={handleChange}
-              />
+            <div className="flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-2xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold transition-all duration-300 transform hover:-translate-y-1"
+              >
+                {t('forms.cancel.button')}
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl hover:from-green-600 hover:to-emerald-700 font-semibold transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+              >
+                {t('forms.submit.achievement')}
+              </button>
             </div>
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="achievements" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('forms.field.achievements')} {t('forms.field.required')}
-            </label>
-            <textarea
-              id="achievements"
-              name="achievements"
-              rows={5}
-              required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={t('forms.placeholder.achievements')}
-              value={formData.achievements}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="challenges" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('forms.field.challenges')}
-            </label>
-            <textarea
-              id="challenges"
-              name="challenges"
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={t('forms.placeholder.challenges')}
-              value={formData.challenges}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="lessons" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('forms.field.lessons')} {t('forms.field.required')}
-            </label>
-            <textarea
-              id="lessons"
-              name="lessons"
-              rows={4}
-              required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={t('forms.placeholder.lessons')}
-              value={formData.lessons}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="attachments" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('forms.field.attachments')}
-            </label>
-            <input
-              type="url"
-              id="attachments"
-              name="attachments"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={t('forms.placeholder.attachments')}
-              value={formData.attachments}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
-            <h3 className="font-medium text-gray-900 dark:text-white mb-2">{t('forms.submit.info')}</h3>
-            <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-              <li>• {t('forms.achievement.submit.info.1')}</li>
-              <li>• {t('forms.achievement.submit.info.2')}</li>
-              <li>• {t('forms.achievement.submit.info.3')}</li>
-              <li>• {t('forms.achievement.submit.info.4')}</li>
-            </ul>
-          </div>
-
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-2xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold transition-all duration-300 transform hover:-translate-y-1"
-            >
-              {t('forms.button.cancel')}
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl hover:from-green-600 hover:to-emerald-700 font-semibold transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
-            >
-              {t('forms.button.submit.achievement')}
-            </button>
-          </div>
           </div>
         </form>
       </div>

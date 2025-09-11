@@ -175,6 +175,48 @@ export default function Honor() {
                 </tbody>
               </table>
             </div>
+            
+            <div className="mt-4 text-left">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('honor.monthly.special.note')}
+                <a 
+                  href="/forms/activity" 
+                  className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 underline ml-1 transition-colors duration-200"
+                >
+                  {t('honor.monthly.special.link')}
+                </a>
+              </p>
+            </div>
+            
+            {/* Definitions Section */}
+            <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-700">
+              <h4 className="font-bold text-blue-900 dark:text-blue-200 text-lg mb-4">{t('honor.monthly.definitions.title')}</h4>
+              <div className="space-y-3 text-blue-700 dark:text-blue-300 text-sm">
+                <div className="flex items-start">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                  <span>{t('honor.monthly.definitions.promotion')}</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                  <span>
+                    创作类内容：任何原创内容，在X上发布时需 
+                    <a 
+                      href={t('honor.monthly.definitions.official.link')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline mx-1 transition-colors duration-200"
+                    >
+                      @官方账号
+                    </a>
+                    及#FFPP
+                  </span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                  <span>{t('honor.monthly.definitions.community')}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -252,7 +294,26 @@ export default function Honor() {
               </table>
             </div>
             
-            <div className="mt-8 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-2xl p-6 border border-yellow-200 dark:border-yellow-700">
+            <div className="mt-4 text-left">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('honor.flipprints.submit.note')}
+                <a 
+                  href="/forms/achievement" 
+                  className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 underline mx-1 transition-colors duration-200"
+                >
+                  {t('honor.flipprints.submit.link')}
+                </a>
+                {t('honor.flipprints.submit.text')}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Important Notes Section */}
+        <div className="mt-8 bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-yellow-100 dark:border-gray-700 relative overflow-hidden">
+          <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-yellow-200 to-amber-300 dark:from-yellow-800 dark:to-amber-900 opacity-20 rounded-full translate-y-20 translate-x-20"></div>
+          <div className="relative z-10">
+            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-2xl p-6 border border-yellow-200 dark:border-yellow-700">
               <div className="flex items-center mb-4">
                 <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-lg">⚠️</span>
@@ -276,7 +337,29 @@ export default function Honor() {
                   <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   <span>{t('honor.notice.4')}</span>
                 </li>
+                <li className="flex items-start">
+                  <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                  <span>{t('honor.notice.5')}</span>
+                </li>
               </ul>
+            </div>
+          </div>
+        </div>
+        
+        {/* Warning Section */}
+        <div className="mt-8 bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-red-100 dark:border-gray-700 relative overflow-hidden">
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-red-200 to-pink-300 dark:from-red-800 dark:to-pink-900 opacity-20 rounded-full -translate-y-20 -translate-x-20"></div>
+          <div className="relative z-10">
+            <div className="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-2xl p-6 border border-red-200 dark:border-red-700">
+              <div className="flex items-center mb-4">
+                <div className="w-8 h-8 bg-gradient-to-r from-red-400 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+                  <span className="text-lg">🚨</span>
+                </div>
+                <h4 className="font-bold text-red-900 dark:text-red-200 text-lg">{t('honor.warning.title')}</h4>
+              </div>
+              <p className="text-red-700 dark:text-red-300 text-sm">
+                {t('honor.warning.text')}
+              </p>
             </div>
           </div>
         </div>
