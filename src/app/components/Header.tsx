@@ -8,6 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
 
@@ -25,7 +26,7 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Navigation */}
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-1">
             <Link href="/honor" className="relative px-4 py-2 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 group">
               <span className="relative z-10">{t('honor.title')}</span>
@@ -45,8 +46,52 @@ export default function Header() {
             </Link>
           </nav>
 
-          {/* Controls */}
-          <div className="flex items-center space-x-2">
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center space-x-2">
+            {/* Theme Toggle for mobile */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
+              title={t('theme.toggle')}
+            >
+              <span className="text-lg">{theme === 'light' ? '🌙' : '☀️'}</span>
+            </button>
+
+            {/* Language Toggle for mobile */}
+            <button
+              onClick={toggleLanguage}
+              className="px-2 py-1 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
+              title={t('language.toggle')}
+            >
+              {language === 'zh' ? 'EN' : '中文'}
+            </button>
+
+            {/* Hamburger menu button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
+              aria-label="Toggle menu"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {isMobileMenuOpen ? (
+                  <path d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
+
+          {/* Desktop Controls */}
+          <div className="hidden md:flex items-center space-x-2">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -92,6 +137,93 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-t border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 py-4 space-y-2">
+            {/* Navigation Links */}
+            <div className="space-y-1">
+              <Link 
+                href="/honor" 
+                className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                🏆 {t('honor.title')}
+              </Link>
+              <Link 
+                href="/ranking" 
+                className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-300"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                📊 {t('ranking.title')}
+              </Link>
+              <Link 
+                href="/process" 
+                className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-300"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                🔄 {t('process.title')}
+              </Link>
+              <Link 
+                href="/forms" 
+                className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                📝 {t('forms.title')}
+              </Link>
+            </div>
+
+            {/* User Actions for Mobile */}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+              {isLoggedIn ? (
+                <div className="space-y-1">
+                  <Link 
+                    href="/profile" 
+                    className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    👤 {t('profile.title')}
+                  </Link>
+                  <Link 
+                    href="/admin" 
+                    className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    ⚙️ {t('admin.title')}
+                  </Link>
+                  <div className="px-4 py-2 text-gray-600 dark:text-gray-400 text-sm">
+                    {t('user.welcome')}, {userName}
+                  </div>
+                  <button 
+                    className="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-3 rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-300 font-medium"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    🚪 {t('user.logout')}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <Link 
+                    href="/login" 
+                    className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    🔑 {t('login.title')}
+                  </Link>
+                  <Link 
+                    href="/register" 
+                    className="block w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-3 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-semibold shadow-lg text-center"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    ✨ {t('register.title')}
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
