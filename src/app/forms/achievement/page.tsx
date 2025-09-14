@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../../contexts/AuthContext';
+import { taskSubmissionService } from '../../../services';
 import CustomDateInput from '../../components/CustomDateInput';
 
 export default function AchievementForm() {
   const { t, language } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   
   // Force re-render when language changes
@@ -20,25 +23,104 @@ export default function AchievementForm() {
     telegramUsername: '',
     walletAddress: '',
     submissionCategory: '',
-    taskType: '',
-    contentLink: '',
-    screenshot: null,
-    completionDate: '',
-    description: ''
+    tasks: [
+      {
+        taskType: '',
+        contentLink: '',
+        screenshot: null as File | null,
+        completionDate: '',
+        description: '',
+        collapsed: false
+      }
+    ]
   });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 这里调用后端表单提交接口
-    console.log('成果提交表数据:', formData);
+    
+    if (!isAuthenticated) {
+      setError('请先登录后再提交成果表');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // 打印成果提交表数据
+      console.log('🏆 成果提交表数据:', {
+        ...formData,
+        timestamp: new Date().toISOString()
+      });
+
+      // 准备提交数据，转换任务格式
+      const submitData = {
+        name: formData.name,
+        email: formData.email,
+        twitterUsername: formData.twitterUsername,
+        telegramUsername: formData.telegramUsername,
+        walletAddress: formData.walletAddress,
+        submissionCategory: formData.submissionCategory,
+        tasks: formData.tasks.map(task => ({
+          taskType: task.taskType,
+          contentLink: task.contentLink,
+          completionDate: task.completionDate,
+          description: task.description,
+          // 注意：screenshot文件上传需要单独处理，这里先忽略
+        }))
+      };
+
+      // 调用后端成果提交表API
+      const submissionId = await taskSubmissionService.addTaskSubmission(submitData);
+      
+      console.log('✅ 成果提交表提交成功，ID:', submissionId);
+      
+      // 成功后跳转到表单申请页面
+      router.push('/forms?success=成果提交表提交成功');
+      
+    } catch (error: any) {
+      console.log('❌ 成果提交表提交失败:', error);
+      setError(error.message || '提交失败，请重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: (e.target as HTMLInputElement).value
     });
   };
+
+  const handleTaskChange = (index: number, field: string, value: any) => {
+    const updatedTasks = [...formData.tasks];
+    // @ts-ignore
+    updatedTasks[index][field] = value;
+    setFormData({ ...formData, tasks: updatedTasks });
+  };
+
+  const toggleTaskCollapsed = (index: number) => {
+    const updatedTasks = [...formData.tasks];
+    updatedTasks[index].collapsed = !updatedTasks[index].collapsed;
+    setFormData({ ...formData, tasks: updatedTasks });
+  };
+
+  const addTask = () => {
+    setFormData({
+      ...formData,
+      tasks: [
+        ...formData.tasks,
+        { taskType: '', contentLink: '', screenshot: null, completionDate: '', description: '', collapsed: false }
+      ]
+    });
+  };
+
+  const isContentLinkRequired = (taskType: string) => ['content', 'article', 'video', 'recap'].includes(taskType);
+  const isScreenshotRequired = (taskType: string) => ['like', 'ama', 'telegram', 'offline'].includes(taskType);
 
   const handleCancel = () => {
     router.push('/forms');
@@ -72,6 +154,20 @@ export default function AchievementForm() {
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-green-100 dark:border-gray-700 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-200 to-emerald-300 dark:from-green-800 dark:to-emerald-900 opacity-20 rounded-full -translate-y-16 translate-x-16"></div>
           <div className="relative z-10">
+            
+            {!isAuthenticated && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
+                <div className="text-sm text-yellow-600 dark:text-yellow-400">
+                  请先登录后再提交成果表
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-6">
+                <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -157,9 +253,9 @@ export default function AchievementForm() {
               </label>
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { key: 'promotion', value: 'forms.category.promotion' },
-                  { key: 'creation', value: 'forms.category.creation' },
-                  { key: 'community', value: 'forms.category.community' }
+                  { key: 'promotion', value: 'forms.achievement.category.promotion' },
+                  { key: 'creation', value: 'forms.achievement.category.creation' },
+                  { key: 'community', value: 'forms.achievement.category.community' }
                 ].map((category) => (
                   <label key={category.key} className="flex items-center">
                     <input
@@ -178,110 +274,117 @@ export default function AchievementForm() {
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                {t('forms.achievement.tasktype')} <span className="text-red-500">{t('forms.required')}</span>
-              </label>
-              <div className="space-y-2">
-                {[
-                  { key: 'like', value: 'forms.task.like' },
-                  { key: 'content', value: 'forms.task.content' },
-                  { key: 'article', value: 'forms.task.article' },
-                  { key: 'video', value: 'forms.task.video' },
-                  { key: 'ama', value: 'forms.task.ama' },
-                  { key: 'recap', value: 'forms.task.recap' },
-                  { key: 'telegram', value: 'forms.task.telegram' },
-                  { key: 'offline', value: 'forms.task.offline' }
-                ].map((task) => (
-                  <label key={task.key} className="flex items-start">
-                    <input
-                      type="radio"
-                      name="taskType"
-                      value={task.key}
-                      checked={formData.taskType === task.key}
-                      onChange={handleChange}
-                      className="mr-2 mt-1 text-green-600 focus:ring-green-500"
-                      required
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{t(task.value)}</span>
-                  </label>
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('forms.achievement.tasktype')} <span className="text-red-500">{t('forms.required')}</span>
+                </label>
+                <button type="button" onClick={addTask} className="text-green-600 hover:text-green-700 text-sm font-medium">
+                  + {t('forms.action.addTask')}
+                </button>
+              </div>
+              <div className="space-y-4">
+                {formData.tasks.map((task, index) => (
+                  <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-900/40 rounded-t-lg">
+                      <div className="flex-1">
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                          value={task.taskType}
+                          onChange={(e) => handleTaskChange(index, 'taskType', e.target.value)}
+                          required
+                        >
+                          <option value="">{t('forms.placeholder.select')}</option>
+                          {[
+                            { key: 'like', value: 'forms.task.like' },
+                            { key: 'content', value: 'forms.task.content' },
+                            { key: 'article', value: 'forms.task.article' },
+                            { key: 'video', value: 'forms.task.video' },
+                            { key: 'ama', value: 'forms.task.ama' },
+                            { key: 'recap', value: 'forms.task.recap' },
+                            { key: 'telegram', value: 'forms.task.telegram' },
+                            { key: 'offline', value: 'forms.task.offline' }
+                          ].map((opt) => (
+                            <option key={opt.key} value={opt.key}>{t(opt.value)}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <button type="button" onClick={() => toggleTaskCollapsed(index)} className="ml-3 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white">
+                        {task.collapsed ? t('forms.action.expand') : t('forms.action.collapse')}
+                      </button>
+                    </div>
+                    {!task.collapsed && (
+                      <div className="p-4 space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {t('forms.achievement.contentlink')} {isContentLinkRequired(task.taskType) && (<span className="text-red-500">{t('forms.required')}</span>)}
+                          </label>
+                          <input
+                            type="url"
+                            required={isContentLinkRequired(task.taskType)}
+                            placeholder={t('forms.placeholder.contentlink')}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                            value={task.contentLink}
+                            onChange={(e) => handleTaskChange(index, 'contentLink', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {t('forms.achievement.screenshot')} {isScreenshotRequired(task.taskType) && (<span className="text-red-500">{t('forms.required')}</span>)}
+                          </label>
+                          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+                            <div className="mb-4">
+                              <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </div>
+                            <div className="flex text-sm text-gray-600 dark:text-gray-400">
+                              <label className="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
+                                <span className="px-2">{t('forms.upload.text')}</span>
+                                <input
+                                  type="file"
+                                  className="sr-only"
+                                  accept="image/*"
+                                  required={isScreenshotRequired(task.taskType)}
+                                  onChange={(e) => handleTaskChange(index, 'screenshot', (e.target.files && e.target.files[0]) || null)}
+                                />
+                              </label>
+                              <p className="pl-1">{t('forms.upload.drag')}</p>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{t('forms.upload.format')}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              {t('forms.achievement.completion')} <span className="text-red-500">{t('forms.required')}</span>
+                            </label>
+                            <CustomDateInput
+                              id={`completionDate-${index}`}
+                              name={`completionDate-${index}`}
+                              type="date"
+                              required
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                              value={task.completionDate}
+                              onChange={(e: any) => handleTaskChange(index, 'completionDate', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              {t('forms.achievement.description')}
+                            </label>
+                            <input
+                              type="text"
+                              placeholder={t('forms.placeholder.description')}
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                              value={task.description}
+                              onChange={(e) => handleTaskChange(index, 'description', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ))}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <label htmlFor="contentLink" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('forms.achievement.contentlink')} <span className="text-red-500">{t('forms.required')}</span>
-              </label>
-              <input
-                type="url"
-                id="contentLink"
-                name="contentLink"
-                required
-                placeholder={t('forms.placeholder.contentlink')}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                value={formData.contentLink}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="mb-6">
-              <label htmlFor="screenshot" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('forms.achievement.screenshot')} <span className="text-red-500">{t('forms.required')}</span>
-              </label>
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
-                <div className="mb-4">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <div className="flex text-sm text-gray-600 dark:text-gray-400">
-                  <label htmlFor="screenshot" className="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
-                    <span className="px-2">{t('forms.upload.text')}</span>
-                    <input 
-                      id="screenshot" 
-                      name="screenshot" 
-                      type="file" 
-                      className="sr-only" 
-                      accept="image/*"
-                      required
-                      onChange={handleChange}
-                    />
-                  </label>
-                  <p className="pl-1">{t('forms.upload.drag')}</p>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{t('forms.upload.format')}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <label htmlFor="completionDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('forms.achievement.completion')} <span className="text-red-500">{t('forms.required')}</span>
-                </label>
-                <CustomDateInput
-                  id="completionDate"
-                  name="completionDate"
-                  type="date"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                  value={formData.completionDate}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('forms.achievement.description')}
-                </label>
-                <input
-                  type="text"
-                  id="description"
-                  name="description"
-                  placeholder={t('forms.placeholder.description')}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                  value={formData.description}
-                  onChange={handleChange}
-                />
               </div>
             </div>
 
@@ -302,9 +405,21 @@ export default function AchievementForm() {
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl hover:from-green-600 hover:to-emerald-700 font-semibold transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+                disabled={loading || !isAuthenticated}
+                className={`px-6 py-3 rounded-2xl font-semibold transition-all duration-300 shadow-lg ${
+                  loading || !isAuthenticated
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transform hover:-translate-y-1 hover:shadow-xl'
+                }`}
               >
-                {t('forms.submit.achievement')}
+                {loading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    提交中...
+                  </div>
+                ) : (
+                  t('forms.submit.achievement')
+                )}
               </button>
             </div>
           </div>

@@ -3,9 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../../contexts/AuthContext';
+import { formService } from '../../../services';
 
 export default function ApplicationForm() {
   const { t } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
@@ -22,11 +25,47 @@ export default function ApplicationForm() {
     resources: '',
     entrepreneurship: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  // 功能暂时禁用
+  const isDisabled = true;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 这里调用后端表单提交接口
-    console.log('申请表数据:', formData);
+    
+    if (isDisabled) {
+      setError('表单提交功能暂未开放，敬请期待');
+      return;
+    }
+    
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // 打印申请表数据
+      console.log('📋 申请表提交数据:', {
+        ...formData,
+        timestamp: new Date().toISOString()
+      });
+
+      // 直接提交表单数据，不再使用JSON格式
+      await formService.submitApplicationForm(formData);
+
+      console.log('✅ 申请表提交成功');
+      // 提交成功，跳转到表单列表页面
+      router.push('/forms?success=申请表提交成功');
+    } catch (error: any) {
+      console.log('❌ 申请表提交失败:', error);
+      setError(error.message || '提交失败，请重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -48,6 +87,33 @@ export default function ApplicationForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-6">
+              <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+            </div>
+          )}
+          
+          {isDisabled && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
+              <div className="flex items-center">
+                <svg className="h-5 w-5 text-yellow-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <div className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  表单提交功能暂未开放，敬请期待
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isAuthenticated && !isDisabled && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
+              <div className="text-sm text-yellow-600 dark:text-yellow-400">
+                请先登录后再提交表单
+              </div>
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -88,7 +154,7 @@ export default function ApplicationForm() {
                 id="twitterUsername"
                 name="twitterUsername"
                 required
-                placeholder={t('forms.placeholder.username')}
+                placeholder={t('forms.field.twitter')}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                 value={formData.twitterUsername}
                 onChange={handleChange}
@@ -104,7 +170,7 @@ export default function ApplicationForm() {
                 id="telegramUsername"
                 name="telegramUsername"
                 required
-                placeholder={t('forms.placeholder.username')}
+                placeholder={t('forms.field.telegram')}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                 value={formData.telegramUsername}
                 onChange={handleChange}
@@ -195,7 +261,6 @@ export default function ApplicationForm() {
               name="portfolioLink"
               rows={3}
               required
-              placeholder={t('forms.placeholder.portfolio')}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
               value={formData.portfolioLink}
               onChange={handleChange}
@@ -211,7 +276,6 @@ export default function ApplicationForm() {
               name="motivation"
               rows={4}
               required
-              placeholder={t('forms.placeholder.motivation')}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
               value={formData.motivation}
               onChange={handleChange}
@@ -227,7 +291,7 @@ export default function ApplicationForm() {
                 type="text"
                 id="weeklyHours"
                 name="weeklyHours"
-                placeholder={t('forms.placeholder.weeklyhours')}
+                placeholder={t('forms.application.weeklyhours.placeholder')}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                 value={formData.weeklyHours}
                 onChange={handleChange}
@@ -242,7 +306,6 @@ export default function ApplicationForm() {
                 type="text"
                 id="eventOrganization"
                 name="eventOrganization"
-                placeholder={t('forms.placeholder.events')}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                 value={formData.eventOrganization}
                 onChange={handleChange}
@@ -258,7 +321,6 @@ export default function ApplicationForm() {
               id="resources"
               name="resources"
               rows={3}
-              placeholder={t('forms.placeholder.resources')}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
               value={formData.resources}
               onChange={handleChange}
@@ -273,7 +335,6 @@ export default function ApplicationForm() {
               id="entrepreneurship"
               name="entrepreneurship"
               rows={3}
-              placeholder={t('forms.placeholder.entrepreneurship')}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
               value={formData.entrepreneurship}
               onChange={handleChange}
@@ -297,9 +358,17 @@ export default function ApplicationForm() {
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-md hover:from-violet-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
+                disabled={loading || !isAuthenticated || isDisabled}
+              className="px-6 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-md hover:from-violet-700 hover:to-purple-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {t('forms.submit.button')}
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  提交中...
+                </div>
+              ) : (
+                t('forms.submit.button')
+              )}
             </button>
           </div>
         </form>

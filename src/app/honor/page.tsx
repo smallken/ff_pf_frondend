@@ -363,6 +363,34 @@ export default function Honor() {
             </div>
           </div>
         </div>
+
+        {/* 社交媒体链接 */}
+        <div className="mt-8 bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-900/20 dark:to-sky-900/20 rounded-3xl p-8 text-center border border-blue-200 dark:border-blue-700 shadow-xl">
+          <div className="flex items-center justify-center mb-6">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-sky-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
+              <span className="text-2xl">🌐</span>
+            </div>
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-sky-600 dark:from-blue-400 dark:to-sky-400 bg-clip-text text-transparent">{t('process.social.title')}</h3>
+          </div>
+          <div className="flex justify-center space-x-6 flex-wrap gap-y-4">
+            <a href="https://x.com/flipfloplaunch" target="_blank" rel="noopener noreferrer" className="group flex items-center px-6 py-3 bg-gradient-to-r from-gray-800 to-black text-white rounded-2xl font-semibold hover:from-gray-900 hover:to-gray-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
+              <span className="mr-2">𝕏</span>
+              X (Twitter)
+            </a>
+            <a href="https://t.me/flipflopEn" target="_blank" rel="noopener noreferrer" className="group flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
+              <span className="mr-2">📱</span>
+              Telegram EN
+            </a>
+            <a href="https://t.me/flipflopChi" target="_blank" rel="noopener noreferrer" className="group flex items-center px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-2xl font-semibold hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
+              <span className="mr-2">📱</span>
+              Telegram 中文
+            </a>
+            <a href="https://discord.com/invite/DtwkgAyD" target="_blank" rel="noopener noreferrer" className="group flex items-center px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
+              <span className="mr-2">💬</span>
+              Discord
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );

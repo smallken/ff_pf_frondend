@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../../contexts/AuthContext';
+import { activityApplicationService } from '../../../services';
 import CustomDateInput from '../../components/CustomDateInput';
 
 export default function ActivityForm() {
   const { t, language } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   
   // Debug language state
@@ -34,11 +37,71 @@ export default function ActivityForm() {
     partners: '',
     expectedResults: ''
   });
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  // 功能暂时禁用
+  const isDisabled = true;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 这里调用后端表单提交接口
-    console.log('活动申请表数据:', formData);
+    
+    if (isDisabled) {
+      setError('表单提交功能暂未开放，敬请期待');
+      return;
+    }
+    
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // 打印活动申请表数据
+      console.log('🎪 活动申请表提交数据:', {
+        ...formData,
+        timestamp: new Date().toISOString()
+      });
+
+      // 准备提交数据，将前端字段名映射到后端需要的格式
+      const submitData = {
+        organizer: formData.organizer,
+        email: formData.email,
+        twitterUsername: formData.twitterUsername,
+        telegramUsername: formData.telegramUsername,
+        walletAddress: formData.walletAddress,
+        activityTheme: formData.activityTheme,
+        briefIntroduction: formData.briefIntroduction,
+        activityType: formData.activityType,
+        activityTime: formData.activityTime,
+        activityLocation: formData.activityLocation,
+        activityScale: formData.activityScale,
+        targetAudience: formData.targetAudience,
+        activityGoals: formData.activityGoals,
+        activityProcess: formData.activityProcess,
+        expectedResults: formData.expectedResults,
+        invitedSpeakers: formData.invitedSpeakers,
+        partners: formData.partners,
+        financialSupport: formData.financialSupport,
+        otherSupport: formData.otherSupport,
+      };
+
+      // 调用后端活动申请表提交API
+      const applicationId = await activityApplicationService.submitApplication(submitData);
+      
+      console.log('✅ 活动申请表提交成功，ID:', applicationId);
+      // 提交成功，跳转到表单申请页面
+      router.push('/forms?success=活动申请表提交成功');
+    } catch (error: any) {
+      console.log('❌ 活动申请表提交失败:', error);
+      setError(error.message || '提交失败，请重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -81,6 +144,33 @@ export default function ActivityForm() {
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-blue-100 dark:border-gray-700 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-200 to-indigo-300 dark:from-blue-800 dark:to-indigo-900 opacity-20 rounded-full -translate-y-16 translate-x-16"></div>
           <div className="relative z-10">
+            
+            {isDisabled && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
+                <div className="flex items-center">
+                  <svg className="h-5 w-5 text-yellow-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                    表单提交功能暂未开放，敬请期待
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!isAuthenticated && !isDisabled && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
+                <div className="text-sm text-yellow-600 dark:text-yellow-400">
+                  请先登录后再提交申请表
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-6">
+                <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label htmlFor="organizer" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -166,9 +256,9 @@ export default function ActivityForm() {
               </label>
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { key: 'online', value: 'forms.acttype.online' },
-                  { key: 'offline', value: 'forms.acttype.offline' },
-                  { key: 'hybrid', value: 'forms.acttype.hybrid' }
+                  { key: 'online', value: 'forms.activity.type.online' },
+                  { key: 'offline', value: 'forms.activity.type.offline' },
+                  { key: 'hybrid', value: 'forms.activity.type.hybrid' }
                 ].map((type) => (
                   <label key={type.key} className="flex items-center">
                     <input
@@ -213,7 +303,7 @@ export default function ActivityForm() {
                   required
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.activityTime}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e as unknown as React.ChangeEvent<HTMLInputElement>)}
                 />
               </div>
 
@@ -226,7 +316,7 @@ export default function ActivityForm() {
                   id="activityLocation"
                   name="activityLocation"
                   required
-                  placeholder={t('forms.placeholder.location')}
+                  placeholder={t('forms.activity.location')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.activityLocation}
                   onChange={handleChange}
@@ -242,7 +332,7 @@ export default function ActivityForm() {
                   id="activityScale"
                   name="activityScale"
                   required
-                  placeholder={t('forms.placeholder.scale')}
+                  placeholder={t('forms.activity.scale')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.activityScale}
                   onChange={handleChange}
@@ -259,7 +349,7 @@ export default function ActivityForm() {
                 name="briefIntroduction"
                 rows={4}
                 required
-                placeholder={t('forms.placeholder.introduction')}
+                placeholder={t('forms.activity.introduction')}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.briefIntroduction}
                 onChange={handleChange}
@@ -288,10 +378,10 @@ export default function ActivityForm() {
               </label>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { key: 'newusers', value: 'forms.audience.newusers' },
-                  { key: 'community', value: 'forms.audience.community' },
-                  { key: 'projects', value: 'forms.audience.projects' },
-                  { key: 'makers', value: 'forms.audience.makers' }
+                  { key: 'newusers', value: 'forms.activity.audience.newusers' },
+                  { key: 'community', value: 'forms.activity.audience.community' },
+                  { key: 'projects', value: 'forms.activity.audience.projects' },
+                  { key: 'makers', value: 'forms.activity.audience.makers' }
                 ].map((audience) => (
                   <label key={audience.key} className="flex items-center">
                     <input
@@ -318,7 +408,6 @@ export default function ActivityForm() {
                 name="activityProcess"
                 rows={4}
                 required
-                placeholder={t('forms.placeholder.process')}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.activityProcess}
                 onChange={handleChange}
@@ -334,7 +423,6 @@ export default function ActivityForm() {
                 name="financialSupport"
                 rows={4}
                 required
-                placeholder={t('forms.placeholder.financial')}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.financialSupport}
                 onChange={handleChange}
@@ -350,7 +438,6 @@ export default function ActivityForm() {
                 name="otherSupport"
                 rows={3}
                 required
-                placeholder={t('forms.placeholder.support')}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.otherSupport}
                 onChange={handleChange}
@@ -366,7 +453,6 @@ export default function ActivityForm() {
                   id="invitedSpeakers"
                   name="invitedSpeakers"
                   rows={3}
-                  placeholder={t('forms.placeholder.speakers')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.invitedSpeakers}
                   onChange={handleChange}
@@ -381,7 +467,6 @@ export default function ActivityForm() {
                   id="partners"
                   name="partners"
                   rows={3}
-                  placeholder={t('forms.placeholder.partners')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.partners}
                   onChange={handleChange}
@@ -397,7 +482,6 @@ export default function ActivityForm() {
                 id="expectedResults"
                 name="expectedResults"
                 rows={3}
-                placeholder={t('forms.placeholder.results')}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.expectedResults}
                 onChange={handleChange}
@@ -421,9 +505,21 @@ export default function ActivityForm() {
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl hover:from-blue-600 hover:to-indigo-700 font-semibold transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+                disabled={loading || !isAuthenticated || isDisabled}
+                className={`px-6 py-3 rounded-2xl font-semibold transition-all duration-300 shadow-lg ${
+                  loading || !isAuthenticated || isDisabled
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transform hover:-translate-y-1 hover:shadow-xl'
+                }`}
               >
-                {t('forms.submit.button')}
+                {loading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    提交中...
+                  </div>
+                ) : (
+                  t('forms.submit.button')
+                )}
               </button>
             </div>
           </div>

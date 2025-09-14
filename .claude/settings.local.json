@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/Users/mac/Documents/学习资料/github笔记/Solana-FF/project/project3/FlipflopPathfinders/**)",
+      "Read(/Users/mac/Documents/学习资料/github笔记/Solana-FF/project/project3/FlipflopPathfinders/springboot-init-master/**)",
+      "Read(/Users/mac/Documents/学习资料/github笔记/Solana-FF/project/project3/FlipflopPathfinders/springboot-init-master/src/main/resources/**)",
+      "Read(/Users/mac/Documents/学习资料/github笔记/Solana-FF/project/project3/FlipflopPathfinders/springboot-init-master/**)",
+      "Read(/Users/mac/Documents/学习资料/github笔记/Solana-FF/project/project3/FlipflopPathfinders/springboot-init-master/src/main/java/com/yupi/springbootinit/**)",
+      "Read(/Users/mac/Documents/学习资料/github笔记/Solana-FF/project/project3/FlipflopPathfinders/**)",
+      "Read(/Users/mac/Documents/学习资料/github笔记/Solana-FF/project/project3/FlipflopPathfinders/**)",
+      "Read(/Users/mac/Documents/学习资料/github笔记/Solana-FF/project/project3/FlipflopPathfinders/**)",
+      "Read(/Users/mac/Documents/学习资料/github笔记/Solana-FF/project/project3/FlipflopPathfinders/springboot-init-master/**)",
+      "Read(/Users/mac/Documents/学习资料/github笔记/Solana-FF/project/project3/FlipflopPathfinders/springboot-init-master/src/main/resources/**)"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "/Users/mac/Documents/学习资料/github笔记/Solana-FF/project/project3/FlipflopPathfinders"
+    ]
+  }
+}

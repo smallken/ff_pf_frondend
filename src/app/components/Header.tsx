@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function Header() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
+  const { user, logout, isAuthenticated } = useAuth();
 
   return (
     <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-lg border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50">
@@ -111,16 +111,21 @@ export default function Header() {
             </button>
 
             {/* User Actions */}
-            {isLoggedIn ? (
+            {isAuthenticated ? (
               <div className="flex items-center space-x-3">
                 <Link href="/profile" className="px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300">
                   {t('profile.title')}
                 </Link>
-                <Link href="/admin" className="px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 font-medium rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300">
-                  {t('admin.title')}
-                </Link>
-                <span className="text-gray-600 dark:text-gray-300 font-medium">{t('user.welcome')}, {userName}</span>
-                <button className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-2 rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-300 transform hover:-translate-y-0.5 font-medium">
+                {user?.userRole === 'admin' && (
+                  <Link href="/admin" className="px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 font-medium rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300">
+                    {t('admin.title')}
+                  </Link>
+                )}
+                <span className="text-gray-600 dark:text-gray-300 font-medium">{t('user.welcome')}, {user?.userName}</span>
+                <button 
+                  onClick={logout}
+                  className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-2 rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-300 transform hover:-translate-y-0.5 font-medium"
+                >
                   {t('user.logout')}
                 </button>
               </div>
@@ -176,7 +181,7 @@ export default function Header() {
 
             {/* User Actions for Mobile */}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-              {isLoggedIn ? (
+              {isAuthenticated ? (
                 <div className="space-y-1">
                   <Link 
                     href="/profile" 
@@ -185,19 +190,24 @@ export default function Header() {
                   >
                     👤 {t('profile.title')}
                   </Link>
-                  <Link 
-                    href="/admin" 
-                    className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    ⚙️ {t('admin.title')}
-                  </Link>
+                  {user?.userRole === 'admin' && (
+                    <Link 
+                      href="/admin" 
+                      className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      ⚙️ {t('admin.title')}
+                    </Link>
+                  )}
                   <div className="px-4 py-2 text-gray-600 dark:text-gray-400 text-sm">
-                    {t('user.welcome')}, {userName}
+                    {t('user.welcome')}, {user?.userName}
                   </div>
                   <button 
                     className="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-3 rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-300 font-medium"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      logout();
+                      setIsMobileMenuOpen(false);
+                    }}
                   >
                     🚪 {t('user.logout')}
                   </button>
