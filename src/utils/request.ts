@@ -103,7 +103,7 @@ const createRequest = async <T>(config: RequestConfig): Promise<T> => {
     return result.data;
   } catch (error) {
     clearTimeout(timeoutId);
-    handleError(error);
+    throw handleError(error);
   }
 };
 
@@ -158,7 +158,7 @@ export const uploadFile = async (url: string, file: File, biz: string): Promise<
 
     return result.data;
   } catch (error) {
-    handleError(error);
+    throw handleError(error);
   }
 };
 

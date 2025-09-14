@@ -246,8 +246,13 @@ export interface TaskSubmissionVO {
 }
 
 export interface TaskSubmissionAddRequest {
-  taskId: number;
-  submissionData: string;
+  name: string;
+  email: string;
+  twitterUsername: string;
+  telegramUsername?: string;
+  walletAddress?: string;
+  submissionCategory: string;
+  tasks: TaskDetailDTO[];
 }
 
 export interface TaskSubmissionEditRequest {

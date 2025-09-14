@@ -37,9 +37,17 @@ export default function AchievementForm() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // 功能暂时禁用
+  const isDisabled = true;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isDisabled) {
+      setError('表单提交功能暂未开放，敬请期待');
+      return;
+    }
     
     if (!isAuthenticated) {
       setError('请先登录后再提交成果表');
@@ -155,7 +163,20 @@ export default function AchievementForm() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-200 to-emerald-300 dark:from-green-800 dark:to-emerald-900 opacity-20 rounded-full -translate-y-16 translate-x-16"></div>
           <div className="relative z-10">
             
-            {!isAuthenticated && (
+            {isDisabled && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
+                <div className="flex items-center">
+                  <svg className="h-5 w-5 text-yellow-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                    表单提交功能暂未开放，敬请期待
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!isAuthenticated && !isDisabled && (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
                 <div className="text-sm text-yellow-600 dark:text-yellow-400">
                   请先登录后再提交成果表
@@ -405,9 +426,9 @@ export default function AchievementForm() {
               </button>
               <button
                 type="submit"
-                disabled={loading || !isAuthenticated}
+                disabled={loading || !isAuthenticated || isDisabled}
                 className={`px-6 py-3 rounded-2xl font-semibold transition-all duration-300 shadow-lg ${
-                  loading || !isAuthenticated
+                  loading || !isAuthenticated || isDisabled
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transform hover:-translate-y-1 hover:shadow-xl'
                 }`}

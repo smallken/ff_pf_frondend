@@ -105,10 +105,6 @@ export default function Profile() {
               <p className="mt-1 text-gray-900 dark:text-white">{user?.userName || '未设置'}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile.email')}</label>
-              <p className="mt-1 text-gray-900 dark:text-white">{user?.userEmail || '未设置'}</p>
-            </div>
-            <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile.user.title')}</label>
               <p className="mt-1 text-emerald-600 dark:text-emerald-400 font-semibold">{getTitleText('explorer')}</p>
             </div>
