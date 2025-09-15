@@ -21,7 +21,7 @@ const getApiBaseUrl = () => {
 // 获取超时时间
 const getTimeout = () => {
   const timeout = process.env.NEXT_PUBLIC_API_TIMEOUT;
-  return timeout ? parseInt(timeout, 10) : 10000;
+  return timeout ? parseInt(timeout, 10) : 30000; // 增加到30秒
 };
 
 // 获取重试次数
@@ -39,7 +39,7 @@ export const API_CONFIG = {
 
 // 应用配置
 export const APP_CONFIG = {
-  NAME: process.env.NEXT_PUBLIC_APP_NAME || 'Flipflop Pathfinders',
+  NAME: process.env.NEXT_PUBLIC_APP_NAME || 'Flipflop Footprint',
   VERSION: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
   ENV: process.env.NEXT_PUBLIC_ENV || process.env.NODE_ENV || 'development',
 };
@@ -55,6 +55,7 @@ export const API_ENDPOINTS = {
     LOGOUT: '/user/logout',
     GET_LOGIN_USER: '/user/get/login',
     UPDATE_MY: '/user/update/my',
+    LIST: '/user/list/page',
   },
   // 表单相关
   FORM: {

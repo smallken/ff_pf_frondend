@@ -1,35 +1,106 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { userService } from '../../services';
+import type { LoginUserVO } from '../../types/api';
+
+// 排行榜用户类型
+interface RankingUser {
+  rank: number;
+  id: number;
+  userName: string;
+  userEmail: string;
+  userPoints: number;
+  userTotalPoints: number;
+  userLevel: number;
+  walletAddress?: string;
+}
 
 export default function Ranking() {
   const { t } = useLanguage();
-  const [rankings, setRankings] = useState([
-    { rank: 1, userName: '张三', twitterHandle: 'zhangsan_web3', points: 450, level: 'gold' },
-    { rank: 2, userName: '李四', twitterHandle: 'lisi_crypto', points: 380, level: 'silver' },
-    { rank: 3, userName: '王五', twitterHandle: 'wangwu_defi', points: 320, level: 'silver' },
-    { rank: 4, userName: '赵六', twitterHandle: 'zhaoliu_nft', points: 280, level: 'silver' },
-    { rank: 5, userName: '钱七', twitterHandle: 'qianqi_dao', points: 220, level: 'silver' },
-    { rank: 6, userName: '孙八', twitterHandle: 'sunba_metaverse', points: 180, level: 'bronze' },
-    { rank: 7, userName: '周九', twitterHandle: 'zhoujiu_gamefi', points: 150, level: 'bronze' },
-    { rank: 8, userName: '吴十', twitterHandle: 'wushi_solana', points: 120, level: 'bronze' },
-    { rank: 9, userName: '郑十一', twitterHandle: 'zhengshiyi_web3', points: 90, level: 'bronze' },
-    { rank: 10, userName: '王十二', twitterHandle: 'wangshier_flipflop', points: 60, level: 'bronze' }
-  ]);
+  const { user, isAuthenticated } = useAuth();
+  const [rankings, setRankings] = useState<RankingUser[]>([]);
+  const [currentUser, setCurrentUser] = useState<RankingUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const [currentUser] = useState({ rank: 15, userName: t('ranking.currentuser'), points: 150, level: 'bronze' });
-
-  const getLevelText = (level: string) => {
-    switch(level) {
-      case 'diamond': return t('ranking.level.diamond');
-      case 'platinum': return t('ranking.level.platinum');
-      case 'gold': return t('ranking.level.gold');
-      case 'silver': return t('ranking.level.silver');
-      case 'bronze': return t('ranking.level.bronze');
-      default: return level;
+  // 根据用户等级获取等级文本
+  const getLevelText = (userLevel: number) => {
+    switch(userLevel) {
+      case 1: return '探索者';
+      case 2: return '探路者';
+      case 3: return '开路者';
+      case 4: return '先驱者';
+      default: return '探索者';
     }
   };
+
+  // 根据用户等级获取等级样式
+  const getLevelStyle = (userLevel: number) => {
+    switch(userLevel) {
+      case 1: return 'bg-gradient-to-r from-green-400 to-emerald-500 text-white'; // 探索者 - 绿色
+      case 2: return 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white'; // 探路者 - 蓝色
+      case 3: return 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white'; // 开路者 - 紫色
+      case 4: return 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white'; // 先驱者 - 金色
+      default: return 'bg-gradient-to-r from-green-400 to-emerald-500 text-white';
+    }
+  };
+
+  // 获取排行榜数据
+  const fetchRankings = async () => {
+    try {
+      // 这里需要调用后端API获取所有用户数据，按积分排序
+      // 由于没有专门的排行榜API，我们暂时使用模拟数据
+      // 实际项目中应该有一个专门的排行榜API
+      
+      // 模拟数据 - 实际应该从API获取
+      const mockRankings: RankingUser[] = [
+        { rank: 1, id: 1, userName: '张三', userEmail: 'zhangsan@example.com', userPoints: 450, userTotalPoints: 450, userLevel: 4, walletAddress: '0x1234...' },
+        { rank: 2, id: 2, userName: '李四', userEmail: 'lisi@example.com', userPoints: 380, userTotalPoints: 380, userLevel: 3, walletAddress: '0x5678...' },
+        { rank: 3, id: 3, userName: '王五', userEmail: 'wangwu@example.com', userPoints: 320, userTotalPoints: 320, userLevel: 3, walletAddress: '0x9abc...' },
+        { rank: 4, id: 4, userName: '赵六', userEmail: 'zhaoliu@example.com', userPoints: 280, userTotalPoints: 280, userLevel: 2, walletAddress: '0xdef0...' },
+        { rank: 5, id: 5, userName: '钱七', userEmail: 'qianqi@example.com', userPoints: 220, userTotalPoints: 220, userLevel: 2, walletAddress: '0x1111...' },
+        { rank: 6, id: 6, userName: '孙八', userEmail: 'sunba@example.com', userPoints: 180, userTotalPoints: 180, userLevel: 1, walletAddress: '0x2222...' },
+        { rank: 7, id: 7, userName: '周九', userEmail: 'zhoujiu@example.com', userPoints: 150, userTotalPoints: 150, userLevel: 1, walletAddress: '0x3333...' },
+        { rank: 8, id: 8, userName: '吴十', userEmail: 'wushi@example.com', userPoints: 120, userTotalPoints: 120, userLevel: 1, walletAddress: '0x4444...' },
+        { rank: 9, id: 9, userName: '郑十一', userEmail: 'zhengshiyi@example.com', userPoints: 90, userTotalPoints: 90, userLevel: 1, walletAddress: '0x5555...' },
+        { rank: 10, id: 10, userName: '王十二', userEmail: 'wangshier@example.com', userPoints: 60, userTotalPoints: 60, userLevel: 1, walletAddress: '0x6666...' }
+      ];
+
+      setRankings(mockRankings);
+
+      // 如果有当前用户，设置当前用户信息
+      if (user) {
+        const currentUserRanking = mockRankings.find(u => u.id === user.id);
+        if (currentUserRanking) {
+          setCurrentUser(currentUserRanking);
+        } else {
+          // 如果当前用户不在前10名，创建一个当前用户记录
+          setCurrentUser({
+            rank: 15, // 假设排名15
+            id: user.id,
+            userName: user.userName,
+            userEmail: user.userEmail || '',
+            userPoints: user.userPoints || 0,
+            userTotalPoints: user.userTotalPoints || 0,
+            userLevel: user.userLevel || 1,
+            walletAddress: user.walletAddress
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error('获取排行榜数据失败:', error);
+      setError(error.message || '获取排行榜数据失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRankings();
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-emerald-900/20 dark:to-gray-800 relative overflow-hidden">
@@ -66,7 +137,7 @@ export default function Ranking() {
               <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">{t('ranking.top10.title')}</h2>
             </div>
             
-            {/* 总Flipprints和参考说明 */}
+            {/* 总Footprint和参考说明 */}
             <div className="mb-8 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-700">
               <div className="flex justify-between items-center">
                 <div className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -83,76 +154,78 @@ export default function Ranking() {
                 </div>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y-2 divide-emerald-200 dark:divide-emerald-700">
-                <thead className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
-                      {t('ranking.table.rank')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
-                      {t('ranking.table.username')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
-                      {t('ranking.table.twitter')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
-                      {t('ranking.table.points')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
-                      {t('ranking.table.level')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {rankings.map((user) => (
-                    <tr key={user.rank} className={`hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-colors duration-200 ${
-                      user.rank <= 3 ? 'bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20' : ''
-                    }`}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <span className={`inline-flex items-center justify-center w-10 h-10 rounded-2xl text-sm font-bold shadow-lg ${
-                            user.rank === 1 ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white' :
-                            user.rank === 2 ? 'bg-gradient-to-r from-gray-400 to-slate-500 text-white' :
-                            user.rank === 3 ? 'bg-gradient-to-r from-orange-400 to-red-500 text-white' :
-                            'bg-gradient-to-r from-emerald-400 to-teal-500 text-white'
-                          }`}>
-                            {user.rank <= 3 ? (
-                              user.rank === 1 ? '🥇' : user.rank === 2 ? '🥈' : '🥉'
-                            ) : user.rank}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">
-                        {user.userName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600 dark:text-gray-300">
-                        <span className="inline-flex items-center">
-                          <span className="text-blue-500 mr-1">@</span>
-                          {user.twitterHandle}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                        <span className="bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full">
-                          {user.points}{t('ranking.points.unit')}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-2 text-xs font-bold rounded-full shadow-sm ${
-                          user.level === 'diamond' ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white' :
-                          user.level === 'platinum' ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white' :
-                          user.level === 'gold' ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white' :
-                          user.level === 'silver' ? 'bg-gradient-to-r from-gray-400 to-slate-500 text-white' :
-                          'bg-gradient-to-r from-green-400 to-emerald-500 text-white'
-                        }`}>
-                          {getLevelText(user.level)}
-                        </span>
-                      </td>
+            {loading ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                <span className="ml-2 text-gray-600 dark:text-gray-300">加载中...</span>
+              </div>
+            ) : error ? (
+              <div className="text-center py-8">
+                <div className="text-red-600 dark:text-red-400">{error}</div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y-2 divide-emerald-200 dark:divide-emerald-700">
+                  <thead className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
+                        {t('ranking.table.rank')}
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
+                        {t('ranking.table.username')}
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
+                        邮箱
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
+                        {t('ranking.table.points')}
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
+                        {t('ranking.table.level')}
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {rankings.map((user) => (
+                      <tr key={user.rank} className={`hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-colors duration-200 ${
+                        user.rank <= 3 ? 'bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20' : ''
+                      }`}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <span className={`inline-flex items-center justify-center w-10 h-10 rounded-2xl text-sm font-bold shadow-lg ${
+                              user.rank === 1 ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white' :
+                              user.rank === 2 ? 'bg-gradient-to-r from-gray-400 to-slate-500 text-white' :
+                              user.rank === 3 ? 'bg-gradient-to-r from-orange-400 to-red-500 text-white' :
+                              'bg-gradient-to-r from-emerald-400 to-teal-500 text-white'
+                            }`}>
+                              {user.rank <= 3 ? (
+                                user.rank === 1 ? '🥇' : user.rank === 2 ? '🥈' : '🥉'
+                              ) : user.rank}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">
+                          {user.userName}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600 dark:text-gray-300">
+                          {user.userEmail}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                          <span className="bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full">
+                            {user.userTotalPoints}{t('ranking.points.unit')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-3 py-2 text-xs font-bold rounded-full shadow-sm ${getLevelStyle(user.userLevel)}`}>
+                            {getLevelText(user.userLevel)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
 
@@ -166,38 +239,44 @@ export default function Ranking() {
               </div>
               <h2 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">{t('ranking.myrank.title')}</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="group text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border border-blue-200 dark:border-blue-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-xl text-white font-bold">#</span>
+            {currentUser ? (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="group text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border border-blue-200 dark:border-blue-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-xl text-white font-bold">#</span>
+                  </div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">{currentUser.rank}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.rank')}</div>
                 </div>
-                <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">{currentUser.rank}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.rank')}</div>
+                <div className="group text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border border-green-200 dark:border-green-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-xl text-white">⭐</span>
+                  </div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">{currentUser.userTotalPoints}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.points')}</div>
+                </div>
+                <div className="group text-center p-6 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-2xl border border-yellow-200 dark:border-yellow-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                  <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-xl text-white">🏆</span>
+                  </div>
+                  <div className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 dark:from-yellow-400 dark:to-amber-400 bg-clip-text text-transparent">{getLevelText(currentUser.userLevel)}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.level')}</div>
+                </div>
+                <div className="group text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border border-purple-200 dark:border-purple-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-xl text-white">📊</span>
+                  </div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                    {rankings.length > 0 ? Math.ceil((currentUser.userTotalPoints / rankings[0].userTotalPoints) * 100) : 0}%
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.completion')}</div>
+                </div>
               </div>
-              <div className="group text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border border-green-200 dark:border-green-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-xl text-white">⭐</span>
-                </div>
-                <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">{currentUser.points}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.points')}</div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-gray-500 dark:text-gray-400">请登录查看您的排名信息</div>
               </div>
-              <div className="group text-center p-6 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-2xl border border-yellow-200 dark:border-yellow-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-xl text-white">🏆</span>
-                </div>
-                <div className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 dark:from-yellow-400 dark:to-amber-400 bg-clip-text text-transparent">{getLevelText(currentUser.level)}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.level')}</div>
-              </div>
-              <div className="group text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border border-purple-200 dark:border-purple-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-xl text-white">📊</span>
-                </div>
-                <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                  {Math.ceil((currentUser.points / rankings[0].points) * 100)}%
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.completion')}</div>
-              </div>
-            </div>
+            )}
             
             <div className="mt-8 text-center">
               <a href="/forms" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-2xl font-semibold hover:from-teal-600 hover:to-cyan-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">

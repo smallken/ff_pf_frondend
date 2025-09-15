@@ -198,18 +198,7 @@ export default function Honor() {
                 </div>
                 <div className="flex items-start">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>
-                    创作类内容：任何原创内容，在X上发布时需 
-                    <a 
-                      href={t('honor.monthly.definitions.official.link')}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline mx-1 transition-colors duration-200"
-                    >
-                      @官方账号
-                    </a>
-                    及#FFPP
-                  </span>
+                  <span>{t('honor.monthly.definitions.creation')}</span>
                 </div>
                 <div className="flex items-start">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
@@ -220,7 +209,7 @@ export default function Honor() {
           </div>
         </div>
 
-        {/* Flipprints贡献参考 */}
+        {/* Footprint贡献参考 */}
         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-violet-100 dark:border-gray-700 relative overflow-hidden">
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-purple-200 to-fuchsia-300 dark:from-purple-800 dark:to-fuchsia-900 opacity-20 rounded-full -translate-y-20 -translate-x-20"></div>
           <div className="relative z-10">
@@ -320,6 +309,9 @@ export default function Honor() {
                 </div>
                 <h4 className="font-bold text-yellow-900 dark:text-yellow-200 text-lg">{t('honor.notice.title')}</h4>
               </div>
+              <p className="text-yellow-800 dark:text-yellow-200 font-medium mb-4 text-sm">
+                {t('honor.notice.subtitle')}
+              </p>
               <ul className="text-yellow-700 dark:text-yellow-300 space-y-2 text-sm">
                 <li className="flex items-start">
                   <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
@@ -340,6 +332,10 @@ export default function Honor() {
                 <li className="flex items-start">
                   <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   <span>{t('honor.notice.5')}</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                  <span>{t('honor.notice.6')}</span>
                 </li>
               </ul>
             </div>

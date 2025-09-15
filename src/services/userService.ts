@@ -12,6 +12,7 @@ import type {
   LoginUserVO,
   User,
   EmailVO,
+  PageData,
 } from '@/types/api';
 
 export const userService = {
@@ -48,5 +49,16 @@ export const userService = {
   // 更新个人信息
   updateMyInfo: (data: UserUpdateMyRequest): Promise<boolean> => {
     return request.post<boolean>(API_ENDPOINTS.USER.UPDATE_MY, data);
+  },
+
+  // 获取用户列表（管理员）
+  getUserList: (params: {
+    current?: number;
+    pageSize?: number;
+  } = {}): Promise<PageData<User>> => {
+    return request.post<PageData<User>>(API_ENDPOINTS.USER.LIST, {
+      current: params.current || 1,
+      pageSize: params.pageSize || 20
+    });
   },
 };

@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Flipflop Pathfinders",
-  description: "Flipflop Pathfinders - 寻路者计划",
+  title: "Flipflop Footprint",
+  description: "Flipflop Footprint - 寻路者计划",
 };
 
 export default function RootLayout({

@@ -6,6 +6,9 @@ import { API_ENDPOINTS } from '@/config/api';
 import type {
   TaskSubmissionAddRequest,
   TaskSubmissionVO,
+  TaskSubmissionEditRequest,
+  TaskSubmissionUpdateRequest,
+  TaskDetailDTO,
   PageData,
 } from '@/types/api';
 
@@ -55,26 +58,12 @@ export const taskSubmissionService = {
   },
 
   // 编辑成果提交表
-  editTaskSubmission: (data: {
-    id: number;
-    name?: string;
-    email?: string;
-    twitterUsername?: string;
-    telegramUsername?: string;
-    walletAddress?: string;
-    submissionCategory?: string;
-    tasks?: any[];
-  }): Promise<boolean> => {
+  editTaskSubmission: (data: TaskSubmissionEditRequest): Promise<boolean> => {
     return request.post<boolean>(API_ENDPOINTS.TASK_SUBMISSION.EDIT, data);
   },
 
   // 更新成果提交表（管理员）
-  updateTaskSubmission: (data: {
-    id: number;
-    reviewStatus?: number;
-    reviewMessage?: string;
-    reviewScore?: number;
-  }): Promise<boolean> => {
+  updateTaskSubmission: (data: TaskSubmissionUpdateRequest): Promise<boolean> => {
     return request.post<boolean>(API_ENDPOINTS.TASK_SUBMISSION.UPDATE, data);
   },
 

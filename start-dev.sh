@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Flipflop Pathfinders 前端开发环境启动脚本
+# Flipflop Footprint 前端开发环境启动脚本
 
-echo "🚀 启动 Flipflop Pathfinders 前端开发环境..."
+echo "🚀 启动 Flipflop Footprint 前端开发环境..."
 
 # 检查Node.js版本
 echo "📋 检查环境..."

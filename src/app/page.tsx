@@ -112,7 +112,7 @@ export default function Home() {
               <div className="group p-5 bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/20 hover:bg-white/20 dark:hover:bg-gray-800/20 transition-all duration-300 transform hover:-translate-y-1">
                 <div className="text-2xl mb-2">🏆</div>
                 <div className="text-xl font-bold text-gray-900 dark:text-white mb-1">1000+</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Active Pathfinders</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Active Footprint</div>
               </div>
               <div className="group p-5 bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/20 hover:bg-white/20 dark:hover:bg-gray-800/20 transition-all duration-300 transform hover:-translate-y-1">
                 <div className="text-2xl mb-2">🎯</div>
@@ -389,7 +389,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pathfinders Benefits Section */}
+      {/* Footprint Benefits Section */}
       <section className="py-16 bg-gradient-to-bl from-rose-50 via-orange-50 to-amber-50 dark:from-gray-900 dark:via-orange-900/10 dark:to-gray-800 relative overflow-hidden">
         {/* Background decorative elements - Waves and Curves */}
         <div className="absolute inset-0">
@@ -410,7 +410,7 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* 1. Flipprints 积分荣誉体系 */}
+            {/* 1. Footprint 积分荣誉体系 */}
             <div className="group bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-blue-100 dark:border-gray-700">
               <div className="relative mb-6">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto shadow-2xl group-hover:scale-110 transition-transform duration-300">

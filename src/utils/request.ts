@@ -15,15 +15,7 @@ interface RequestConfig {
 
 // 请求拦截器
 const requestInterceptor = (config: RequestConfig): RequestConfig => {
-  // 添加认证token
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers = {
-      ...config.headers,
-      'Authorization': `Bearer ${token}`,
-    };
-  }
-
+  // 后端使用session认证，不需要token
   // 添加默认headers
   config.headers = {
     'Content-Type': 'application/json',
@@ -55,14 +47,19 @@ const handleError = (error: any): never => {
   console.error('Request error:', error);
   
   if (error.name === 'AbortError') {
-    throw new Error('请求超时');
+    console.error('请求被中止，可能是超时或网络问题');
+    throw new Error('请求超时，请检查网络连接或稍后重试');
   }
   
   if (error.message.includes('HTTP Error: 401')) {
-    // 未授权，清除token并跳转到登录页
-    localStorage.removeItem('token');
+    // 未授权，跳转到登录页
     window.location.href = '/login';
     throw new Error('登录已过期，请重新登录');
+  }
+  
+  if (error.message.includes('Failed to fetch')) {
+    console.error('网络连接失败，请检查后端服务是否运行');
+    throw new Error('网络连接失败，请检查后端服务是否正常运行');
   }
   
   throw error;
@@ -96,14 +93,17 @@ const createRequest = async <T>(config: RequestConfig): Promise<T> => {
   requestOptions.signal = controller.signal;
 
   try {
+    console.log(`[API Request] ${method} ${fullUrl}`, { data, timeout });
     const response = await fetch(fullUrl, requestOptions);
     clearTimeout(timeoutId);
     
+    console.log(`[API Response] ${response.status} ${response.statusText}`);
     const result = await responseInterceptor<T>(response);
     return result.data;
   } catch (error) {
     clearTimeout(timeoutId);
-    throw handleError(error);
+    console.error(`[API Error] ${method} ${fullUrl}`, error);
+    return handleError(error);
   }
 };
 
@@ -133,16 +133,9 @@ export const uploadFile = async (url: string, file: File, biz: string): Promise<
   formData.append('file', file);
   formData.append('biz', biz);
 
-  const token = localStorage.getItem('token');
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
   try {
     const response = await fetch(`${API_CONFIG.BASE_URL}${url}`, {
       method: 'POST',
-      headers,
       body: formData,
       credentials: 'include',
     });
@@ -158,7 +151,7 @@ export const uploadFile = async (url: string, file: File, biz: string): Promise<
 
     return result.data;
   } catch (error) {
-    throw handleError(error);
+    handleError(error);
   }
 };
 

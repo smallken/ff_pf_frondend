@@ -87,7 +87,7 @@ npm run dev
 ### 前端环境变量 (.env.local)
 ```bash
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8101/api
-NEXT_PUBLIC_APP_NAME=Flipflop Pathfinders
+NEXT_PUBLIC_APP_NAME=Flipflop Footprint
 NEXT_PUBLIC_APP_VERSION=1.0.0
 NEXT_PUBLIC_ENV=development
 NEXT_PUBLIC_DEBUG=true

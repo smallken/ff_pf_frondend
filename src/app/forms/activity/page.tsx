@@ -40,17 +40,10 @@ export default function ActivityForm() {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  // 功能暂时禁用
-  const isDisabled = true;
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (isDisabled) {
-      setError('表单提交功能暂未开放，敬请期待');
-      return;
-    }
     
     if (!isAuthenticated) {
       router.push('/login');
@@ -59,6 +52,7 @@ export default function ActivityForm() {
 
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       // 打印活动申请表数据
@@ -94,8 +88,19 @@ export default function ActivityForm() {
       const applicationId = await activityApplicationService.submitApplication(submitData);
       
       console.log('✅ 活动申请表提交成功，ID:', applicationId);
-      // 提交成功，跳转到表单申请页面
-      router.push('/forms?success=活动申请表提交成功');
+      
+      // 显示成功提示
+      setSuccess('🎉 活动申请表提交成功！我们将在1-3个工作日内审核您的申请。');
+      
+      // 2秒后自动消失提示
+      setTimeout(() => {
+        setSuccess('');
+      }, 2000);
+      
+      // 3秒后跳转到表单申请页面
+      setTimeout(() => {
+        router.push('/forms?success=activity');
+      }, 3000);
     } catch (error: any) {
       console.log('❌ 活动申请表提交失败:', error);
       setError(error.message || '提交失败，请重试');
@@ -145,20 +150,7 @@ export default function ActivityForm() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-200 to-indigo-300 dark:from-blue-800 dark:to-indigo-900 opacity-20 rounded-full -translate-y-16 translate-x-16"></div>
           <div className="relative z-10">
             
-            {isDisabled && (
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
-                <div className="flex items-center">
-                  <svg className="h-5 w-5 text-yellow-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <div className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                    表单提交功能暂未开放，敬请期待
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {!isAuthenticated && !isDisabled && (
+            {!isAuthenticated && (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
                 <div className="text-sm text-yellow-600 dark:text-yellow-400">
                   请先登录后再提交申请表
@@ -167,8 +159,18 @@ export default function ActivityForm() {
             )}
 
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-6">
-                <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-xl p-6 mb-6 shadow-lg animate-pulse">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-1">提交失败</h3>
+                    <div className="text-red-700 dark:text-red-300">{error}</div>
+                  </div>
+                </div>
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -505,9 +507,9 @@ export default function ActivityForm() {
               </button>
               <button
                 type="submit"
-                disabled={loading || !isAuthenticated || isDisabled}
+                disabled={loading || !isAuthenticated || !!success}
                 className={`px-6 py-3 rounded-2xl font-semibold transition-all duration-300 shadow-lg ${
-                  loading || !isAuthenticated || isDisabled
+                  loading || !isAuthenticated || !!success
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transform hover:-translate-y-1 hover:shadow-xl'
                 }`}
@@ -517,6 +519,13 @@ export default function ActivityForm() {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     提交中...
                   </div>
+                ) : success ? (
+                  <div className="flex items-center">
+                    <svg className="h-4 w-4 text-white mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    已提交
+                  </div>
                 ) : (
                   t('forms.submit.button')
                 )}
@@ -525,6 +534,28 @@ export default function ActivityForm() {
           </div>
         </form>
       </div>
+
+      {/* 成功提示模态框 */}
+      {success && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-12 max-w-md mx-4 shadow-2xl transform animate-scaleIn">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 dark:bg-green-900/30 mb-6">
+                <svg className="h-12 w-12 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">提交成功！</h3>
+              <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                {success}
+              </p>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                页面将在3秒后自动跳转...
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

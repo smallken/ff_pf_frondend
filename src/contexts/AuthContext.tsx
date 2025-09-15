@@ -58,6 +58,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setUser(null);
       localStorage.removeItem('token');
+      // 退出后跳转到首页
+      window.location.href = '/';
     }
   };
 

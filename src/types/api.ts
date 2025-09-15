@@ -34,6 +34,7 @@ export interface User {
   userRole: string;
   userPoints?: number;
   userTotalPoints?: number;
+  userLevel?: number; // 用户等级：1-探索者，2-探路者，3-开路者，4-先驱者
   walletAddress?: string;
   createTime: string;
   updateTime: string;
@@ -42,9 +43,14 @@ export interface User {
 export interface LoginUserVO {
   id: number;
   userName: string;
+  userEmail?: string;
   userAvatar?: string;
   userProfile?: string;
   userRole: string;
+  userPoints?: number;
+  userTotalPoints?: number;
+  userLevel?: number; // 用户等级：1-探索者，2-探路者，3-开路者，4-先驱者
+  walletAddress?: string;
   createTime: string;
   updateTime: string;
 }
@@ -76,8 +82,10 @@ export interface UserSendEmailRequest {
 
 export interface UserUpdateMyRequest {
   userName?: string;
+  userEmail?: string;
   userProfile?: string;
   userAvatar?: string;
+  walletAddress?: string;
 }
 
 // 表单相关类型
@@ -183,7 +191,7 @@ export interface ActivityApplication {
 export interface TaskDetailDTO {
   taskType: string;
   contentLink: string;
-  screenshot?: File;
+  screenshot?: string; // 文件路径，与后端一致
   completionDate: string;
   description: string;
 }
@@ -208,69 +216,42 @@ export interface TaskSubmissionVO {
   walletAddress?: string;
   submissionCategory: string;
   tasks: TaskDetailDTO[];
-  reviewStatus?: number;
-  reviewMessage?: string;
-  reviewScore?: number;
+  reviewStatus?: number; // 审核状态：0-未审核，1-审核通过，2-未通过
+  reviewMessage?: string; // 审核意见
+  reviewScore?: number; // 审核积分
   createTime: string;
   updateTime: string;
 }
 
 export interface FormReviewRequest {
-  id: number;
+  formId: number;
   status: number;
-  reviewMessage?: string;
+  reviewComment?: string;
+  score?: number;
 }
 
-// 任务提交相关类型
-export interface TaskSubmission {
-  id: number;
-  userId: number;
-  taskId: number;
-  submissionData: string;
-  status: number;
-  reviewMessage?: string;
-  createTime: string;
-  updateTime: string;
-}
-
-export interface TaskSubmissionVO {
-  id: number;
-  userId: number;
-  taskId: number;
-  submissionData: string;
-  status: number;
-  reviewMessage?: string;
-  createTime: string;
-  updateTime: string;
-  userName?: string;
-}
-
-export interface TaskSubmissionAddRequest {
-  name: string;
-  email: string;
-  twitterUsername: string;
-  telegramUsername?: string;
-  walletAddress?: string;
-  submissionCategory: string;
-  tasks: TaskDetailDTO[];
-}
-
+// 任务提交相关类型 - 与后端保持一致
 export interface TaskSubmissionEditRequest {
   id: number;
-  submissionData: string;
+  name?: string;
+  email?: string;
+  twitterUsername?: string;
+  telegramUsername?: string;
+  walletAddress?: string;
+  submissionCategory?: string;
+  tasks?: TaskDetailDTO[];
 }
 
 export interface TaskSubmissionUpdateRequest {
   id: number;
-  submissionData?: string;
-  status?: number;
+  reviewStatus?: number;
   reviewMessage?: string;
+  reviewScore?: number;
 }
 
 export interface TaskSubmissionQueryRequest extends PageRequest {
   userId?: number;
-  taskId?: number;
-  status?: number;
+  reviewStatus?: number;
 }
 
 // 文件上传类型

@@ -166,11 +166,10 @@ export default function Process() {
                         </p>
                       ) : step.step === 3 ? (
                         <p>
-                          成果提交表
+                          {t('process.step3.fill.form')}
                           <a href="/forms/achievement" className="mx-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium underline transition-colors duration-200">
-                            {t('process.achievement.form')}
+                            {t('process.step3.achievement.form')}
                           </a>
-                          上传
                         </p>
                       ) : step.step === 2 ? (
                         <div>
@@ -230,42 +229,6 @@ export default function Process() {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* 重要提示 */}
-        <div className="mt-16 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-3xl p-8 border border-yellow-200 dark:border-yellow-700 shadow-xl">
-          <div className="flex items-center mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center mr-4 shadow-lg">
-              <span className="text-2xl">⚠️</span>
-            </div>
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 dark:from-yellow-400 dark:to-amber-400 bg-clip-text text-transparent">{t('process.notice.title')}</h3>
-          </div>
-          <ul className="text-yellow-700 dark:text-yellow-300 space-y-3">
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2.5 mr-4 flex-shrink-0"></span>
-              <span>{t('process.notice.1')}</span>
-            </li>
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2.5 mr-4 flex-shrink-0"></span>
-              <span>{t('process.notice.2')}</span>
-            </li>
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2.5 mr-4 flex-shrink-0"></span>
-              <span>{t('process.notice.3')}</span>
-            </li>
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2.5 mr-4 flex-shrink-0"></span>
-              <span>{t('process.notice.4')}</span>
-            </li>
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2.5 mr-4 flex-shrink-0"></span>
-              <span>{t('process.notice.5')}</span>
-            </li>
-            <li className="flex items-start">
-              <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2.5 mr-4 flex-shrink-0"></span>
-              <span>{t('process.notice.6')}</span>
-            </li>
-          </ul>
         </div>
 
         {/* 社交媒体链接 */}
