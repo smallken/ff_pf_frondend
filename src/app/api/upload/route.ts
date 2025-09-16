@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     console.error('❌ 文件上传失败:', error);
     return NextResponse.json({ 
       error: '文件上传失败',
-      details: error.message 
+      details: error instanceof Error ? error.message : '未知错误'
     }, { status: 500 });
   }
 }
