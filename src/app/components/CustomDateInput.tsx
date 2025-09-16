@@ -86,23 +86,42 @@ export default function CustomDateInput({
     hiddenInput.style.opacity = '0';
     hiddenInput.style.pointerEvents = 'none';
     hiddenInput.style.zIndex = '9999';
+    // Set locale for date picker
+    hiddenInput.setAttribute('lang', language === 'zh' ? 'zh-CN' : 'en-US');
+    // Set required attribute to match the original input
+    if (required) {
+      hiddenInput.required = true;
+    }
     document.body.appendChild(hiddenInput);
+    
+    // Add event listeners
+    const cleanup = () => {
+      setIsOpen(false);
+      if (document.body.contains(hiddenInput)) {
+        document.body.removeChild(hiddenInput);
+      }
+    };
     
     hiddenInput.addEventListener('change', (e) => {
       const target = e.target as HTMLInputElement;
       onChange({ target: { name, value: target.value } });
-      setIsOpen(false);
-      if (document.body.contains(hiddenInput)) {
-        document.body.removeChild(hiddenInput);
-      }
+      cleanup();
     });
 
-    hiddenInput.addEventListener('blur', () => {
-      setIsOpen(false);
-      if (document.body.contains(hiddenInput)) {
-        document.body.removeChild(hiddenInput);
+    hiddenInput.addEventListener('blur', cleanup);
+    
+    // Add click outside listener
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!hiddenInput.contains(event.target as Node) && !inputRef.current?.contains(event.target as Node)) {
+        cleanup();
+        document.removeEventListener('click', handleClickOutside);
       }
-    });
+    };
+    
+    // Use setTimeout to avoid immediate cleanup
+    setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 100);
 
     // Trigger the native date picker immediately (must be in direct response to user gesture)
     try {

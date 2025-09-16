@@ -158,11 +158,11 @@ export default function Process() {
                     <div className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
                       {step.step === 1 ? (
                         <p>
-                          填写
+                          {t('process.fill')}
                           <a href="/forms/application" className="mx-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium underline transition-colors duration-200">
                             {t('process.application.form')}
                           </a>
-                          ，留下你的基本信息（昵称、社交账号、钱包地址）
+                          {t('process.leave.basic.info')}
                         </p>
                       ) : step.step === 3 ? (
                         <p>
@@ -175,7 +175,7 @@ export default function Process() {
                         <div>
                           <p className="mb-2">{step.description}</p>
                           <p>
-                            举办活动请填写
+                            {t('process.organize.activity')}
                             <a href="/forms/activity" className="mx-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium underline transition-colors duration-200">
                               {t('process.activity.form')}
                             </a>

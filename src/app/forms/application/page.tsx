@@ -7,7 +7,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { formService } from '../../../services';
 
 export default function ApplicationForm() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -85,7 +85,7 @@ export default function ApplicationForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12" lang={language === 'zh' ? 'zh-CN' : 'en-US'}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('forms.application.title')}</h1>
@@ -101,7 +101,7 @@ export default function ApplicationForm() {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-1">提交失败</h3>
+                  <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-1">{t('forms.error.submit.failed')}</h3>
                   <div className="text-red-700 dark:text-red-300">{error}</div>
                 </div>
               </div>
@@ -366,14 +366,14 @@ export default function ApplicationForm() {
               {loading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  提交中...
+                  {t('forms.submit.processing')}
                 </div>
               ) : success ? (
                 <div className="flex items-center">
                   <svg className="h-4 w-4 text-white mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  已提交
+                  {t('forms.submit.completed')}
                 </div>
               ) : (
                 t('forms.submit.button')
@@ -393,12 +393,12 @@ export default function ApplicationForm() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">提交成功！</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{t('forms.success.title')}</h3>
               <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
                 {success}
               </p>
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                页面将在3秒后自动跳转...
+                {t('forms.success.redirect')}
               </div>
             </div>
           </div>

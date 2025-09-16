@@ -22,9 +22,9 @@ export default function AchievementForm() {
     twitterUsername: '',
     telegramUsername: '',
     walletAddress: '',
-    submissionCategory: '',
     tasks: [
       {
+        submissionCategory: '',
         taskType: '',
         contentLink: '',
         screenshot: null as File | null,
@@ -65,13 +65,47 @@ export default function AchievementForm() {
         twitterUsername: formData.twitterUsername,
         telegramUsername: formData.telegramUsername,
         walletAddress: formData.walletAddress,
-        submissionCategory: formData.submissionCategory,
-        tasks: formData.tasks.map(task => ({
-          taskType: task.taskType,
-          contentLink: task.contentLink,
-          completionDate: task.completionDate,
-          description: task.description,
-          // 注意：screenshot文件上传需要单独处理，这里先忽略
+        tasks: await Promise.all(formData.tasks.map(async (task) => {
+          let screenshotPath = '';
+          
+          // 如果有截图文件，先上传到Vercel Blob
+          if (task.screenshot) {
+            try {
+              console.log('📤 开始上传文件到Vercel Blob:', task.screenshot.name);
+              
+              // 使用API路由上传文件
+              const formData = new FormData();
+              formData.append('file', task.screenshot);
+              formData.append('biz', 'task_screenshot');
+              
+              const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+              });
+              
+              if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || '上传失败');
+              }
+              
+              const result = await response.json();
+              screenshotPath = result.url;
+              console.log('📸 截图上传到Vercel Blob成功:', screenshotPath);
+            } catch (error) {
+              console.error('❌ 截图上传到Vercel Blob失败:', error);
+              const errorMessage = error instanceof Error ? error.message : '未知错误';
+              throw new Error(`截图上传失败: ${errorMessage}`);
+            }
+          }
+          
+          return {
+            submissionCategory: task.submissionCategory,
+            taskType: task.taskType,
+            contentLink: task.contentLink,
+            screenshot: screenshotPath,
+            completionDate: task.completionDate,
+            description: task.description,
+          };
         }))
       };
 
@@ -102,9 +136,10 @@ export default function AchievementForm() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: (e.target as HTMLInputElement).value
+      [name]: value
     });
   };
 
@@ -112,6 +147,19 @@ export default function AchievementForm() {
     const updatedTasks = [...formData.tasks];
     // @ts-ignore
     updatedTasks[index][field] = value;
+    
+    // 如果改变了提交类别，处理任务类型
+    if (field === 'submissionCategory') {
+      const taskTypeOptions = getTaskTypeOptions(value);
+      if (taskTypeOptions.length === 1) {
+        // 如果只有一个选项，自动设置
+        updatedTasks[index].taskType = taskTypeOptions[0].key;
+      } else {
+        // 如果有多个选项，清空任务类型
+        updatedTasks[index].taskType = '';
+      }
+    }
+    
     setFormData({ ...formData, tasks: updatedTasks });
   };
 
@@ -126,20 +174,49 @@ export default function AchievementForm() {
       ...formData,
       tasks: [
         ...formData.tasks,
-        { taskType: '', contentLink: '', screenshot: null, completionDate: '', description: '', collapsed: false }
+        { submissionCategory: '', taskType: '', contentLink: '', screenshot: null, completionDate: '', description: '', collapsed: false }
       ]
     });
   };
 
-  const isContentLinkRequired = (taskType: string) => ['content', 'article', 'video', 'recap'].includes(taskType);
-  const isScreenshotRequired = (taskType: string) => ['like', 'ama', 'telegram', 'offline'].includes(taskType);
+  const isContentLinkRequired = (taskType: string) => ['short.content', 'long.article', 'long.video', 'long.recap', 'community.viral'].includes(taskType);
+  const isScreenshotRequired = (taskType: string) => ['promotion.triple', 'community.ama', 'community.telegram', 'community.offline'].includes(taskType);
+
+  // 根据选择的类别获取对应的任务类型选项
+  const getTaskTypeOptions = (category: string) => {
+    switch (category) {
+      case 'promotion':
+        return [
+          { key: 'promotion.triple', value: 'forms.task.promotion.triple' }
+        ];
+      case 'short':
+        return [
+          { key: 'short.content', value: 'forms.task.short.content' }
+        ];
+      case 'long':
+        return [
+          { key: 'long.article', value: 'forms.task.long.article' },
+          { key: 'long.video', value: 'forms.task.long.video' },
+          { key: 'long.recap', value: 'forms.task.long.recap' }
+        ];
+      case 'community':
+        return [
+          { key: 'community.ama', value: 'forms.task.community.ama' },
+          { key: 'community.telegram', value: 'forms.task.community.telegram' },
+          { key: 'community.offline', value: 'forms.task.community.offline' },
+          { key: 'community.viral', value: 'forms.task.community.viral' }
+        ];
+      default:
+        return [];
+    }
+  };
 
   const handleCancel = () => {
     router.push('/forms');
   };
 
   return (
-    <div key={language} className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:via-green-900/20 dark:to-gray-800 relative overflow-hidden">
+    <div key={language} className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:via-green-900/20 dark:to-gray-800 relative overflow-hidden" lang={language === 'zh' ? 'zh-CN' : 'en-US'}>
       {/* Background decorative elements - Achievement themed */}
       <div className="absolute inset-0">
         <div className="absolute top-16 left-16 w-24 h-24 opacity-10">
@@ -184,7 +261,7 @@ export default function AchievementForm() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-1">提交失败</h3>
+                    <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-1">{t('forms.error.submit.failed')}</h3>
                     <div className="text-red-700 dark:text-red-300">{error}</div>
                   </div>
                 </div>
@@ -270,31 +347,6 @@ export default function AchievementForm() {
               </div>
             </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                {t('forms.achievement.category')} <span className="text-red-500">{t('forms.required')}</span>
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { key: 'promotion', value: 'forms.achievement.category.promotion' },
-                  { key: 'creation', value: 'forms.achievement.category.creation' },
-                  { key: 'community', value: 'forms.achievement.category.community' }
-                ].map((category) => (
-                  <label key={category.key} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="submissionCategory"
-                      value={category.key}
-                      checked={formData.submissionCategory === category.key}
-                      onChange={handleChange}
-                      className="mr-2 text-green-600 focus:ring-green-500"
-                      required
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{t(category.value)}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
 
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
@@ -309,27 +361,58 @@ export default function AchievementForm() {
                 {formData.tasks.map((task, index) => (
                   <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg">
                     <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-900/40 rounded-t-lg">
-                      <div className="flex-1">
-                        <select
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                          value={task.taskType}
-                          onChange={(e) => handleTaskChange(index, 'taskType', e.target.value)}
-                          required
-                        >
-                          <option value="">{t('forms.placeholder.select')}</option>
-                          {[
-                            { key: 'like', value: 'forms.task.like' },
-                            { key: 'content', value: 'forms.task.content' },
-                            { key: 'article', value: 'forms.task.article' },
-                            { key: 'video', value: 'forms.task.video' },
-                            { key: 'ama', value: 'forms.task.ama' },
-                            { key: 'recap', value: 'forms.task.recap' },
-                            { key: 'telegram', value: 'forms.task.telegram' },
-                            { key: 'offline', value: 'forms.task.offline' }
-                          ].map((opt) => (
-                            <option key={opt.key} value={opt.key}>{t(opt.value)}</option>
-                          ))}
-                        </select>
+                      <div className="flex-1 space-y-3">
+                        {/* 提交类别选择 */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {t('forms.achievement.category')} <span className="text-red-500">{t('forms.required')}</span>
+                          </label>
+                          <select
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                            value={task.submissionCategory}
+                            onChange={(e) => handleTaskChange(index, 'submissionCategory', e.target.value)}
+                            required
+                          >
+                            <option value="">{t('forms.placeholder.select')}</option>
+                            <option value="promotion">{t('forms.achievement.category.promotion')}</option>
+                            <option value="short">{t('forms.achievement.category.short')}</option>
+                            <option value="long">{t('forms.achievement.category.long')}</option>
+                            <option value="community">{t('forms.achievement.category.community')}</option>
+                          </select>
+                        </div>
+                        
+                        {/* 任务类型选择 */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {t('forms.achievement.tasktype')} <span className="text-red-500">{t('forms.required')}</span>
+                          </label>
+                          {getTaskTypeOptions(task.submissionCategory).length === 1 ? (
+                            // 如果只有一个选项，直接显示
+                            <div className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white">
+                              {t(getTaskTypeOptions(task.submissionCategory)[0].value)}
+                              <input
+                                type="hidden"
+                                value={getTaskTypeOptions(task.submissionCategory)[0].key}
+                              />
+                            </div>
+                          ) : (
+                            // 如果有多个选项，显示下拉框
+                            <select
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                              value={task.taskType}
+                              onChange={(e) => handleTaskChange(index, 'taskType', e.target.value)}
+                              required
+                              disabled={!task.submissionCategory}
+                            >
+                              <option value="">{t('forms.placeholder.select')}</option>
+                              {getTaskTypeOptions(task.submissionCategory).map((taskType) => (
+                                <option key={taskType.key} value={taskType.key}>
+                                  {t(taskType.value)}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
                       </div>
                       <button type="button" onClick={() => toggleTaskCollapsed(index)} className="ml-3 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white">
                         {task.collapsed ? t('forms.action.expand') : t('forms.action.collapse')}
@@ -354,27 +437,68 @@ export default function AchievementForm() {
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {t('forms.achievement.screenshot')} {isScreenshotRequired(task.taskType) && (<span className="text-red-500">{t('forms.required')}</span>)}
                           </label>
-                          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
-                            <div className="mb-4">
-                              <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
+                          {task.screenshot ? (
+                            // 显示已选择的文件
+                            <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white">{task.screenshot.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                      {(task.screenshot.size / 1024 / 1024).toFixed(2)} MB
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex space-x-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const url = URL.createObjectURL(task.screenshot!);
+                                      window.open(url, '_blank');
+                                    }}
+                                    className="text-blue-600 hover:text-blue-800 text-sm"
+                                  >
+                                    预览
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleTaskChange(index, 'screenshot', null)}
+                                    className="text-red-600 hover:text-red-800 text-sm"
+                                  >
+                                    删除
+                                  </button>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex text-sm text-gray-600 dark:text-gray-400">
-                              <label className="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
-                                <span className="px-2">{t('forms.upload.text')}</span>
-                                <input
-                                  type="file"
-                                  className="sr-only"
-                                  accept="image/*"
-                                  required={isScreenshotRequired(task.taskType)}
-                                  onChange={(e) => handleTaskChange(index, 'screenshot', (e.target.files && e.target.files[0]) || null)}
-                                />
-                              </label>
-                              <p className="pl-1">{t('forms.upload.drag')}</p>
+                          ) : (
+                            // 文件上传区域
+                            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+                              <div className="mb-4">
+                                <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </div>
+                              <div className="flex text-sm text-gray-600 dark:text-gray-400">
+                                <label className="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
+                                  <span className="px-2">{t('forms.upload.text')}</span>
+                                  <input
+                                    type="file"
+                                    className="sr-only"
+                                    accept="image/*"
+                                    required={isScreenshotRequired(task.taskType)}
+                                    onChange={(e) => handleTaskChange(index, 'screenshot', (e.target.files && e.target.files[0]) || null)}
+                                  />
+                                </label>
+                                <p className="pl-1">{t('forms.upload.drag')}</p>
+                              </div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{t('forms.upload.format')}</p>
                             </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{t('forms.upload.format')}</p>
-                          </div>
+                          )}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
@@ -438,14 +562,14 @@ export default function AchievementForm() {
                 {loading ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    提交中...
+                    {t('forms.submit.processing')}
                   </div>
                 ) : success ? (
                   <div className="flex items-center">
                     <svg className="h-4 w-4 text-white mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    已提交
+                    {t('forms.submit.completed')}
                   </div>
                 ) : (
                   t('forms.submit.achievement')
@@ -466,12 +590,12 @@ export default function AchievementForm() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">提交成功！</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{t('forms.success.title')}</h3>
               <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
                 {success}
               </p>
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                页面将在3秒后自动跳转...
+                {t('forms.success.redirect')}
               </div>
             </div>
           </div>

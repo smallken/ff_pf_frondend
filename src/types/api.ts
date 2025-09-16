@@ -33,7 +33,6 @@ export interface User {
   userProfile?: string;
   userRole: string;
   userPoints?: number;
-  userTotalPoints?: number;
   userLevel?: number; // 用户等级：1-探索者，2-探路者，3-开路者，4-先驱者
   walletAddress?: string;
   createTime: string;
@@ -48,7 +47,6 @@ export interface LoginUserVO {
   userProfile?: string;
   userRole: string;
   userPoints?: number;
-  userTotalPoints?: number;
   userLevel?: number; // 用户等级：1-探索者，2-探路者，3-开路者，4-先驱者
   walletAddress?: string;
   createTime: string;
@@ -189,11 +187,20 @@ export interface ActivityApplication {
 
 // 成果提交表相关类型
 export interface TaskDetailDTO {
+  id?: number;
+  taskSubmissionId?: number;
+  submissionCategory: string; // 提交类别
   taskType: string;
   contentLink: string;
   screenshot?: string; // 文件路径，与后端一致
   completionDate: string;
-  description: string;
+  description?: string;
+  reviewStatus?: number;
+  reviewMessage?: string;
+  reviewScore?: number;
+  userId?: number;
+  createTime?: string;
+  updateTime?: string;
 }
 
 export interface TaskSubmissionAddRequest {
@@ -202,7 +209,6 @@ export interface TaskSubmissionAddRequest {
   twitterUsername: string;
   telegramUsername?: string;
   walletAddress?: string;
-  submissionCategory: string;
   tasks: TaskDetailDTO[];
 }
 
@@ -214,7 +220,6 @@ export interface TaskSubmissionVO {
   twitterUsername: string;
   telegramUsername?: string;
   walletAddress?: string;
-  submissionCategory: string;
   tasks: TaskDetailDTO[];
   reviewStatus?: number; // 审核状态：0-未审核，1-审核通过，2-未通过
   reviewMessage?: string; // 审核意见
@@ -238,7 +243,6 @@ export interface TaskSubmissionEditRequest {
   twitterUsername?: string;
   telegramUsername?: string;
   walletAddress?: string;
-  submissionCategory?: string;
   tasks?: TaskDetailDTO[];
 }
 

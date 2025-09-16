@@ -121,7 +121,7 @@ export default function ActivityForm() {
   };
 
   return (
-    <div key={language} className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-800 relative overflow-hidden">
+    <div key={language} className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-800 relative overflow-hidden" lang={language === 'zh' ? 'zh-CN' : 'en-US'}>
       {/* Background decorative elements - Activity themed */}
       <div className="absolute inset-0">
         <div className="absolute top-16 left-16 w-24 h-24 opacity-10">
@@ -153,7 +153,7 @@ export default function ActivityForm() {
             {!isAuthenticated && (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
                 <div className="text-sm text-yellow-600 dark:text-yellow-400">
-                  请先登录后再提交申请表
+                  {t('forms.error.login.required')}
                 </div>
               </div>
             )}
@@ -167,7 +167,7 @@ export default function ActivityForm() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-1">提交失败</h3>
+                    <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-1">{t('forms.error.submit.failed')}</h3>
                     <div className="text-red-700 dark:text-red-300">{error}</div>
                   </div>
                 </div>
@@ -517,14 +517,14 @@ export default function ActivityForm() {
                 {loading ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    提交中...
+                    {t('forms.submit.processing')}
                   </div>
                 ) : success ? (
                   <div className="flex items-center">
                     <svg className="h-4 w-4 text-white mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    已提交
+                    {t('forms.submit.completed')}
                   </div>
                 ) : (
                   t('forms.submit.button')
@@ -545,12 +545,12 @@ export default function ActivityForm() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">提交成功！</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{t('forms.success.title')}</h3>
               <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
                 {success}
               </p>
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                页面将在3秒后自动跳转...
+                {t('forms.success.redirect')}
               </div>
             </div>
           </div>

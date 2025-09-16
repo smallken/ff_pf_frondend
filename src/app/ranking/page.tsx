@@ -13,7 +13,6 @@ interface RankingUser {
   userName: string;
   userEmail: string;
   userPoints: number;
-  userTotalPoints: number;
   userLevel: number;
   walletAddress?: string;
 }
@@ -29,11 +28,11 @@ export default function Ranking() {
   // 根据用户等级获取等级文本
   const getLevelText = (userLevel: number) => {
     switch(userLevel) {
-      case 1: return '探索者';
-      case 2: return '探路者';
-      case 3: return '开路者';
-      case 4: return '先驱者';
-      default: return '探索者';
+      case 1: return t('profile.title.explorer');
+      case 2: return t('profile.title.pathfinder');
+      case 3: return t('profile.title.trailblazer');
+      case 4: return t('profile.title.pioneer');
+      default: return t('profile.title.explorer');
     }
   };
 
@@ -57,16 +56,16 @@ export default function Ranking() {
       
       // 模拟数据 - 实际应该从API获取
       const mockRankings: RankingUser[] = [
-        { rank: 1, id: 1, userName: '张三', userEmail: 'zhangsan@example.com', userPoints: 450, userTotalPoints: 450, userLevel: 4, walletAddress: '0x1234...' },
-        { rank: 2, id: 2, userName: '李四', userEmail: 'lisi@example.com', userPoints: 380, userTotalPoints: 380, userLevel: 3, walletAddress: '0x5678...' },
-        { rank: 3, id: 3, userName: '王五', userEmail: 'wangwu@example.com', userPoints: 320, userTotalPoints: 320, userLevel: 3, walletAddress: '0x9abc...' },
-        { rank: 4, id: 4, userName: '赵六', userEmail: 'zhaoliu@example.com', userPoints: 280, userTotalPoints: 280, userLevel: 2, walletAddress: '0xdef0...' },
-        { rank: 5, id: 5, userName: '钱七', userEmail: 'qianqi@example.com', userPoints: 220, userTotalPoints: 220, userLevel: 2, walletAddress: '0x1111...' },
-        { rank: 6, id: 6, userName: '孙八', userEmail: 'sunba@example.com', userPoints: 180, userTotalPoints: 180, userLevel: 1, walletAddress: '0x2222...' },
-        { rank: 7, id: 7, userName: '周九', userEmail: 'zhoujiu@example.com', userPoints: 150, userTotalPoints: 150, userLevel: 1, walletAddress: '0x3333...' },
-        { rank: 8, id: 8, userName: '吴十', userEmail: 'wushi@example.com', userPoints: 120, userTotalPoints: 120, userLevel: 1, walletAddress: '0x4444...' },
-        { rank: 9, id: 9, userName: '郑十一', userEmail: 'zhengshiyi@example.com', userPoints: 90, userTotalPoints: 90, userLevel: 1, walletAddress: '0x5555...' },
-        { rank: 10, id: 10, userName: '王十二', userEmail: 'wangshier@example.com', userPoints: 60, userTotalPoints: 60, userLevel: 1, walletAddress: '0x6666...' }
+        { rank: 1, id: 1, userName: '张三', userEmail: 'zhangsan@example.com', userPoints: 450, userLevel: 4, walletAddress: '0x1234...' },
+        { rank: 2, id: 2, userName: '李四', userEmail: 'lisi@example.com', userPoints: 380, userLevel: 3, walletAddress: '0x5678...' },
+        { rank: 3, id: 3, userName: '王五', userEmail: 'wangwu@example.com', userPoints: 320, userLevel: 3, walletAddress: '0x9abc...' },
+        { rank: 4, id: 4, userName: '赵六', userEmail: 'zhaoliu@example.com', userPoints: 280, userLevel: 2, walletAddress: '0xdef0...' },
+        { rank: 5, id: 5, userName: '钱七', userEmail: 'qianqi@example.com', userPoints: 220, userLevel: 2, walletAddress: '0x1111...' },
+        { rank: 6, id: 6, userName: '孙八', userEmail: 'sunba@example.com', userPoints: 180, userLevel: 1, walletAddress: '0x2222...' },
+        { rank: 7, id: 7, userName: '周九', userEmail: 'zhoujiu@example.com', userPoints: 150, userLevel: 1, walletAddress: '0x3333...' },
+        { rank: 8, id: 8, userName: '吴十', userEmail: 'wushi@example.com', userPoints: 120, userLevel: 1, walletAddress: '0x4444...' },
+        { rank: 9, id: 9, userName: '郑十一', userEmail: 'zhengshiyi@example.com', userPoints: 90, userLevel: 1, walletAddress: '0x5555...' },
+        { rank: 10, id: 10, userName: '王十二', userEmail: 'wangshier@example.com', userPoints: 60, userLevel: 1, walletAddress: '0x6666...' }
       ];
 
       setRankings(mockRankings);
@@ -84,7 +83,6 @@ export default function Ranking() {
             userName: user.userName,
             userEmail: user.userEmail || '',
             userPoints: user.userPoints || 0,
-            userTotalPoints: user.userTotalPoints || 0,
             userLevel: user.userLevel || 1,
             walletAddress: user.walletAddress
           });
@@ -212,7 +210,7 @@ export default function Ranking() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                           <span className="bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full">
-                            {user.userTotalPoints}{t('ranking.points.unit')}
+                            {user.userPoints}{t('ranking.points.unit')}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -252,7 +250,7 @@ export default function Ranking() {
                   <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
                     <span className="text-xl text-white">⭐</span>
                   </div>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">{currentUser.userTotalPoints}</div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">{currentUser.userPoints}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.points')}</div>
                 </div>
                 <div className="group text-center p-6 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-2xl border border-yellow-200 dark:border-yellow-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
@@ -267,7 +265,7 @@ export default function Ranking() {
                     <span className="text-xl text-white">📊</span>
                   </div>
                   <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                    {rankings.length > 0 ? Math.ceil((currentUser.userTotalPoints / rankings[0].userTotalPoints) * 100) : 0}%
+                    {rankings.length > 0 ? Math.ceil((currentUser.userPoints / rankings[0].userPoints) * 100) : 0}%
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.completion')}</div>
                 </div>

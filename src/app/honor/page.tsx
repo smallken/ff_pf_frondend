@@ -191,18 +191,54 @@ export default function Honor() {
             {/* Definitions Section */}
             <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-700">
               <h4 className="font-bold text-blue-900 dark:text-blue-200 text-lg mb-4">{t('honor.monthly.definitions.title')}</h4>
-              <div className="space-y-3 text-blue-700 dark:text-blue-300 text-sm">
-                <div className="flex items-start">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>{t('honor.monthly.definitions.promotion')}</span>
+              <div className="space-y-4 text-blue-700 dark:text-blue-300 text-sm">
+                {/* 传播类 */}
+                <div>
+                  <h5 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('honor.monthly.definitions.promotion.title')}</h5>
+                  <div className="space-y-2 ml-4">
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.monthly.definitions.promotion.1')}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.monthly.definitions.promotion.2')}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.monthly.definitions.promotion.3')}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>{t('honor.monthly.definitions.creation')}</span>
+                
+                {/* 创作类 */}
+                <div>
+                  <h5 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('honor.monthly.definitions.creation.title')}</h5>
+                  <div className="space-y-2 ml-4">
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.monthly.definitions.creation.1')}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.monthly.definitions.creation.2')}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>{t('honor.monthly.definitions.community')}</span>
+                
+                {/* 社区类 */}
+                <div>
+                  <h5 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('honor.monthly.definitions.community.title')}</h5>
+                  <div className="space-y-2 ml-4">
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.monthly.definitions.community.1')}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.monthly.definitions.community.2')}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -231,20 +267,25 @@ export default function Honor() {
                   </tr>
                 </thead>
                 <tbody className="text-gray-600 dark:text-gray-300">
+                  {/* 传播类 */}
                   <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
                     <td className="py-4 font-medium">{t('honor.flipprints.promotion.category')}</td>
                     <td className="py-4">{t('honor.flipprints.promotion.task')}</td>
                     <td className="py-4">{t('honor.flipprints.promotion.points')}</td>
                     <td className="py-4">{t('honor.flipprints.promotion.notes')}</td>
                   </tr>
+                  
+                  {/* 创作类（短） */}
                   <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4 font-medium border-r-0">{t('honor.flipprints.creation.category')}</td>
+                    <td className="py-4 font-medium">{t('honor.flipprints.creation.category')}</td>
                     <td className="py-4">{t('honor.flipprints.creation.task1')}</td>
                     <td className="py-4">{t('honor.flipprints.creation.points1')}</td>
                     <td className="py-4">{t('honor.flipprints.creation.notes1')}</td>
                   </tr>
+                  
+                  {/* 创作类（长） */}
                   <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4"></td>
+                    <td className="py-4 font-medium">{t('honor.flipprints.creation.category2')}</td>
                     <td className="py-4">{t('honor.flipprints.creation.task2')}</td>
                     <td className="py-4">{t('honor.flipprints.creation.points2')}</td>
                     <td className="py-4">{t('honor.flipprints.creation.notes2')}</td>
@@ -256,7 +297,15 @@ export default function Honor() {
                     <td className="py-4">{t('honor.flipprints.creation.notes3')}</td>
                   </tr>
                   <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4 font-medium border-r-0">{t('honor.flipprints.community.category')}</td>
+                    <td className="py-4"></td>
+                    <td className="py-4">{t('honor.flipprints.creation.task4')}</td>
+                    <td className="py-4">{t('honor.flipprints.creation.points4')}</td>
+                    <td className="py-4">{t('honor.flipprints.creation.notes4')}</td>
+                  </tr>
+                  
+                  {/* 社区类 */}
+                  <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
+                    <td className="py-4 font-medium">{t('honor.flipprints.community.category')}</td>
                     <td className="py-4">{t('honor.flipprints.community.task1')}</td>
                     <td className="py-4">{t('honor.flipprints.community.points1')}</td>
                     <td className="py-4">{t('honor.flipprints.community.notes1')}</td>
@@ -273,6 +322,8 @@ export default function Honor() {
                     <td className="py-4">{t('honor.flipprints.community.points3')}</td>
                     <td className="py-4">{t('honor.flipprints.community.notes3')}</td>
                   </tr>
+                  
+                  {/* 爆款内容 */}
                   <tr className="hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
                     <td className="py-4 font-medium">{t('honor.flipprints.viral.category')}</td>
                     <td className="py-4">{t('honor.flipprints.viral.task')}</td>
