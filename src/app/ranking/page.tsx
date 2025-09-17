@@ -4,30 +4,28 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { userService } from '../../services';
-import type { LoginUserVO } from '../../types/api';
-
-// 排行榜用户类型
-interface RankingUser {
-  rank: number;
-  id: number;
-  userName: string;
-  userEmail: string;
-  userPoints: number;
-  userLevel: number;
-  walletAddress?: string;
-}
+import type { LoginUserVO, RankingUserVO } from '../../types/api';
 
 export default function Ranking() {
   const { t } = useLanguage();
   const { user, isAuthenticated } = useAuth();
-  const [rankings, setRankings] = useState<RankingUser[]>([]);
-  const [currentUser, setCurrentUser] = useState<RankingUser | null>(null);
+  const [rankings, setRankings] = useState<RankingUserVO[]>([]);
+  const [currentUser, setCurrentUser] = useState<RankingUserVO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // 根据用户等级获取等级文本
-  const getLevelText = (userLevel: number) => {
-    switch(userLevel) {
+  // 根据脚印数量计算等级
+  const calculateLevel = (userPoints: number) => {
+    if (userPoints >= 300) return 4; // Pioneer（先驱者）
+    if (userPoints >= 101) return 3; // Trailblazer（开路者）
+    if (userPoints >= 31) return 2;  // Pathfinder（探路者）
+    return 1; // Explorer（探索者）
+  };
+
+  // 根据脚印数量获取等级文本
+  const getLevelText = (userPoints: number) => {
+    const level = calculateLevel(userPoints);
+    switch(level) {
       case 1: return t('profile.title.explorer');
       case 2: return t('profile.title.pathfinder');
       case 3: return t('profile.title.trailblazer');
@@ -36,9 +34,10 @@ export default function Ranking() {
     }
   };
 
-  // 根据用户等级获取等级样式
-  const getLevelStyle = (userLevel: number) => {
-    switch(userLevel) {
+  // 根据脚印数量获取等级样式
+  const getLevelStyle = (userPoints: number) => {
+    const level = calculateLevel(userPoints);
+    switch(level) {
       case 1: return 'bg-gradient-to-r from-green-400 to-emerald-500 text-white'; // 探索者 - 绿色
       case 2: return 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white'; // 探路者 - 蓝色
       case 3: return 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white'; // 开路者 - 紫色
@@ -50,46 +49,35 @@ export default function Ranking() {
   // 获取排行榜数据
   const fetchRankings = async () => {
     try {
-      // 这里需要调用后端API获取所有用户数据，按积分排序
-      // 由于没有专门的排行榜API，我们暂时使用模拟数据
-      // 实际项目中应该有一个专门的排行榜API
+      console.log('🔍 开始获取排行榜数据...');
       
-      // 模拟数据 - 实际应该从API获取
-      const mockRankings: RankingUser[] = [
-        { rank: 1, id: 1, userName: '张三', userEmail: 'zhangsan@example.com', userPoints: 450, userLevel: 4, walletAddress: '0x1234...' },
-        { rank: 2, id: 2, userName: '李四', userEmail: 'lisi@example.com', userPoints: 380, userLevel: 3, walletAddress: '0x5678...' },
-        { rank: 3, id: 3, userName: '王五', userEmail: 'wangwu@example.com', userPoints: 320, userLevel: 3, walletAddress: '0x9abc...' },
-        { rank: 4, id: 4, userName: '赵六', userEmail: 'zhaoliu@example.com', userPoints: 280, userLevel: 2, walletAddress: '0xdef0...' },
-        { rank: 5, id: 5, userName: '钱七', userEmail: 'qianqi@example.com', userPoints: 220, userLevel: 2, walletAddress: '0x1111...' },
-        { rank: 6, id: 6, userName: '孙八', userEmail: 'sunba@example.com', userPoints: 180, userLevel: 1, walletAddress: '0x2222...' },
-        { rank: 7, id: 7, userName: '周九', userEmail: 'zhoujiu@example.com', userPoints: 150, userLevel: 1, walletAddress: '0x3333...' },
-        { rank: 8, id: 8, userName: '吴十', userEmail: 'wushi@example.com', userPoints: 120, userLevel: 1, walletAddress: '0x4444...' },
-        { rank: 9, id: 9, userName: '郑十一', userEmail: 'zhengshiyi@example.com', userPoints: 90, userLevel: 1, walletAddress: '0x5555...' },
-        { rank: 10, id: 10, userName: '王十二', userEmail: 'wangshier@example.com', userPoints: 60, userLevel: 1, walletAddress: '0x6666...' }
-      ];
-
-      setRankings(mockRankings);
+      // 调用后端API获取排行榜数据
+      const rankingData = await userService.getRanking();
+      console.log('✅ 排行榜数据获取成功:', rankingData);
+      
+      setRankings(rankingData);
 
       // 如果有当前用户，设置当前用户信息
       if (user) {
-        const currentUserRanking = mockRankings.find(u => u.id === user.id);
+        const currentUserRanking = rankingData.find(u => u.id === user.id);
         if (currentUserRanking) {
           setCurrentUser(currentUserRanking);
         } else {
-          // 如果当前用户不在前10名，创建一个当前用户记录
+          // 如果当前用户不在排行榜中，创建一个当前用户记录
+          const userPoints = user.userPoints || 0;
           setCurrentUser({
-            rank: 15, // 假设排名15
+            rank: rankingData.length + 1, // 排名为最后一名
             id: user.id,
             userName: user.userName,
             userEmail: user.userEmail || '',
-            userPoints: user.userPoints || 0,
-            userLevel: user.userLevel || 1,
+            userPoints: userPoints,
+            userLevel: calculateLevel(userPoints), // 根据脚印数量计算等级
             walletAddress: user.walletAddress
           });
         }
       }
     } catch (error: any) {
-      console.error('获取排行榜数据失败:', error);
+      console.error('❌ 获取排行榜数据失败:', error);
       setError(error.message || '获取排行榜数据失败');
     } finally {
       setLoading(false);
@@ -139,7 +127,9 @@ export default function Ranking() {
             <div className="mb-8 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-700">
               <div className="flex justify-between items-center">
                 <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {t('ranking.total.points')}: <span className="text-emerald-600 dark:text-emerald-400 font-bold">2250{t('ranking.points.unit')}</span>
+                  {t('ranking.total.points')}: <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                    {rankings.reduce((total, user) => total + user.userPoints, 0)}{t('ranking.points.unit')}
+                  </span>
                 </div>
                 <div className="text-sm font-normal text-gray-600 dark:text-gray-300">
                   {t('ranking.reference.note')}
@@ -214,8 +204,8 @@ export default function Ranking() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-3 py-2 text-xs font-bold rounded-full shadow-sm ${getLevelStyle(user.userLevel)}`}>
-                            {getLevelText(user.userLevel)}
+                          <span className={`px-3 py-2 text-xs font-bold rounded-full shadow-sm ${getLevelStyle(user.userPoints)}`}>
+                            {getLevelText(user.userPoints)}
                           </span>
                         </td>
                       </tr>
@@ -257,7 +247,7 @@ export default function Ranking() {
                   <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
                     <span className="text-xl text-white">🏆</span>
                   </div>
-                  <div className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 dark:from-yellow-400 dark:to-amber-400 bg-clip-text text-transparent">{getLevelText(currentUser.userLevel)}</div>
+                  <div className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 dark:from-yellow-400 dark:to-amber-400 bg-clip-text text-transparent">{getLevelText(currentUser.userPoints)}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.level')}</div>
                 </div>
                 <div className="group text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border border-purple-200 dark:border-purple-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">

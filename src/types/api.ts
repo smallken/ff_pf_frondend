@@ -53,6 +53,17 @@ export interface LoginUserVO {
   updateTime: string;
 }
 
+// 排行榜用户类型
+export interface RankingUserVO {
+  rank: number;
+  id: number;
+  userName: string;
+  userEmail: string;
+  userPoints: number;
+  userLevel: number;
+  walletAddress?: string;
+}
+
 // 用户请求类型
 export interface UserLoginRequest {
   userAccount: string;

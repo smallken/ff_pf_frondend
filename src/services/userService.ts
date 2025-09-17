@@ -13,6 +13,7 @@ import type {
   User,
   EmailVO,
   PageData,
+  RankingUserVO,
 } from '@/types/api';
 
 export const userService = {
@@ -60,5 +61,10 @@ export const userService = {
       current: params.current || 1,
       pageSize: params.pageSize || 20
     });
+  },
+
+  // 获取排行榜
+  getRanking: (): Promise<RankingUserVO[]> => {
+    return request.get<RankingUserVO[]>(API_ENDPOINTS.USER.RANKING);
   },
 };

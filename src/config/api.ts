@@ -56,6 +56,7 @@ export const API_ENDPOINTS = {
     GET_LOGIN_USER: '/user/get/login',
     UPDATE_MY: '/user/update/my',
     LIST: '/user/list/page',
+    RANKING: '/user/ranking',
   },
   // 表单相关
   FORM: {
