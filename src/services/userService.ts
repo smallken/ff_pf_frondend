@@ -14,6 +14,7 @@ import type {
   EmailVO,
   PageData,
   RankingUserVO,
+  AdminStatsVO,
 } from '@/types/api';
 
 export const userService = {
@@ -66,5 +67,10 @@ export const userService = {
   // 获取排行榜
   getRanking: (): Promise<RankingUserVO[]> => {
     return request.get<RankingUserVO[]>(API_ENDPOINTS.USER.RANKING);
+  },
+
+  // 获取管理员统计数据
+  getAdminStats: (): Promise<AdminStatsVO> => {
+    return request.get<AdminStatsVO>(API_ENDPOINTS.USER.ADMIN_STATS);
   },
 };

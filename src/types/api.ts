@@ -64,6 +64,25 @@ export interface RankingUserVO {
   walletAddress?: string;
 }
 
+export interface AdminStatsVO {
+  totalUsers: number;
+  pendingForms: number;
+  approvedForms: number;
+  rejectedForms: number;
+  totalPoints: number;
+  totalSubmissions: number;
+  averagePoints: number;
+  pendingApplications: number;
+  pendingTaskSubmissions: number;
+  pendingActivityApplications: number;
+  approvedApplications: number;
+  approvedTaskSubmissions: number;
+  approvedActivityApplications: number;
+  rejectedApplications: number;
+  rejectedTaskSubmissions: number;
+  rejectedActivityApplications: number;
+}
+
 // 用户请求类型
 export interface UserLoginRequest {
   userAccount: string;

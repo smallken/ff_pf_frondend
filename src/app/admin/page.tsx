@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { formService, taskSubmissionService, activityApplicationService, userService } from '../../services';
-import type { ApplicationForm, TaskSubmissionVO, ActivityApplication } from '../../types/api';
+import type { ApplicationForm, TaskSubmissionVO, ActivityApplication, AdminStatsVO } from '../../types/api';
 
 // 统一的待审核表单类型
 interface PendingSubmission {
@@ -80,13 +80,23 @@ export default function Admin() {
   const [error, setError] = useState('');
   
   // 统计数据状态
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<AdminStatsVO>({
     totalUsers: 0,
     pendingForms: 0,
     approvedForms: 0,
     rejectedForms: 0,
     totalPoints: 0,
-    totalSubmissions: 0
+    totalSubmissions: 0,
+    averagePoints: 0,
+    pendingApplications: 0,
+    pendingTaskSubmissions: 0,
+    pendingActivityApplications: 0,
+    approvedApplications: 0,
+    approvedTaskSubmissions: 0,
+    approvedActivityApplications: 0,
+    rejectedApplications: 0,
+    rejectedTaskSubmissions: 0,
+    rejectedActivityApplications: 0
   });
 
   // 获取所有待审核表单
@@ -263,57 +273,15 @@ export default function Admin() {
       setStatsLoading(true);
       setError(''); // 清除之前的错误
       
-      // 并行获取所有统计数据（使用后端允许的最大pageSize）
-      const [
-        usersData,
-        pendingFormsData,
-        approvedFormsData,
-        rejectedFormsData,
-        taskSubmissionsData,
-        approvedActivitiesData,
-        rejectedActivitiesData
-      ] = await Promise.all([
-        userService.getUserList({ current: 1, pageSize: 20 }), // 获取用户（后端限制20）
-        formService.getFormList({ status: 0, current: 1, pageSize: 20 }), // 待审核申请表
-        formService.getFormList({ status: 1, current: 1, pageSize: 20 }), // 已通过申请表
-        formService.getFormList({ status: 2, current: 1, pageSize: 20 }), // 已拒绝申请表
-        taskSubmissionService.getAllTaskSubmissions({ current: 1, pageSize: 20 }), // 所有任务提交（后端限制20）
-        activityApplicationService.getAllApplications({ reviewStatus: 1, current: 1, pageSize: 20 }), // 已通过活动申请
-        activityApplicationService.getAllApplications({ reviewStatus: 2, current: 1, pageSize: 20 })  // 已拒绝活动申请
-      ]);
-
-      // 计算统计数据
-      const totalUsers = usersData.total;
-      const pendingForms = pendingFormsData.total;
-      const approvedForms = approvedFormsData.total;
-      const rejectedForms = rejectedFormsData.total;
+      console.log('🔍 开始获取管理员统计数据...');
       
-      // 计算待审核的任务提交（从当前页面的记录中计算，可能不准确）
-      const pendingTasks = taskSubmissionsData.records.filter(task => (task.reviewStatus || 0) === 0).length;
+      // 调用新的统计数据API
+      const statsData = await userService.getAdminStats();
+      console.log('✅ 管理员统计数据获取成功:', statsData);
       
-      // 计算待审核的活动申请
-      const pendingActivities = 0; // 活动申请没有待审核状态，只有通过和拒绝
-      
-      // 计算总积分（从当前页面的用户记录中计算，可能不准确）
-      const totalPoints = usersData.records.reduce((sum, user) => {
-        return sum + (user.userPoints || 0);
-      }, 0);
-      
-      // 计算总提交数
-      const totalSubmissions = approvedForms + rejectedForms + 
-                              taskSubmissionsData.total + 
-                              approvedActivitiesData.total + rejectedActivitiesData.total;
-
-      setStats({
-        totalUsers,
-        pendingForms: pendingForms + pendingTasks + pendingActivities,
-        approvedForms: approvedForms + approvedActivitiesData.total,
-        rejectedForms: rejectedForms + rejectedActivitiesData.total,
-        totalPoints,
-        totalSubmissions
-      });
+      setStats(statsData);
     } catch (error: any) {
-      console.error('获取统计数据失败:', error);
+      console.error('❌ 获取统计数据失败:', error);
       setError(error.message || t('admin.error.fetch.stats'));
     } finally {
       setStatsLoading(false);
@@ -712,6 +680,63 @@ export default function Admin() {
                 </div>
 
                 {/* 详细统计 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">申请表统计</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">待审核</span>
+                        <span className="text-sm font-medium text-yellow-600">{stats.pendingApplications}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">已通过</span>
+                        <span className="text-sm font-medium text-green-600">{stats.approvedApplications}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">已拒绝</span>
+                        <span className="text-sm font-medium text-red-600">{stats.rejectedApplications}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">任务提交统计</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">待审核</span>
+                        <span className="text-sm font-medium text-yellow-600">{stats.pendingTaskSubmissions}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">已通过</span>
+                        <span className="text-sm font-medium text-green-600">{stats.approvedTaskSubmissions}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">已拒绝</span>
+                        <span className="text-sm font-medium text-red-600">{stats.rejectedTaskSubmissions}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">活动申请统计</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">待审核</span>
+                        <span className="text-sm font-medium text-yellow-600">{stats.pendingActivityApplications}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">已通过</span>
+                        <span className="text-sm font-medium text-green-600">{stats.approvedActivityApplications}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">已拒绝</span>
+                        <span className="text-sm font-medium text-red-600">{stats.rejectedActivityApplications}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 汇总统计 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('admin.stats.formstats')}</h3>
@@ -749,7 +774,7 @@ export default function Admin() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600 dark:text-gray-300">{t('admin.stats.averagepoints')}</span>
                         <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {stats.totalUsers > 0 ? Math.round(stats.totalPoints / stats.totalUsers) : 0}
+                          {stats.averagePoints.toFixed(1)}
                         </span>
                       </div>
                     </div>

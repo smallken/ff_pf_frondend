@@ -57,6 +57,7 @@ export const API_ENDPOINTS = {
     UPDATE_MY: '/user/update/my',
     LIST: '/user/list/page',
     RANKING: '/user/ranking',
+    ADMIN_STATS: '/user/admin/stats',
   },
   // 表单相关
   FORM: {
