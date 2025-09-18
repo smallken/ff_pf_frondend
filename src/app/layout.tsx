@@ -20,6 +20,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Flipflop Footprint",
   description: "Flipflop Footprint - 寻路者计划",
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

@@ -5,6 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { formService, taskSubmissionService, activityApplicationService, userService } from '../../services';
 import type { ApplicationForm, TaskSubmissionVO, ActivityApplication, AdminStatsVO } from '../../types/api';
+import AdminMonthlyReward from '../components/AdminMonthlyReward';
 
 // 统一的待审核表单类型
 interface PendingSubmission {
@@ -78,6 +79,64 @@ export default function Admin() {
   const [reviewedLoading, setReviewedLoading] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // 筛选状态
+  const [filters, setFilters] = useState({
+    user: '',
+    formType: '',
+    status: '',
+    dateRange: ''
+  });
+
+  // 筛选后的数据
+  const filteredPendingSubmissions = pendingSubmissions.filter(submission => {
+    if (filters.user && !submission.userName.toLowerCase().includes(filters.user.toLowerCase()) && 
+        !submission.userEmail.toLowerCase().includes(filters.user.toLowerCase())) {
+      return false;
+    }
+    if (filters.formType && submission.title !== filters.formType) {
+      return false;
+    }
+    if (filters.dateRange) {
+      const submissionDate = new Date(submission.createTime).toDateString();
+      const filterDate = new Date(filters.dateRange).toDateString();
+      if (submissionDate !== filterDate) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const filteredReviewedSubmissions = reviewedSubmissions.filter(submission => {
+    if (filters.user && !submission.userName.toLowerCase().includes(filters.user.toLowerCase()) && 
+        !submission.userEmail.toLowerCase().includes(filters.user.toLowerCase())) {
+      return false;
+    }
+    if (filters.formType && submission.title !== filters.formType) {
+      return false;
+    }
+    if (filters.status && submission.status.toString() !== filters.status) {
+      return false;
+    }
+    if (filters.dateRange) {
+      const submissionDate = new Date(submission.createTime).toDateString();
+      const filterDate = new Date(filters.dateRange).toDateString();
+      if (submissionDate !== filterDate) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  // 重置筛选
+  const resetFilters = () => {
+    setFilters({
+      user: '',
+      formType: '',
+      status: '',
+      dateRange: ''
+    });
+  };
   
   // 统计数据状态
   const [stats, setStats] = useState<AdminStatsVO>({
@@ -326,26 +385,31 @@ export default function Admin() {
 
     setReviewLoading(true);
     try {
+      // 申请表和活动申请表不给予积分奖励
+      const points = (selectedSubmission.type === 'application' || selectedSubmission.type === 'activity') 
+        ? 0 
+        : (status === 1 ? reviewForm.points : 0);
+
       if (selectedSubmission.type === 'application') {
         await formService.reviewForm({
           formId: selectedSubmission.id,
           status: status,
           reviewComment: reviewForm.reviewMessage,
-          score: status === 1 ? reviewForm.points : 0
+          score: points
         });
       } else if (selectedSubmission.type === 'task') {
         await taskSubmissionService.updateTaskSubmission({
           id: selectedSubmission.id,
           reviewStatus: status,
           reviewMessage: reviewForm.reviewMessage,
-          reviewScore: status === 1 ? reviewForm.points : 0
+          reviewScore: points
         });
       } else if (selectedSubmission.type === 'activity') {
         await activityApplicationService.reviewApplication({
           id: selectedSubmission.id,
           reviewStatus: status,
           reviewMessage: reviewForm.reviewMessage,
-          reviewScore: status === 1 ? reviewForm.points : 0
+          reviewScore: points
         });
       }
 
@@ -369,6 +433,7 @@ export default function Admin() {
       } else if (activeTab === 'stats') {
         fetchStats();
       }
+      // 月度奖励模块的数据获取在组件内部处理
     }
   }, [isAuthenticated, user, activeTab]);
 
@@ -449,6 +514,16 @@ export default function Admin() {
               >
                 {t('admin.tab.stats')}
               </button>
+              <button
+                onClick={() => setActiveTab('monthly-reward')}
+                className={`py-4 px-6 border-b-2 font-medium text-sm ${
+                  activeTab === 'monthly-reward'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                月度奖励
+              </button>
             </nav>
           </div>
         </div>
@@ -457,6 +532,58 @@ export default function Admin() {
         {activeTab === 'forms' && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{t('admin.pending.title')}</h2>
+            
+            {/* 筛选器 */}
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    用户筛选
+                  </label>
+                  <input
+                    type="text"
+                    value={filters.user}
+                    onChange={(e) => setFilters(prev => ({ ...prev, user: e.target.value }))}
+                    placeholder="输入用户名或邮箱"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    表单类型
+                  </label>
+                  <select
+                    value={filters.formType}
+                    onChange={(e) => setFilters(prev => ({ ...prev, formType: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">全部类型</option>
+                    <option value={t('admin.forms.application')}>{t('admin.forms.application')}</option>
+                    <option value={t('admin.forms.achievement')}>{t('admin.forms.achievement')}</option>
+                    <option value={t('admin.forms.activity')}>{t('admin.forms.activity')}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    提交日期
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.dateRange}
+                    onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    onClick={resetFilters}
+                    className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                  >
+                    重置筛选
+                  </button>
+                </div>
+              </div>
+            </div>
             
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-4">
@@ -492,14 +619,14 @@ export default function Admin() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {pendingSubmissions.length === 0 ? (
+                    {filteredPendingSubmissions.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                          {t('admin.no.pending')}
+                          {pendingSubmissions.length === 0 ? t('admin.no.pending') : '没有找到符合条件的表单'}
                         </td>
                       </tr>
                     ) : (
-                      pendingSubmissions.map((submission) => (
+                      filteredPendingSubmissions.map((submission) => (
                         <tr key={`${submission.type}-${submission.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                             <div>
@@ -541,6 +668,72 @@ export default function Admin() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{t('admin.reviewed.title')}</h2>
             
+            {/* 筛选器 */}
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    用户筛选
+                  </label>
+                  <input
+                    type="text"
+                    value={filters.user}
+                    onChange={(e) => setFilters(prev => ({ ...prev, user: e.target.value }))}
+                    placeholder="输入用户名或邮箱"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    表单类型
+                  </label>
+                  <select
+                    value={filters.formType}
+                    onChange={(e) => setFilters(prev => ({ ...prev, formType: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">全部类型</option>
+                    <option value={t('admin.forms.application')}>{t('admin.forms.application')}</option>
+                    <option value={t('admin.forms.achievement')}>{t('admin.forms.achievement')}</option>
+                    <option value={t('admin.forms.activity')}>{t('admin.forms.activity')}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    审核状态
+                  </label>
+                  <select
+                    value={filters.status}
+                    onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">全部状态</option>
+                    <option value="1">已通过</option>
+                    <option value="2">已拒绝</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    提交日期
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.dateRange}
+                    onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    onClick={resetFilters}
+                    className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                  >
+                    重置筛选
+                  </button>
+                </div>
+              </div>
+            </div>
+            
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-4">
                 <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
@@ -581,14 +774,14 @@ export default function Admin() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {reviewedSubmissions.length === 0 ? (
+                    {filteredReviewedSubmissions.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                          {t('admin.no.reviewed')}
+                          {reviewedSubmissions.length === 0 ? t('admin.no.reviewed') : '没有找到符合条件的表单'}
                         </td>
                       </tr>
                     ) : (
-                      reviewedSubmissions.map((submission) => (
+                      filteredReviewedSubmissions.map((submission) => (
                         <tr key={`${submission.type}-${submission.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                             <div>
@@ -783,6 +976,11 @@ export default function Admin() {
               </div>
             )}
           </div>
+        )}
+
+        {/* 月度奖励管理 */}
+        {activeTab === 'monthly-reward' && (
+          <AdminMonthlyReward />
         )}
       </div>
 
@@ -1020,19 +1218,22 @@ export default function Admin() {
                       placeholder={t('admin.review.placeholder.comment')}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('admin.review.points')}
-                    </label>
-                    <input
-                      type="number"
-                      value={reviewForm.points}
-                      onChange={(e) => setReviewForm(prev => ({ ...prev, points: parseInt(e.target.value) || 0 }))}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder={t('admin.review.placeholder.points')}
-                      min="0"
-                    />
-                  </div>
+                  {/* 只有任务提交才显示积分输入框 */}
+                  {selectedSubmission?.type === 'task' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t('admin.review.points')}
+                      </label>
+                      <input
+                        type="number"
+                        value={reviewForm.points}
+                        onChange={(e) => setReviewForm(prev => ({ ...prev, points: parseInt(e.target.value) || 0 }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder={t('admin.review.placeholder.points')}
+                        min="0"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

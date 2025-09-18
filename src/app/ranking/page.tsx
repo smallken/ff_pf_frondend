@@ -55,25 +55,18 @@ export default function Ranking() {
       const rankingData = await userService.getRanking();
       console.log('✅ 排行榜数据获取成功:', rankingData);
       
-      setRankings(rankingData);
+      // 过滤条件：必须有通过的报名申请（后端需保证），且分数>0
+      const filtered = rankingData.filter(u => (u.userPoints || 0) > 0);
+      setRankings(filtered);
 
       // 如果有当前用户，设置当前用户信息
       if (user) {
-        const currentUserRanking = rankingData.find(u => u.id === user.id);
+        const currentUserRanking = filtered.find(u => u.id === user.id);
         if (currentUserRanking) {
           setCurrentUser(currentUserRanking);
         } else {
-          // 如果当前用户不在排行榜中，创建一个当前用户记录
-          const userPoints = user.userPoints || 0;
-          setCurrentUser({
-            rank: rankingData.length + 1, // 排名为最后一名
-            id: user.id,
-            userName: user.userName,
-            userEmail: user.userEmail || '',
-            userPoints: userPoints,
-            userLevel: calculateLevel(userPoints), // 根据脚印数量计算等级
-            walletAddress: user.walletAddress
-          });
+          // 不在榜单中且分数为0或未申请通过，则不显示个人临时记录
+          setCurrentUser(null);
         }
       }
     } catch (error: any) {
@@ -262,16 +255,26 @@ export default function Ranking() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <div className="text-gray-500 dark:text-gray-400">请登录查看您的排名信息</div>
+                <div className="text-gray-500 dark:text-gray-400">
+                  {!isAuthenticated ? t('ranking.notice.notlogin') : t('ranking.notice.notonboarded')}
+                </div>
+                <div className="mt-4">
+                  <a href="/forms" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-2xl font-semibold hover:from-teal-600 hover:to-cyan-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
+                    <span className="mr-2">🚀</span>
+                    {t('ranking.improve.link')}
+                  </a>
+                </div>
               </div>
             )}
             
-            <div className="mt-8 text-center">
-              <a href="/forms" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-2xl font-semibold hover:from-teal-600 hover:to-cyan-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
-                <span className="mr-2">🚀</span>
-                {t('ranking.improve.link')}
-              </a>
-            </div>
+            {currentUser && (
+              <div className="mt-8 text-center">
+                <a href="/forms" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-2xl font-semibold hover:from-teal-600 hover:to-cyan-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
+                  <span className="mr-2">🚀</span>
+                  {t('ranking.improve.link')}
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>

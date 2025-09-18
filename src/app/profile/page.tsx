@@ -6,6 +6,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { formService, userService, taskSubmissionService, activityApplicationService } from '../../services';
 import type { ApplicationForm, LoginUserVO, UserUpdateMyRequest, TaskSubmissionVO, ActivityApplication } from '../../types/api';
+import MonthlyRewardProgress from '../components/MonthlyRewardProgress';
+import MonthlyRewardHistory from '../components/MonthlyRewardHistory';
 
 // 统一的提交历史类型
 interface SubmissionHistoryItem {
@@ -57,11 +59,18 @@ export default function Profile() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [hasApproved, setHasApproved] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [editForm, setEditForm] = useState({
     userName: '',
     walletAddress: ''
   });
+
+  // 分页相关状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10); // 每页显示10条
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [allSubmissionHistory, setAllSubmissionHistory] = useState<SubmissionHistoryItem[]>([]);
 
   // 获取用户详细信息
   const fetchUserInfo = async () => {
@@ -154,6 +163,16 @@ export default function Profile() {
       setError(error.message || t('profile.error.fetch.submissions'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 检查是否已有通过的报名申请表
+  const fetchHasApproved = async () => {
+    try {
+      const approved = await formService.hasApprovedApplication();
+      setHasApproved(approved);
+    } catch (e) {
+      setHasApproved(false);
     }
   };
 
@@ -251,7 +270,12 @@ export default function Profile() {
         }))
       });
       
-      setSubmissionHistory(history);
+      // 存储所有历史记录
+      setAllSubmissionHistory(history);
+      setTotalRecords(history.length);
+      
+      // 计算当前页显示的数据
+      updateCurrentPageData(history, 1);
     } catch (error: any) {
       console.error('获取提交历史失败:', error);
       setError(error.message || t('profile.submission.fetch.error'));
@@ -268,7 +292,8 @@ export default function Profile() {
     Promise.all([
       fetchUserInfo(),
       fetchUserSubmissions(),
-      fetchAllSubmissionHistory()
+      fetchAllSubmissionHistory(),
+      fetchHasApproved()
     ]).catch(error => {
       console.error('获取数据失败:', error);
     });
@@ -286,14 +311,43 @@ export default function Profile() {
     setSelectedSubmission(null);
   };
 
+  // 更新当前页显示的数据
+  const updateCurrentPageData = (allData: SubmissionHistoryItem[], page: number) => {
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const currentPageData = allData.slice(startIndex, endIndex);
+    setSubmissionHistory(currentPageData);
+  };
 
-  const getTitleText = (userLevel?: number) => {
+  // 处理分页变化
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    updateCurrentPageData(allSubmissionHistory, page);
+  };
+
+  // 计算总页数
+  const totalPages = Math.ceil(totalRecords / pageSize);
+
+
+  // 根据userLevel获取称号
+  const getTitleByLevel = (userLevel?: number) => {
     switch(userLevel) {
       case 1: return t('profile.title.explorer'); // 探索者
       case 2: return t('profile.title.pathfinder'); // 探路者
       case 3: return t('profile.title.trailblazer'); // 开路者
       case 4: return t('profile.title.pioneer'); // 先驱者
       default: return t('profile.title.explorer'); // 默认为探索者
+    }
+  };
+
+  // 获取称号对应的颜色
+  const getTitleColorByLevel = (userLevel?: number) => {
+    switch(userLevel) {
+      case 1: return 'text-blue-600 dark:text-blue-400'; // 探索者 - 蓝色
+      case 2: return 'text-green-600 dark:text-green-400'; // 探路者 - 绿色
+      case 3: return 'text-yellow-600 dark:text-yellow-400'; // 开路者 - 黄色
+      case 4: return 'text-purple-600 dark:text-purple-400'; // 先驱者 - 紫色
+      default: return 'text-blue-600 dark:text-blue-400'; // 默认为探索者 - 蓝色
     }
   };
 
@@ -405,7 +459,9 @@ export default function Profile() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile.user.title')}</label>
-              <p className="mt-1 text-emerald-600 dark:text-emerald-400 font-semibold">{getTitleText(userInfo?.userLevel)}</p>
+              <p className={`mt-1 font-semibold ${hasApproved ? getTitleColorByLevel(1) : 'text-gray-500 dark:text-gray-400'}`}>
+                {hasApproved ? t('profile.title.explorer') : t('profile.title.none')}
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Footprint</label>
@@ -469,6 +525,11 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* 月度奖励进度 */}
+        <MonthlyRewardProgress />
+
+        {/* 历史奖励记录 */}
+        <MonthlyRewardHistory />
 
         {/* 提交历史 */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -568,6 +629,62 @@ export default function Profile() {
                   )}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* 分页组件 */}
+          {totalRecords > pageSize && (
+            <div className="mt-6 flex items-center justify-between">
+              <div className="text-sm text-gray-700 dark:text-gray-300">
+                显示第 {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalRecords)} 条，共 {totalRecords} 条记录
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  上一页
+                </button>
+                
+                {/* 页码按钮 */}
+                <div className="flex space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`px-3 py-2 text-sm font-medium rounded-md ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  下一页
+                </button>
+              </div>
             </div>
           )}
           

@@ -1,9 +1,30 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import LogoutConfirmModal from '../components/LogoutConfirmModal';
 
 export default function Process() {
   const { t } = useLanguage();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleRegisterClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isAuthenticated) {
+      setShowLogoutModal(true);
+    } else {
+      router.push('/register');
+    }
+  };
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutModal(false);
+    router.push('/register');
+  };
   const steps = [
     {
       step: 1,
@@ -158,11 +179,7 @@ export default function Process() {
                     <div className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
                       {step.step === 1 ? (
                         <p>
-                          {t('process.fill')}
-                          <a href="/forms/application" className="mx-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium underline transition-colors duration-200">
-                            {t('process.application.form')}
-                          </a>
-                          {t('process.leave.basic.info')}
+                          {t('process.step1.custom')}
                         </p>
                       ) : step.step === 3 ? (
                         <p>
@@ -207,23 +224,7 @@ export default function Process() {
                       </ul>
                     </div>
                     
-                    {step.step === 1 && (
-                      <div className="mt-6">
-                        <a href="/register" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-500 to-blue-600 text-white rounded-2xl font-semibold hover:from-indigo-600 hover:to-blue-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
-                          <span className="mr-2">📝</span>
-                          {t('process.register.link')}
-                        </a>
-                      </div>
-                    )}
-                    
-                    {step.step === 2 && (
-                      <div className="mt-6">
-                        <a href="/forms" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-sky-600 text-white rounded-2xl font-semibold hover:from-blue-600 hover:to-sky-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
-                          <span className="mr-2">📄</span>
-                          {t('process.forms.link')}
-                        </a>
-                      </div>
-                    )}
+                    {/* 移除“立即注册/开始填写申请表”按钮 */}
                   </div>
                 </div>
               </div>
@@ -259,6 +260,13 @@ export default function Process() {
           </div>
         </div>
       </div>
+
+      {/* 退出确认弹窗 */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogoutConfirm}
+      />
     </div>
   );
 }

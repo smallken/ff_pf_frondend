@@ -4,12 +4,15 @@ import Link from 'next/link';
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '../contexts/LanguageContext';
+import { formService } from '@/services';
 
 function FormsContent() {
   const { t } = useLanguage();
   const searchParams = useSearchParams();
   const [successMessage, setSuccessMessage] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [hasApproved, setHasApproved] = useState<boolean>(false);
+  const [hasSubmittedApplication, setHasSubmittedApplication] = useState<boolean>(false);
 
   useEffect(() => {
     const success = searchParams.get('success');
@@ -23,11 +26,21 @@ function FormsContent() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    // 检查是否已有通过的报名申请表
+    formService.hasApprovedApplication().then(setHasApproved).catch(() => setHasApproved(false));
+    
+    // 检查是否已提交过报名申请表（无论是否通过）
+    formService.getMyForms({ status: undefined, current: 1, pageSize: 1 }).then(response => {
+      setHasSubmittedApplication(response.records && response.records.length > 0);
+    }).catch(() => setHasSubmittedApplication(false));
+  }, []);
+
   const formTypes = [
     {
       id: 1,
-      titleKey: 'forms.application.title',
-      descriptionKey: 'forms.application.desc',
+      titleKey: 'forms.application.customTitle',
+      descriptionKey: 'forms.application.customDesc',
       icon: '📄',
       link: '/forms/application'
     },
@@ -83,8 +96,8 @@ function FormsContent() {
         )}
 
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{t('forms.page.title')}</h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">{t('forms.page.subtitle')}</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{t('forms.page.customTitle')}</h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300">{t('forms.page.customSubtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -92,7 +105,9 @@ function FormsContent() {
             <Link
               key={form.id}
               href={form.link}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300"
+              className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300 ${
+                (form.id !== 1 && !hasApproved) || (form.id === 1 && hasSubmittedApplication) ? 'pointer-events-none opacity-50' : ''
+              }`}
             >
               <div className="text-center">
                 <div className="text-4xl mb-4">{form.icon}</div>
@@ -101,9 +116,25 @@ function FormsContent() {
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">{t(form.descriptionKey)}</p>
                 <div className="mt-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                    {t('forms.start.fill')} →
-                  </span>
+                  {form.id === 1 ? (
+                    hasSubmittedApplication ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-500">
+                        已提交
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        {t('forms.start.fill')} →
+                      </span>
+                    )
+                  ) : hasApproved ? (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                      {t('forms.start.fill')} →
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-500">
+                      {t('forms.disabled.need.approved')}
+                    </span>
+                  )}
                 </div>
               </div>
             </Link>

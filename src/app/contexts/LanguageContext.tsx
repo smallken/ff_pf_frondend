@@ -15,6 +15,19 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 const translations = {
   zh: {
+    // Honor eligibility note
+    'honor.eligibility.note': '注：只有提交申请表并通过审核的用户，才能参与积分和奖励。',
+
+    // Process page customizations
+    'process.step1.custom': '注册账号，并填写报名申请表，待通过审核后，即可开启积分与奖励之旅。',
+    'process.step2.note': '通过审核后，方可成功加入脚印计划。',
+
+    // Forms page customizations
+    'forms.application.customTitle': '报名申请表',
+    'forms.application.customDesc': '请先完成报名申请表的递交，审核通过后可进行后续操作。',
+    'forms.page.customTitle': '表格中心',
+    'forms.page.customSubtitle': '请先完成申请表递交，成果通过审核，方可递交活动申请表与成果提交表',
+    'forms.disabled.need.approved': '需申请表通过后可填写',
     // Task types
     // 传播类任务
     'forms.task.promotion.triple': '官方内容一键三联（转发+点赞+评论）',
@@ -44,7 +57,7 @@ const translations = {
     'home.features.community.desc': '志同道合的伙伴',
     'home.features.growth.title': '从零到一',
     'home.features.growth.desc': '创意落地实现',
-    'home.mission.title': '🎯 Flipflop 脚印计划的目标',
+    'home.mission.title': '🎯 脚印计划的目标',
     'home.mission.community': '通过内容创作与活动，壮大 Flipflop 的全球社区影响力',
     'home.mission.incubation': '陪伴新项目完成孵化，推动 Web3 创业者从零到一',
     'home.mission.rewards': '为优秀贡献者提供奖励、周边与创业支持',
@@ -149,12 +162,16 @@ const translations = {
     'login.title': '登录',
     'register.title': '注册',
     'profile.title': '个人中心',
+    'profile.title.none': '无',
     'admin.title': '管理员后台',
     'theme.toggle': '切换主题',
     'language.toggle': '切换语言',
     'user.welcome': '欢迎',
     'user.logout': '退出',
-    'honor.page.title': '✨ 成为Footprint，你将获得什么？',
+    'honor.page.title': '✨ 参与脚印计划，你将获得什么？',
+    'forms.wallet.tip': '奖励的收款地址，可在个人信息更改',
+    'common.yes': '是',
+    'common.no': '否',
     'honor.page.subtitle': '通过贡献积累「Footprint」（👣脚印），晋升不同等级，获得专属荣誉与特权',
     'honor.level.l1': 'L1 Explorer（探索者）',
     'honor.level.l2': 'L2 Pathfinder（探路者）',
@@ -291,6 +308,8 @@ const translations = {
     'ranking.total.points': '总Footprint',
     'ranking.reference.note': '详细Footprint计算可参考',
     'ranking.reference.link': '荣誉体系',
+    'ranking.notice.notlogin': '请登录查看您的排名信息',
+    'ranking.notice.notonboarded': '您当前未上榜（需申请表通过且积分>0）',
     // Process page
     'process.page.title': '🌟 如何参与 Flipflop Footprint 计划？',
     'process.page.subtitle': '了解如何参与Footprint Program项目',
@@ -299,7 +318,7 @@ const translations = {
     'process.step1.detail1': '告诉我们你的擅长方向（内容创作 / 社群活动 / 研究写作 / 推广传播）',
     'process.step1.detail2': '展示一些代表性的作品',
     'process.step1.detail3': '一段简短的自我介绍，让我们知道你为什么想加入 Footprint',
-    'process.step1.detail4': '通过审核后，你将被邀请进入专属社群',
+    'process.step1.detail4': '通过审核后，方可成功加入脚印计划',
     'process.step2.title': '完成任务，积累脚印',
     'process.step2.description': '基础任务（解锁月度奖励资格）和进阶任务（冲击高额奖励）',
     'process.step2.detail1': '基础任务：每周点赞/转发/评论官方内容',
@@ -357,6 +376,10 @@ const translations = {
     'login.form.password.placeholder': '请输入密码',
     'login.form.submit': '登录',
     'login.form.register.link': '没有账号？立即注册',
+    'logout.confirm.title': '确认退出',
+    'logout.confirm.message': '您已登录，是否要退出当前账号并重新注册？',
+    'logout.confirm.cancel': '取消',
+    'logout.confirm.confirm': '确认退出',
     'register.page.title': '用户注册',
     'register.page.subtitle': '使用邮箱注册 Footprint Program 账号',
     'register.form.username': '用户名',
@@ -620,7 +643,7 @@ const translations = {
     'profile.submission.activity.introduction': '活动简介',
     'date.format': 'YYYY年MM月DD日',
     // Footprint benefits section
-    'home.pathfinders.title': '成为Footprint，你将获得什么？',
+    'home.pathfinders.title': '参与脚印计划，你将获得什么？',
     'home.pathfinders.subtitle': '通过贡献积累「Footprint」（👣脚印），晋升不同等级，获得专属荣誉与特权',
     'home.pathfinders.benefits.flipprints.title': 'Footprint 👣积分荣誉体系',
     'home.pathfinders.benefits.flipprints.desc1': '每一份贡献都会化为"脚印"留在 Flipflop 的生态里',
@@ -652,6 +675,19 @@ const translations = {
     'forms.action.expand': '展开'
   },
   en: {
+    // Honor eligibility note
+    'honor.eligibility.note': 'Note: Only users who submit the application form and pass the review can participate in points and rewards.',
+
+    // Process page customizations
+    'process.step1.custom': 'Register an account and fill out the enrollment application form. Once approved, you can start your journey of points and rewards.',
+    'process.step2.note': 'You can officially join the Footprint Program only after passing the review.',
+
+    // Forms page customizations
+    'forms.application.customTitle': 'Enrollment Application Form',
+    'forms.application.customDesc': 'Please submit the enrollment application first. After approval, you can proceed with subsequent actions.',
+    'forms.page.customTitle': 'Forms Center',
+    'forms.page.customSubtitle': 'Please submit the application form first. Only after your achievements are approved can you submit the Activity Application and Achievement Submission forms.',
+    'forms.disabled.need.approved': 'Requires approved application first',
     // Task types
     // Promotion tasks
     'forms.task.promotion.triple': 'One-click triple on official X content (retweet + like + comment)',
@@ -786,12 +822,13 @@ const translations = {
     'login.title': 'Login',
     'register.title': 'Register',
     'profile.title': 'Profile',
+    'profile.title.none': 'None',
     'admin.title': 'Admin Panel',
     'theme.toggle': 'Toggle Theme',
     'language.toggle': 'Toggle Language',
     'user.welcome': 'Welcome',
     'user.logout': 'Logout',
-    'honor.page.title': '✨ What will you get as a Pathfinder?',
+    'honor.page.title': '✨ What will you gain by joining the Footprint Program?',
     'honor.page.subtitle': 'Accumulate "Footprint" (👣 footprints) through contributions, advance to different levels, and gain exclusive honors and privileges',
     'honor.level.l1': 'L1 Explorer',
     'honor.level.l2': 'L2 Pathfinder',
@@ -928,6 +965,8 @@ const translations = {
     'ranking.total.points': 'Total Points',
     'ranking.reference.note': 'For detailed points calculation, please refer to',
     'ranking.reference.link': 'Honor System',
+    'ranking.notice.notlogin': 'Please log in to view your ranking.',
+    'ranking.notice.notonboarded': 'You are not on the leaderboard (application must be approved and points > 0).',
     // Process page
     'process.page.title': '🌟 How to Participate in Flipflop Footprint Program?',
     'process.page.subtitle': 'Learn how to participate in Footprint Program',
@@ -994,6 +1033,10 @@ const translations = {
     'login.form.password.placeholder': 'Enter your password',
     'login.form.submit': 'Login',
     'login.form.register.link': 'Don\'t have an account? Register now',
+    'logout.confirm.title': 'Confirm Logout',
+    'logout.confirm.message': 'You are already logged in. Do you want to logout and register with a new account?',
+    'logout.confirm.cancel': 'Cancel',
+    'logout.confirm.confirm': 'Confirm Logout',
     'register.page.title': 'User Registration',
     'register.page.subtitle': 'Register your Footprint Program account with email',
     'register.form.username': 'Username',
@@ -1257,7 +1300,7 @@ const translations = {
     'profile.submission.activity.introduction': 'Activity Introduction',
     'date.format': 'MM/DD/YYYY',
     // Footprint benefits section
-    'home.pathfinders.title': 'What Will You Get as a Pathfinder?',
+    'home.pathfinders.title': 'What will you gain by joining the Footprint Program?',
     'home.pathfinders.subtitle': 'Accumulate "Footprint" (👣 footprints) through contributions, advance to different levels, and gain exclusive honors and privileges',
     'home.pathfinders.benefits.flipprints.title': 'Footprint 👣 Honor System',
     'home.pathfinders.benefits.flipprints.desc1': 'Every contribution becomes "footprints" in the Flipflop ecosystem',

@@ -15,7 +15,7 @@ const getApiBaseUrl = () => {
   }
   
   // 生产环境默认配置
-  return 'https://your-api-domain.com/api';
+  return 'https://api.ffpp.space/api';
 };
 
 // 获取超时时间

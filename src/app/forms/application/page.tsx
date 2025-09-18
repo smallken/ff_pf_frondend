@@ -149,13 +149,13 @@ export default function ApplicationForm() {
 
             <div>
               <label htmlFor="twitterUsername" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('forms.field.twitter')} <span className="text-red-500">{t('forms.required')}</span>
+                {t('forms.field.twitter')}
               </label>
               <input
                 type="text"
                 id="twitterUsername"
                 name="twitterUsername"
-                required
+                
                 placeholder={t('forms.field.twitter')}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                 value={formData.twitterUsername}
@@ -182,6 +182,7 @@ export default function ApplicationForm() {
             <div className="md:col-span-2">
               <label htmlFor="walletAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('forms.field.wallet.solana')} <span className="text-red-500">{t('forms.required')}</span>
+                <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{t('forms.wallet.tip')}</span>
               </label>
               <input
                 type="text"
@@ -256,13 +257,13 @@ export default function ApplicationForm() {
 
           <div className="mb-6">
             <label htmlFor="portfolioLink" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('forms.application.portfolio')} <span className="text-red-500">{t('forms.required')}</span>
+              {t('forms.application.portfolio')}
             </label>
             <textarea
               id="portfolioLink"
               name="portfolioLink"
               rows={3}
-              required
+              
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
               value={formData.portfolioLink}
               onChange={handleChange}
@@ -304,14 +305,17 @@ export default function ApplicationForm() {
               <label htmlFor="eventOrganization" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('forms.application.events')}
               </label>
-              <input
-                type="text"
+              <select
                 id="eventOrganization"
                 name="eventOrganization"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                 value={formData.eventOrganization}
                 onChange={handleChange}
-              />
+              >
+                <option value="">{t('admin.review.not.filled')}</option>
+                <option value="yes">{t('common.yes')}</option>
+                <option value="no">{t('common.no')}</option>
+              </select>
             </div>
           </div>
 

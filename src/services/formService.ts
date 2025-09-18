@@ -57,4 +57,16 @@ export const formService = {
     
     return request.get<PageData<ApplicationForm>>(`${API_ENDPOINTS.FORM.LIST}?${queryParams.toString()}`);
   },
+
+  // 判断当前登录用户是否已有通过的报名申请表
+  hasApprovedApplication: async (): Promise<boolean> => {
+    try {
+      const page = await request.get<PageData<ApplicationForm>>(
+        `${API_ENDPOINTS.FORM.MY_FORMS}?status=1&current=1&pageSize=1`
+      );
+      return (page?.total || 0) > 0;
+    } catch (e) {
+      return false;
+    }
+  },
 };
