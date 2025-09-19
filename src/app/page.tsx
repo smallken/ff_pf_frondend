@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import LogoutConfirmModal from './components/LogoutConfirmModal';
 
 export default function Home() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -131,210 +131,19 @@ export default function Home() {
             {/* Stats or feature highlights */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <div className="group p-5 bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/20 hover:bg-white/20 dark:hover:bg-gray-800/20 transition-all duration-300 transform hover:-translate-y-1">
-                <div className="text-2xl mb-2">🏆</div>
+                <div className="text-2xl mb-2">👣</div>
                 <div className="text-xl font-bold text-gray-900 dark:text-white mb-1">1000+</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Active Footprint</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">{t('home.stats.contributors')}</div>
               </div>
               <div className="group p-5 bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/20 hover:bg-white/20 dark:hover:bg-gray-800/20 transition-all duration-300 transform hover:-translate-y-1">
                 <div className="text-2xl mb-2">🎯</div>
                 <div className="text-xl font-bold text-gray-900 dark:text-white mb-1">500+</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Projects Completed</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">{t('home.stats.projects')}</div>
               </div>
               <div className="group p-5 bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/20 hover:bg-white/20 dark:hover:bg-gray-800/20 transition-all duration-300 transform hover:-translate-y-1">
                 <div className="text-2xl mb-2">💎</div>
-                <div className="text-xl font-bold text-gray-900 dark:text-white mb-1">50+</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Rewards Distributed</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Social Media Section */}
-      <section className="py-20 bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
-        {/* Background decorative elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-10 animate-pulse"></div>
-          <div className="absolute top-32 right-20 w-24 h-24 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full opacity-10 animate-pulse delay-1000"></div>
-          <div className="absolute bottom-20 left-1/3 w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full opacity-10 animate-pulse delay-2000"></div>
-          <div className="absolute bottom-32 right-10 w-16 h-16 bg-gradient-to-r from-green-400 to-cyan-500 rounded-full opacity-10 animate-pulse delay-3000"></div>
-        </div>
-
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
-            {/* Left side - Text content */}
-            <div className="flex-1 text-center lg:text-left">
-              <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-6">
-                {t('home.social.title')}
-              </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-                {t('home.social.desc')}
-              </p>
-              <div className="flex items-center justify-center lg:justify-start space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span>实时更新 · 社区活跃</span>
-              </div>
-            </div>
-            
-            {/* Right side - Social media icons and links */}
-            <div className="flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* X (Twitter) */}
-                <a
-                  href="https://x.com/flipfloplaunch"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative overflow-hidden bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-black opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-                  <div className="relative z-10 flex items-center">
-                    <div className="w-14 h-14 bg-gradient-to-r from-gray-900 to-black dark:from-white dark:to-gray-200 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                      <span className="text-2xl text-white dark:text-black font-extrabold">X</span>
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-900 dark:text-white text-lg">X (Twitter)</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">flipfloplaunch</div>
-                      <div className="text-xs text-blue-500 mt-1">实时更新 →</div>
-                    </div>
-                  </div>
-                </a>
-
-                {/* Discord */}
-                <a
-                  href="https://discord.com/invite/DtwkgAyD"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative overflow-hidden bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-                  <div className="relative z-10 flex items-center">
-                    <div className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                      <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-900 dark:text-white text-lg">Discord</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Community</div>
-                      <div className="text-xs text-indigo-500 mt-1">实时交流 →</div>
-                    </div>
-                  </div>
-                </a>
-
-                {/* Telegram Global */}
-                <a
-                  href="https://t.me/flipflopEng"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative overflow-hidden bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-                  <div className="relative z-10 flex items-center">
-                    <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                      <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-900 dark:text-white text-lg">Telegram</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{t('home.social.global')}</div>
-                      <div className="text-xs text-blue-500 mt-1">🌍 Global →</div>
-                    </div>
-                  </div>
-                </a>
-
-                {/* Telegram Chinese */}
-                <a
-                  href="https://t.me/flipflopChi"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative overflow-hidden bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-                  <div className="relative z-10 flex items-center">
-                    <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                      <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-900 dark:text-white text-lg">Telegram</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{t('home.social.chinese')}</div>
-                      <div className="text-xs text-blue-500 mt-1">🇨🇳 中文 →</div>
-                    </div>
-                  </div>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Description Section */}
-      <section className="py-12 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-gray-800 relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative">
-            {/* Background decorative elements - Hexagons and Triangles */}
-            <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute top-8 left-8 w-20 h-20 bg-gradient-to-r from-purple-300 to-pink-400 opacity-15 animate-spin" style={{clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}}></div>
-              <div className="absolute top-20 right-12 w-16 h-16 bg-gradient-to-r from-blue-300 to-cyan-400 opacity-15 animate-bounce" style={{clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'}}></div>
-              <div className="absolute bottom-16 left-1/4 w-12 h-12 bg-gradient-to-r from-green-300 to-blue-400 opacity-15 animate-pulse delay-1000" style={{clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'}}></div>
-              <div className="absolute bottom-32 right-16 w-14 h-14 bg-gradient-to-r from-pink-300 to-purple-400 opacity-15 animate-ping delay-2000" style={{clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)'}}></div>
-            </div>
-            
-            <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 md:p-12 border border-gray-100 dark:border-gray-700">
-              {/* Header with icons */}
-              <div className="flex justify-center mb-8">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full">
-                    <span className="text-2xl">🔗</span>
-                  </div>
-                  <div className="flex items-center justify-center w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full">
-                    <span className="text-2xl">⚡</span>
-                  </div>
-                  <div className="flex items-center justify-center w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full">
-                    <span className="text-2xl">🚀</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Main content */}
-              <div className="text-center">
-                <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full text-sm font-medium mb-6">
-                  <span className="mr-2">✨</span>
-                  Proof of Mint (PoM) & URC
-                </div>
-                
-                <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 leading-relaxed mb-8">
-                  {t('home.description')}
-                </p>
-
-                {/* Key features grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                  <div className="flex flex-col items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center mb-3">
-                      <span className="text-white text-lg">🏗️</span>
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('home.features.builder.title')}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 text-center">{t('home.features.builder.desc')}</p>
-                  </div>
-                  
-                  <div className="flex flex-col items-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                    <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center mb-3">
-                      <span className="text-white text-lg">👥</span>
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('home.features.community.title')}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 text-center">{t('home.features.community.desc')}</p>
-                  </div>
-                  
-                  <div className="flex flex-col items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
-                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mb-3">
-                      <span className="text-white text-lg">🎯</span>
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{t('home.features.growth.title')}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 text-center">{t('home.features.growth.desc')}</p>
-                  </div>
-                </div>
+                <div className="text-xl font-bold text-gray-900 dark:text-white mb-1">2000+</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">{t('home.stats.creative')}</div>
               </div>
             </div>
           </div>
@@ -353,10 +162,6 @@ export default function Home() {
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full text-sm font-medium mb-8 shadow-lg">
-              <span className="mr-2">🎯</span>
-              Our Mission
-            </div>
             <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent mb-6">
               {t('home.mission.title')}
             </h2>
@@ -403,6 +208,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+
 
       {/* Footprint Benefits Section */}
       <section className="py-16 bg-gradient-to-bl from-rose-50 via-orange-50 to-amber-50 dark:from-gray-900 dark:via-orange-900/10 dark:to-gray-800 relative overflow-hidden">
@@ -518,6 +324,173 @@ export default function Home() {
         </div>
       </section>
 
+
+      {/* Description Section */}
+      <section className="py-12 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-gray-800 relative overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative">
+            {/* Background decorative elements - Hexagons and Triangles */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute top-8 left-8 w-20 h-20 bg-gradient-to-r from-purple-300 to-pink-400 opacity-15 animate-spin" style={{clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}}></div>
+              <div className="absolute top-20 right-12 w-16 h-16 bg-gradient-to-r from-blue-300 to-cyan-400 opacity-15 animate-bounce" style={{clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'}}></div>
+              <div className="absolute bottom-16 left-1/4 w-12 h-12 bg-gradient-to-r from-green-300 to-blue-400 opacity-15 animate-pulse delay-1000" style={{clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'}}></div>
+              <div className="absolute bottom-32 right-16 w-14 h-14 bg-gradient-to-r from-pink-300 to-purple-400 opacity-15 animate-ping delay-2000" style={{clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)'}}></div>
+            </div>
+            
+            <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 md:p-12 border border-gray-100 dark:border-gray-700">
+              {/* Main content */}
+              <div className="text-center">
+                <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent mb-8">
+                  {language === 'zh' ? 'POM机制' : 'POM Mechanism'}
+                </h2>
+                
+                <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 leading-relaxed mb-8">
+                  {t('home.description')}
+                </p>
+                
+                <div className="flex justify-center">
+                  <a
+                    href="https://docsend.com/view/r9rz54y2ggvwny4j"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full text-sm font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                    {language === 'zh' ? '查看白皮书' : 'View Whitepaper'}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Media Section */}
+      <section className="py-20 bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-10 animate-pulse"></div>
+          <div className="absolute top-32 right-20 w-24 h-24 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full opacity-10 animate-pulse delay-1000"></div>
+          <div className="absolute bottom-20 left-1/3 w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full opacity-10 animate-pulse delay-2000"></div>
+          <div className="absolute bottom-32 right-10 w-16 h-16 bg-gradient-to-r from-green-400 to-cyan-500 rounded-full opacity-10 animate-pulse delay-3000"></div>
+        </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            {/* Left side - Text content */}
+            <div className="flex-1 text-center lg:text-left">
+              <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-6">
+                {t('home.social.title')}
+              </h2>
+              <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+                {t('home.social.desc')}
+              </p>
+              <div className="flex items-center justify-center lg:justify-start space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span>{t('home.social.realtime')}</span>
+              </div>
+            </div>
+            
+            {/* Right side - Social media icons and links */}
+            <div className="flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* X (Twitter) */}
+                <a
+                  href="https://x.com/flipfloplaunch"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative overflow-hidden bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-black opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
+                  <div className="relative z-10 flex items-center">
+                    <div className="w-14 h-14 bg-gradient-to-r from-gray-900 to-black dark:from-white dark:to-gray-200 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                      <span className="text-2xl text-white dark:text-black font-extrabold">X</span>
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900 dark:text-white text-lg">X (Twitter)</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">flipfloplaunch</div>
+                      <div className="text-xs text-blue-500 mt-1">{t('home.social.twitter.update')}</div>
+                    </div>
+                  </div>
+                </a>
+
+                {/* Discord */}
+                <a
+                  href="https://discord.gg/flipflop"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative overflow-hidden bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
+                  <div className="relative z-10 flex items-center">
+                    <div className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                      <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900 dark:text-white text-lg">Discord</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">Community</div>
+                      <div className="text-xs text-indigo-500 mt-1">{t('home.social.discord.chat')}</div>
+                    </div>
+                  </div>
+                </a>
+
+                {/* Telegram Global */}
+                <a
+                  href="https://t.me/flipflopEng"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative overflow-hidden bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
+                  <div className="relative z-10 flex items-center">
+                    <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                      <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900 dark:text-white text-lg">Telegram</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{t('home.social.global')}</div>
+                      <div className="text-xs text-blue-500 mt-1">🌍 Global →</div>
+                    </div>
+                  </div>
+                </a>
+
+                {/* Official FF Entry */}
+                <a
+                  href="https://www.flipflop.plus/?utm_source=tokenpocket"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative overflow-hidden bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
+                  <div className="relative z-10 flex items-center">
+                    <div className="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                      <span className="text-2xl">🚀</span>
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900 dark:text-white text-lg">
+                        {language === 'zh' ? '官方ff入口' : 'Official FF Entry'}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {language === 'zh' ? 'Flipflop官方平台' : 'Flipflop Official Platform'}
+                      </div>
+                      <div className="text-xs text-purple-500 mt-1">
+                        {language === 'zh' ? '立即访问 →' : 'Visit Now →'}
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
       {/* Quick Links */}
       <section className="py-20 bg-gradient-to-tr from-slate-50 via-gray-50 to-zinc-50 dark:from-gray-800 dark:via-slate-900 dark:to-gray-900 relative overflow-hidden">
         {/* Background decorative elements - Lines and Dots */}
@@ -530,10 +503,6 @@ export default function Home() {
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-full text-sm font-medium mb-8 shadow-lg">
-              <span className="mr-2">🚀</span>
-              Quick Access
-            </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <a
@@ -587,6 +556,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      
 
       {/* 退出确认弹窗 */}
       <LogoutConfirmModal

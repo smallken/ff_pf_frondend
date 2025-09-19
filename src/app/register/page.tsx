@@ -28,7 +28,7 @@ export default function Register() {
   };
 
   // 发送邮箱验证码
-  const sendVerificationCode = async () => {
+const sendVerificationCode = async () => {
     setLoading(true);
     try {
       await userService.sendEmail({
@@ -38,6 +38,33 @@ export default function Register() {
       setStep('verify');
     } catch (error: any) {
       setErrors({ general: error.message || '发送验证码失败' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 检查重复性并发送验证码
+  const checkDuplicatesAndSendCode = async () => {
+    setLoading(true);
+    try {
+      // 先检查重复性
+      const duplicateError = await userService.checkRegistrationDuplicates(
+        formData.userEmail,
+        formData.userName,
+        formData.twitterHandle
+      );
+      
+      if (duplicateError && duplicateError !== '信息可用') {
+        // 有重复，显示错误信息
+        setErrors({ general: duplicateError });
+        return;
+      }
+      
+      // 没有重复，发送验证码
+      await sendVerificationCode();
+    } catch (error: any) {
+      console.error('检查重复性失败:', error);
+      setErrors({ general: error.message || '检查信息失败，请重试' });
     } finally {
       setLoading(false);
     }
@@ -58,9 +85,8 @@ export default function Register() {
     // Validation
     const newErrors: {[key: string]: string} = {};
     
-    if (!formData.twitterHandle.trim()) {
-      newErrors.twitterHandle = t('register.twitter.required');
-    } else if (!validateTwitterHandle(formData.twitterHandle.trim())) {
+    // 推特字段是可选的，但如果填写了需要验证格式
+    if (formData.twitterHandle.trim() && !validateTwitterHandle(formData.twitterHandle.trim())) {
       newErrors.twitterHandle = t('register.twitter.invalid');
     }
     
@@ -71,8 +97,8 @@ export default function Register() {
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length === 0) {
-      console.log('✅ 注册表单验证通过，发送验证码');
-      await sendVerificationCode();
+      console.log('✅ 注册表单验证通过，检查重复性');
+      await checkDuplicatesAndSendCode();
     } else {
       console.log('❌ 注册表单验证失败:', newErrors);
     }
@@ -166,7 +192,7 @@ export default function Register() {
             </div>
             <div>
               <label htmlFor="twitterHandle" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('register.form.twitter')} <span className="text-red-500">*</span>
+                {t('register.form.twitter')}
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -176,7 +202,6 @@ export default function Register() {
                   id="twitterHandle"
                   name="twitterHandle"
                   type="text"
-                  required
                   className={`block w-full pl-8 pr-3 py-2 border ${errors.twitterHandle ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
                   placeholder={t('register.form.twitter.placeholder')}
                   value={formData.twitterHandle}

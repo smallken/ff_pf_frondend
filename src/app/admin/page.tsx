@@ -75,10 +75,20 @@ export default function Admin() {
     points: 0
   });
   const [reviewLoading, setReviewLoading] = useState(false);
+  
+  // 编辑已审核表单的状态
+  const [isEditingReviewed, setIsEditingReviewed] = useState(false);
+  const [editReviewedForm, setEditReviewedForm] = useState({
+    status: 1,
+    reviewMessage: '',
+    reviewScore: 0
+  });
+  const [editReviewedLoading, setEditReviewedLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reviewedLoading, setReviewedLoading] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
   // 筛选状态
   const [filters, setFilters] = useState({
@@ -377,6 +387,99 @@ export default function Admin() {
   const handleCloseReviewedModal = () => {
     setShowReviewedModal(false);
     setSelectedReviewedSubmission(null);
+    setIsEditingReviewed(false);
+    setEditReviewedForm({
+      status: 1,
+      reviewMessage: '',
+      reviewScore: 0
+    });
+  };
+
+  // 开始编辑已审核表单
+  const handleStartEditReviewed = () => {
+    if (selectedReviewedSubmission) {
+      setEditReviewedForm({
+        status: selectedReviewedSubmission.status,
+        reviewMessage: selectedReviewedSubmission.reviewMessage,
+        reviewScore: selectedReviewedSubmission.reviewScore
+      });
+      setIsEditingReviewed(true);
+    }
+  };
+
+  // 取消编辑已审核表单
+  const handleCancelEditReviewed = () => {
+    setIsEditingReviewed(false);
+    if (selectedReviewedSubmission) {
+      setEditReviewedForm({
+        status: selectedReviewedSubmission.status,
+        reviewMessage: selectedReviewedSubmission.reviewMessage,
+        reviewScore: selectedReviewedSubmission.reviewScore
+      });
+    }
+  };
+
+  // 保存已审核表单的修改
+  const handleSaveReviewedEdit = async () => {
+    if (!selectedReviewedSubmission) return;
+
+    setEditReviewedLoading(true);
+    try {
+      // 根据表单类型调用不同的更新接口
+      if (selectedReviewedSubmission.type === 'application') {
+        await formService.reviewForm({
+          formId: selectedReviewedSubmission.id,
+          status: editReviewedForm.status,
+          reviewComment: editReviewedForm.reviewMessage,
+          score: editReviewedForm.reviewScore
+        });
+      } else if (selectedReviewedSubmission.type === 'task') {
+        await taskSubmissionService.updateTaskSubmission({
+          id: selectedReviewedSubmission.id,
+          reviewStatus: editReviewedForm.status,
+          reviewMessage: editReviewedForm.reviewMessage,
+          reviewScore: editReviewedForm.reviewScore
+        });
+      } else if (selectedReviewedSubmission.type === 'activity') {
+        await activityApplicationService.reviewApplication({
+          id: selectedReviewedSubmission.id,
+          reviewStatus: editReviewedForm.status,
+          reviewMessage: editReviewedForm.reviewMessage,
+          reviewScore: editReviewedForm.reviewScore
+        });
+      }
+
+      // 更新本地状态
+      setSelectedReviewedSubmission({
+        ...selectedReviewedSubmission,
+        status: editReviewedForm.status,
+        reviewMessage: editReviewedForm.reviewMessage,
+        reviewScore: editReviewedForm.reviewScore
+      });
+
+      // 更新列表中的对应项
+      setReviewedSubmissions(prev => 
+        prev.map(item => 
+          item.id === selectedReviewedSubmission.id 
+            ? {
+                ...item,
+                status: editReviewedForm.status,
+                reviewMessage: editReviewedForm.reviewMessage,
+                reviewScore: editReviewedForm.reviewScore
+              }
+            : item
+        )
+      );
+
+      setIsEditingReviewed(false);
+      setSuccess('审核结果已更新，邮件通知已发送给用户');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error: any) {
+      console.error('更新审核结果失败:', error);
+      setError(error.message || '更新失败，请重试');
+    } finally {
+      setEditReviewedLoading(false);
+    }
   };
 
   // 提交审核结果
@@ -1309,42 +1412,6 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* 审核结果 */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">审核结果</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">审核状态：</span>
-                    <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${
-                      selectedReviewedSubmission.status === 1 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                        : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-                    }`}>
-                      {selectedReviewedSubmission.status === 1 ? t('admin.status.approved') : t('admin.status.rejected')}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('admin.reviewed.score')}：</span>
-                    <span className="text-sm text-gray-900 dark:text-white ml-2">
-                      {selectedReviewedSubmission.reviewScore > 0 ? (
-                        <span className="text-green-600 dark:text-green-400 font-semibold">+{selectedReviewedSubmission.reviewScore}</span>
-                      ) : selectedReviewedSubmission.reviewScore === 0 ? (
-                        <span className="text-gray-600 dark:text-gray-400">0</span>
-                      ) : (
-                        t('admin.review.no.comment')
-                      )}
-                    </span>
-                  </div>
-                </div>
-                {selectedReviewedSubmission.reviewMessage && (
-                  <div className="mt-4">
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('admin.reviewed.comment')}：</span>
-                    <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
-                      {selectedReviewedSubmission.reviewMessage}
-                    </div>
-                  </div>
-                )}
-              </div>
 
               {/* 表单详情 */}
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
@@ -1521,6 +1588,117 @@ export default function Admin() {
                       <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
                         {(selectedReviewedSubmission.data as ActivityApplication).activityGoals}
                       </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 审核结果 - 移到最下面 */}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">审核结果</h4>
+                  {!isEditingReviewed && (
+                    <button
+                      onClick={handleStartEditReviewed}
+                      className="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
+                    >
+                      编辑
+                    </button>
+                  )}
+                </div>
+                
+                {isEditingReviewed ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        审核状态
+                      </label>
+                      <select
+                        value={editReviewedForm.status}
+                        onChange={(e) => setEditReviewedForm(prev => ({ ...prev, status: parseInt(e.target.value) }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value={1}>通过</option>
+                        <option value={2}>驳回</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        积分
+                      </label>
+                      <input
+                        type="number"
+                        value={editReviewedForm.reviewScore}
+                        onChange={(e) => setEditReviewedForm(prev => ({ ...prev, reviewScore: parseInt(e.target.value) || 0 }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="输入积分"
+                        min="0"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        审核意见
+                      </label>
+                      <textarea
+                        value={editReviewedForm.reviewMessage}
+                        onChange={(e) => setEditReviewedForm(prev => ({ ...prev, reviewMessage: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={3}
+                        placeholder="输入审核意见"
+                      />
+                    </div>
+                    
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={handleCancelEditReviewed}
+                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                        disabled={editReviewedLoading}
+                      >
+                        取消
+                      </button>
+                      <button
+                        onClick={handleSaveReviewedEdit}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
+                        disabled={editReviewedLoading}
+                      >
+                        {editReviewedLoading ? '保存中...' : '保存并通知用户'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">审核状态：</span>
+                      <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${
+                        selectedReviewedSubmission.status === 1 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                          : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                      }`}>
+                        {selectedReviewedSubmission.status === 1 ? t('admin.status.approved') : t('admin.status.rejected')}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('admin.reviewed.score')}：</span>
+                      <span className="text-sm text-gray-900 dark:text-white ml-2">
+                        {selectedReviewedSubmission.reviewScore > 0 ? (
+                          <span className="text-green-600 dark:text-green-400 font-semibold">+{selectedReviewedSubmission.reviewScore}</span>
+                        ) : selectedReviewedSubmission.reviewScore === 0 ? (
+                          <span className="text-gray-600 dark:text-gray-400">0</span>
+                        ) : (
+                          t('admin.review.no.comment')
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                {!isEditingReviewed && selectedReviewedSubmission.reviewMessage && (
+                  <div className="mt-4">
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('admin.reviewed.comment')}：</span>
+                    <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                      {selectedReviewedSubmission.reviewMessage}
                     </div>
                   </div>
                 )}

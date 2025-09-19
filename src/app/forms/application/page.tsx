@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../../contexts/AuthContext';
-import { formService } from '../../../services';
+import { formService, userService } from '../../../services';
 
 export default function ApplicationForm() {
   const { t, language } = useLanguage();
@@ -16,8 +16,8 @@ export default function ApplicationForm() {
     twitterUsername: '',
     telegramUsername: '',
     walletAddress: '',
-    web3Role: '',
-    expertise: '',
+    web3Role: [] as string[],
+    expertise: [] as string[],
     portfolioLink: '',
     motivation: '',
     weeklyHours: '',
@@ -28,18 +28,126 @@ export default function ApplicationForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [userInfo, setUserInfo] = useState<any>(null);
+
+  // 检查登录状态并获取用户信息
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    const fetchUserInfo = async () => {
+      try {
+        const user = await userService.getLoginUser();
+        setUserInfo(user);
+        // 自动填充用户信息
+        setFormData(prev => ({
+          ...prev,
+          name: user.userName || '',
+          email: user.userEmail || ''
+        }));
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+        // 如果获取用户信息失败，可能是登录状态有问题，重定向到登录页
+        router.push('/login');
+      }
+    };
+
+    fetchUserInfo();
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isAuthenticated) {
-      router.push('/login');
+    // 验证多选字段
+    if (formData.web3Role.length === 0) {
+      setError('请至少选择一个参与身份');
+      return;
+    }
+    if (formData.expertise.length === 0) {
+      setError('请至少选择一个擅长方向');
       return;
     }
 
     setLoading(true);
     setError('');
     setSuccess('');
+
+    // 检查字段重复性
+    console.log('🔍 开始检查字段重复性...');
+    const duplicateErrors = [];
+    let hasApiError = false;
+    
+    // 检查推特用户名重复
+    if (formData.twitterUsername && formData.twitterUsername.trim()) {
+      try {
+        console.log('🔍 检查推特用户名:', formData.twitterUsername.trim());
+        const twitterResult = await userService.checkFieldUniqueWithError('twitterUsername', formData.twitterUsername.trim());
+        console.log('🔍 推特用户名检查结果:', twitterResult);
+        if (!twitterResult.isUnique && twitterResult.errorMessage) {
+          console.log('🔍 推特用户名重复错误:', twitterResult.errorMessage);
+          duplicateErrors.push(twitterResult.errorMessage);
+        }
+      } catch (error: any) {
+        console.error('❌ 推特用户名检查失败:', error);
+        hasApiError = true;
+      }
+    }
+    
+    // 检查Telegram用户名重复
+    if (formData.telegramUsername && formData.telegramUsername.trim()) {
+      try {
+        console.log('🔍 检查Telegram用户名:', formData.telegramUsername.trim());
+        const telegramResult = await userService.checkFieldUniqueWithError('telegramUsername', formData.telegramUsername.trim());
+        console.log('🔍 Telegram用户名检查结果:', telegramResult);
+        if (!telegramResult.isUnique && telegramResult.errorMessage) {
+          console.log('🔍 Telegram用户名重复错误:', telegramResult.errorMessage);
+          duplicateErrors.push(telegramResult.errorMessage);
+        }
+      } catch (error: any) {
+        console.error('❌ Telegram用户名检查失败:', error);
+        hasApiError = true;
+      }
+    }
+    
+    // 检查钱包地址重复
+    if (formData.walletAddress && formData.walletAddress.trim()) {
+      try {
+        console.log('🔍 检查钱包地址:', formData.walletAddress.trim());
+        const walletResult = await userService.checkFieldUniqueWithError('walletAddress', formData.walletAddress.trim());
+        console.log('🔍 钱包地址检查结果:', walletResult);
+        if (!walletResult.isUnique && walletResult.errorMessage) {
+          console.log('🔍 钱包地址重复错误:', walletResult.errorMessage);
+          duplicateErrors.push(walletResult.errorMessage);
+        }
+      } catch (error: any) {
+        console.error('❌ 钱包地址检查失败:', error);
+        hasApiError = true;
+      }
+    }
+    
+    console.log('🔍 重复错误列表:', duplicateErrors);
+    console.log('🔍 是否有API错误:', hasApiError);
+    
+    // 如果有重复字段，显示具体的重复错误信息
+    if (duplicateErrors.length > 0) {
+      const combinedError = duplicateErrors.join('；');
+      console.log('🔍 设置重复错误:', combinedError);
+      setError(combinedError);
+      setLoading(false);
+      return;
+    }
+    
+    // 如果没有重复字段但有API错误，显示通用错误
+    if (hasApiError) {
+      console.log('❌ 有API错误但没有重复字段，显示通用错误');
+      setError(t('forms.duplicate.check.failed'));
+      setLoading(false);
+      return;
+    }
+    
+    console.log('✅ 所有字段检查通过，无重复');
 
     try {
       // 打印申请表数据
@@ -80,6 +188,15 @@ export default function ApplicationForm() {
     });
   };
 
+  const handleCheckboxChange = (name: 'web3Role' | 'expertise', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: prev[name].includes(value)
+        ? prev[name].filter(item => item !== value)
+        : [...prev[name], value]
+    }));
+  };
+
   const handleCancel = () => {
     router.push('/forms');
   };
@@ -88,7 +205,9 @@ export default function ApplicationForm() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12" lang={language === 'zh' ? 'zh-CN' : 'en-US'}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('forms.application.title')}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            {language === 'zh' ? '报名申请表' : 'Enrollment Application Form'}
+          </h1>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -108,42 +227,37 @@ export default function ApplicationForm() {
             </div>
           )}
           
-          {!isAuthenticated && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
-              <div className="text-sm text-yellow-600 dark:text-yellow-400">
-                请先登录后再提交表单
-              </div>
-            </div>
-          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('forms.field.name')} <span className="text-red-500">{t('forms.required')}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({t('forms.auto.filled')})</span>
               </label>
               <input
                 type="text"
                 id="name"
                 name="name"
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-not-allowed"
                 value={formData.name}
-                onChange={handleChange}
               />
             </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('forms.field.email')} <span className="text-red-500">{t('forms.required')}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({t('forms.auto.filled')})</span>
               </label>
               <input
                 type="email"
                 id="email"
                 name="email"
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-not-allowed"
                 value={formData.email}
-                onChange={handleChange}
               />
             </div>
 
@@ -182,7 +296,9 @@ export default function ApplicationForm() {
             <div className="md:col-span-2">
               <label htmlFor="walletAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('forms.field.wallet.solana')} <span className="text-red-500">{t('forms.required')}</span>
-                <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{t('forms.wallet.tip')}</span>
+                <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                  {language === 'zh' ? '奖励的收款地址,可在个人信息更改' : 'Reward receiving address. You can change it in Profile later.'}
+                </span>
               </label>
               <input
                 type="text"
@@ -199,6 +315,9 @@ export default function ApplicationForm() {
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               {t('forms.application.web3role')} <span className="text-red-500">{t('forms.required')}</span>
+              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                {language === 'zh' ? '多选' : 'Multiple Choice'}
+              </span>
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
@@ -214,13 +333,10 @@ export default function ApplicationForm() {
               ].map((role) => (
                 <label key={role.key} className="flex items-center">
                   <input
-                    type="radio"
-                    name="web3Role"
-                    value={role.key}
-                    checked={formData.web3Role === role.key}
-                    onChange={handleChange}
+                    type="checkbox"
+                    checked={formData.web3Role.includes(role.key)}
+                    onChange={() => handleCheckboxChange('web3Role', role.key)}
                     className="mr-2 text-violet-600 focus:ring-violet-500"
-                    required
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">{t(role.value)}</span>
                 </label>
@@ -231,6 +347,9 @@ export default function ApplicationForm() {
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               {t('forms.application.expertise')} <span className="text-red-500">{t('forms.required')}</span>
+              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                {language === 'zh' ? '多选' : 'Multiple Choice'}
+              </span>
             </label>
             <div className="grid grid-cols-2 gap-3">
               {[
@@ -241,13 +360,10 @@ export default function ApplicationForm() {
               ].map((skill) => (
                 <label key={skill.key} className="flex items-center">
                   <input
-                    type="radio"
-                    name="expertise"
-                    value={skill.key}
-                    checked={formData.expertise === skill.key}
-                    onChange={handleChange}
+                    type="checkbox"
+                    checked={formData.expertise.includes(skill.key)}
+                    onChange={() => handleCheckboxChange('expertise', skill.key)}
                     className="mr-2 text-violet-600 focus:ring-violet-500"
-                    required
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">{t(skill.value)}</span>
                 </label>
@@ -312,9 +428,9 @@ export default function ApplicationForm() {
                 value={formData.eventOrganization}
                 onChange={handleChange}
               >
-                <option value="">{t('admin.review.not.filled')}</option>
-                <option value="yes">{t('common.yes')}</option>
-                <option value="no">{t('common.no')}</option>
+                <option value="">{language === 'zh' ? '未填写' : 'Not filled'}</option>
+                <option value="yes">{language === 'zh' ? '是' : 'Yes'}</option>
+                <option value="no">{language === 'zh' ? '否' : 'No'}</option>
               </select>
             </div>
           </div>

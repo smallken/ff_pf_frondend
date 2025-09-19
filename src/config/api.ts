@@ -11,7 +11,7 @@ const getApiBaseUrl = () => {
   
   // 根据环境返回默认配置
   if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:8101/api';
+    return 'http://localhost:8100/api';
   }
   
   // 生产环境默认配置

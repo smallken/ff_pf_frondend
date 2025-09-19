@@ -48,9 +48,24 @@ export interface LoginUserVO {
   userRole: string;
   userPoints?: number;
   userLevel?: number; // 用户等级：1-探索者，2-探路者，3-开路者，4-先驱者
+  twitterUsername?: string;
+  telegramUsername?: string;
   walletAddress?: string;
   createTime: string;
   updateTime: string;
+}
+
+export interface UserVO {
+  id: number;
+  userEmail?: string;
+  userName: string;
+  userAvatar?: string;
+  userProfile?: string;
+  twitterUsername?: string;
+  telegramUsername?: string;
+  walletAddress?: string;
+  userRole: string;
+  createTime: string;
 }
 
 // 排行榜用户类型
@@ -113,7 +128,10 @@ export interface UserUpdateMyRequest {
   userEmail?: string;
   userProfile?: string;
   userAvatar?: string;
+  twitterUsername?: string;
+  telegramUsername?: string;
   walletAddress?: string;
+  emailVerificationCode?: string;
 }
 
 // 表单相关类型
@@ -147,8 +165,8 @@ export interface ApplicationFormSubmitRequest {
   twitterUsername: string;
   telegramUsername?: string;
   walletAddress?: string;
-  web3Role?: string;
-  expertise?: string;
+  web3Role?: string | string[];
+  expertise?: string | string[];
   portfolioLink?: string;
   motivation?: string;
   weeklyHours?: string;

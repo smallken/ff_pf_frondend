@@ -73,4 +73,42 @@ export const userService = {
   getAdminStats: (): Promise<AdminStatsVO> => {
     return request.get<AdminStatsVO>(API_ENDPOINTS.USER.ADMIN_STATS);
   },
+
+  // 发送邮箱验证码
+  sendEmailVerificationCode: (email: string): Promise<boolean> => {
+    return request.post<boolean>(`/user/send-email-code?email=${encodeURIComponent(email)}`, null);
+  },
+
+  // 验证邮箱验证码
+  verifyEmailCode: (data: { email: string; verificationCode: string }): Promise<boolean> => {
+    return request.post<boolean>('/user/verify-email-code', data);
+  },
+
+  // 检查注册信息重复性
+  checkRegistrationDuplicates: (userEmail: string, userName: string, twitterUsername?: string): Promise<string> => {
+    const params = new URLSearchParams();
+    params.append('userEmail', userEmail);
+    params.append('userName', userName);
+    if (twitterUsername && twitterUsername.trim()) {
+      params.append('twitterUsername', twitterUsername.trim());
+    }
+    return request.post<string>(`/user/check-duplicates?${params.toString()}`, null);
+  },
+
+  // 检查字段唯一性
+  checkFieldUnique: (field: string, value: string): Promise<boolean> => {
+    const params = new URLSearchParams();
+    params.append('field', field);
+    params.append('value', value);
+    return request.get<boolean>(`/user/check-field-unique?${params.toString()}`);
+  },
+
+  // 检查字段唯一性并返回具体错误信息
+  checkFieldUniqueWithError: (field: string, value: string): Promise<{isUnique: boolean, errorMessage?: string}> => {
+    // 使用POST方法避免URL长度限制，特别是对于长钱包地址
+    return request.post<{isUnique: boolean, errorMessage?: string}>(`/user/check-field-unique-with-error`, {
+      field,
+      value
+    });
+  },
 };
