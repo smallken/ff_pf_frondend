@@ -4,11 +4,13 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { ddQuestionnaireService, DDQuestionnaireData } from '../../../services/ddQuestionnaireService';
+import SuccessModal from '../../components/SuccessModal';
 
 export default function DDQuestionnaireTest() {
   const { language } = useLanguage();
   const [selectedTrack, setSelectedTrack] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   
   // 表单数据状态
   const [formData, setFormData] = useState<DDQuestionnaireData>({
@@ -79,9 +81,7 @@ export default function DDQuestionnaireTest() {
       const result = await ddQuestionnaireService.submitDDQuestionnaire(formData);
       
       if (result.code === 0) {
-        alert(language === 'zh' ? '提交成功！' : 'Submitted successfully!');
-        // 可以跳转到其他页面或重置表单
-        window.location.href = '/launch-contest';
+        setShowSuccessModal(true);
       } else {
         alert(language === 'zh' ? `提交失败：${result.message}` : `Submission failed: ${result.message}`);
       }
@@ -350,6 +350,8 @@ export default function DDQuestionnaireTest() {
                       {language === 'zh' ? '已毕业可补充描述外盘目前相关数据：' : 'Additional external market data (for graduated projects):'}
                     </label>
                     <textarea
+                      value={formData.keyDataAtT0}
+                      onChange={(e) => handleInputChange('keyDataAtT0', e.target.value)}
                       className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                       placeholder={language === 'zh' ? '请描述外盘相关数据' : 'Please describe external market data'}
                       rows={2}
@@ -376,6 +378,8 @@ export default function DDQuestionnaireTest() {
                         {language === 'zh' ? '截止 T0，你们带来的新增用户或曝光规模是多少？' : 'By T0, what is the scale of new users or exposure you brought?'}
                       </label>
                       <textarea
+                        value={formData.trafficContribution}
+                        onChange={(e) => handleInputChange('trafficContribution', e.target.value)}
                         className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                         placeholder={language === 'zh' ? '请描述新增用户数量、曝光规模等具体数据' : 'Please describe specific data on new users, exposure scale, etc.'}
                         rows={2}
@@ -471,6 +475,8 @@ export default function DDQuestionnaireTest() {
                         {language === 'zh' ? '项目的核心价值与亮点是什么？' : 'What are the core value and highlights of the project?'}
                       </label>
                       <textarea
+                        value={formData.projectQuality}
+                        onChange={(e) => handleInputChange('projectQuality', e.target.value)}
                         className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                         placeholder={language === 'zh' ? '请详细描述项目的核心价值和亮点' : 'Please describe the core value and highlights of the project in detail'}
                         rows={2}
@@ -566,6 +572,8 @@ export default function DDQuestionnaireTest() {
                         {language === 'zh' ? '用一句话总结你们的叙事（≤200字）。' : 'Summarize your narrative in one sentence (≤200 words).'}
                       </label>
                       <textarea
+                        value={formData.narrativeConsensus}
+                        onChange={(e) => handleInputChange('narrativeConsensus', e.target.value)}
                         className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                         placeholder={language === 'zh' ? '请用一句话总结项目叙事（不超过200字）' : 'Please summarize the project narrative in one sentence (no more than 200 words)'}
                         rows={2}
@@ -662,6 +670,8 @@ export default function DDQuestionnaireTest() {
                         {language === 'zh' ? '当前团队规模与核心分工。' : 'Current team size and core division of labor.'}
                       </label>
                       <textarea
+                        value={formData.teamEfficiency}
+                        onChange={(e) => handleInputChange('teamEfficiency', e.target.value)}
                         className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                         placeholder={language === 'zh' ? '请描述团队规模和核心分工' : 'Please describe team size and core division of labor'}
                         rows={2}
@@ -751,6 +761,8 @@ export default function DDQuestionnaireTest() {
                     {language === 'zh' ? '未来 3 个月的重点目标是什么？' : 'What are the key goals for the next 3 months?'}
                   </label>
                   <textarea
+                    value={formData.nextSteps}
+                    onChange={(e) => handleInputChange('nextSteps', e.target.value)}
                     className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-pink-400 focus:ring-2 focus:ring-pink-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                     placeholder={language === 'zh' ? '请详细描述未来3个月的重点目标' : 'Please describe the key goals for the next 3 months in detail'}
                     rows={2}
@@ -887,6 +899,18 @@ export default function DDQuestionnaireTest() {
           </div>
         </div>
       </div>
+
+      {/* 成功提交弹窗 */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        message={language === 'zh' ? '您的DD问答清单已成功提交！感谢您的详细回答。' : 'Your DD questionnaire has been submitted successfully! Thank you for your detailed responses.'}
+        buttonText={language === 'zh' ? '返回Launch大赛' : 'Back to Launch Contest'}
+        onButtonClick={() => {
+          setShowSuccessModal(false);
+          window.location.href = '/launch-contest';
+        }}
+      />
     </div>
   );
 }

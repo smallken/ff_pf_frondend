@@ -97,6 +97,8 @@ export const API_ENDPOINTS = {
       DELETE: '/launch-contest/registration/delete',
       GET: '/launch-contest/registration/get/vo',
       LIST: '/launch-contest/registration/list/page/vo',
+      PUBLIC_LIST: '/launch-contest/registration/public/list/page/vo',
+      MY_LIST: '/launch-contest/registration/my/list/page/vo',
     },
     DD_QUESTIONNAIRE: {
       ADD: '/launch-contest/dd-questionnaire/add',

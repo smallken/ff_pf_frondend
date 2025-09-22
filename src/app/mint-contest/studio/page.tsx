@@ -3,73 +3,61 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { PixelButton } from '../../components/mint-contest/PixelButton';
-import { PixelCard } from '../../components/mint-contest/PixelCard';
-import { PixelInput } from '../../components/mint-contest/PixelInput';
-import { PixelTextarea } from '../../components/mint-contest/PixelTextarea';
-import { PixelSelect } from '../../components/mint-contest/PixelSelect';
-import { mintContestService } from '../../../services/mintContestService';
+import { mintContestService, MintContestRegistrationData } from '../../../services/mintContestService';
+import SuccessModal from '../../components/SuccessModal';
 
 export default function StudioPage() {
   const { language } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [formData, setFormData] = useState({
-    studioName: '',
-    contactPerson: '',
+    trackType: 'studio',
+    displayName: '',
     email: '',
-    phone: '',
-    website: '',
-    teamSize: '',
-    experience: '',
-    projectTitle: '',
-    projectDescription: '',
-    projectCategory: '',
-    projectLink: '',
-    walletAddress: '',
-    additionalInfo: ''
+    twitterAccount: '',
+    telegramAccount: '',
+    mainWalletAddress: '',
+    rewardWalletAddress: '',
+    rulesAccepted: false,
+    infoConfirmed: false,
+    lockAccepted: false
   });
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 基本验证
-    if (!formData.studioName || !formData.contactPerson || !formData.email || !formData.projectTitle || !formData.projectDescription || !formData.projectCategory || !formData.walletAddress) {
-      alert(language === 'zh' ? '请填写所有必填字段' : 'Please fill in all required fields');
+    if (!formData.rulesAccepted || !formData.infoConfirmed || !formData.lockAccepted) {
+      alert(language === 'zh' ? '请确认所有声明与确认项' : 'Please confirm all declarations');
       return;
     }
 
     setIsSubmitting(true);
-
     try {
-      // 准备提交数据
-      const submissionData = {
-        category: 'studio',
-        studioName: formData.studioName,
-        contactPerson: formData.contactPerson,
+      const submissionData: MintContestRegistrationData = {
+        trackType: formData.trackType,
+        displayName: formData.displayName,
         email: formData.email,
-        phone: formData.phone || undefined,
-        website: formData.website || undefined,
-        teamSize: formData.teamSize || undefined,
-        experience: formData.experience || undefined,
-        projectTitle: formData.projectTitle,
-        projectDescription: formData.projectDescription,
-        projectCategory: formData.projectCategory,
-        projectLink: formData.projectLink || undefined,
-        walletAddress: formData.walletAddress,
-        additionalInfo: formData.additionalInfo || undefined
+        twitterAccount: formData.twitterAccount,
+        telegramAccount: formData.telegramAccount,
+        mainWalletAddress: formData.mainWalletAddress,
+        rewardWalletAddress: formData.rewardWalletAddress,
+        rulesAccepted: formData.rulesAccepted,
+        infoConfirmed: formData.infoConfirmed,
+        lockAccepted: formData.lockAccepted
       };
 
       // 调用后端API
       const response = await mintContestService.submitRegistration(submissionData);
       
       if (response.code === 0) {
-        alert(language === 'zh' ? '工作室报名提交成功！' : 'Studio registration submitted successfully!');
-        // 可以在这里添加跳转逻辑
-        window.location.href = '/mint-contest';
+        setShowSuccessModal(true);
       } else {
         throw new Error(response.message || 'Submission failed');
       }
@@ -81,23 +69,8 @@ export default function StudioPage() {
     }
   };
 
-  const projectCategories = [
-    { value: 'game', label: language === 'zh' ? '游戏开发' : 'Game Development' },
-    { value: 'art', label: language === 'zh' ? '像素艺术' : 'Pixel Art' },
-    { value: 'animation', label: language === 'zh' ? '动画制作' : 'Animation' },
-    { value: 'music', label: language === 'zh' ? '音乐制作' : 'Music Production' },
-    { value: 'other', label: language === 'zh' ? '其他' : 'Other' }
-  ];
-
-  const teamSizes = [
-    { value: '1-5', label: '1-5 人' },
-    { value: '6-10', label: '6-10 人' },
-    { value: '11-20', label: '11-20 人' },
-    { value: '20+', label: '20+ 人' }
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-black text-white py-20 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-black text-white py-20 px-4">
       <div className="max-w-4xl mx-auto">
         {/* 返回按钮 */}
         <motion.div
@@ -108,239 +81,260 @@ export default function StudioPage() {
         >
           <a
             href="/mint-contest"
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-gray-800 to-gray-700 text-white font-bold rounded-lg hover:from-gray-700 hover:to-gray-600 transition-all duration-300 transform hover:scale-105 border-2 border-gray-600 hover:border-gray-500 font-mono"
+            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg hover:from-cyan-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105"
           >
-            <span className="mr-2">←</span>
-            {language === 'zh' ? '返回Mint大赛' : 'Back to Mint Contest'}
+            ← {language === 'zh' ? '返回Mint大赛' : 'Back to Mint Contest'}
           </a>
         </motion.div>
 
-        {/* 页面标题 */}
+        {/* 标题 */}
         <motion.div
           className="text-center mb-12"
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1 className="text-5xl font-bold mb-4 font-mono">
-            <span className="bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">
-              🎮 STUDIO
-            </span>
+          <h1 className="text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+            🏢 {language === 'zh' ? '工作室组参赛申请表' : 'Studio Registration Form'}
           </h1>
-          <p className="text-xl text-gray-300 font-mono">
+          <p className="text-gray-300 text-lg">
             {language === 'zh' 
-              ? '专业工作室参赛登记'
-              : 'Professional Studio Registration'
+              ? '提示：参赛信息表自大赛开始起开放，参赛者可在赛事期间随时修改或添加参赛钱包地址。最终截止日期锁定后，所有信息不可再修改。请务必确认填写内容真实有效。'
+              : 'Note: Registration forms are open from the start of the contest. Participants can modify or add wallet addresses during the contest period. After the final deadline, all information cannot be modified. Please ensure all information is accurate.'
             }
           </p>
         </motion.div>
 
-        {/* 参赛表单 */}
+        {/* 表单 */}
         <motion.div
+          className="bg-gradient-to-r from-gray-900/50 to-blue-900/20 backdrop-blur-sm border border-cyan-500/30 rounded-2xl p-8"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <PixelCard>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* 工作室基本信息 */}
-              <div>
-                <h3 className="text-2xl font-bold text-red-400 mb-4 font-mono">
-                  {language === 'zh' ? '🏢 工作室信息' : '🏢 Studio Information'}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-300 mb-2 font-mono">
-                      {language === 'zh' ? '工作室名称 *' : 'Studio Name *'}
-                    </label>
-                    <PixelInput
-                      value={formData.studioName}
-                      onChange={(e) => handleInputChange('studioName', e.target.value)}
-                      placeholder={language === 'zh' ? '请输入工作室名称' : 'Enter studio name'}
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-300 mb-2 font-mono">
-                      {language === 'zh' ? '联系人 *' : 'Contact Person *'}
-                    </label>
-                    <PixelInput
-                      value={formData.contactPerson}
-                      onChange={(e) => handleInputChange('contactPerson', e.target.value)}
-                      placeholder={language === 'zh' ? '请输入联系人姓名' : 'Enter contact person name'}
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-300 mb-2 font-mono">
-                      {language === 'zh' ? '邮箱地址 *' : 'Email Address *'}
-                    </label>
-                    <PixelInput
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder={language === 'zh' ? '请输入邮箱地址' : 'Enter email address'}
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-300 mb-2 font-mono">
-                      {language === 'zh' ? '联系电话' : 'Phone Number'}
-                    </label>
-                    <PixelInput
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder={language === 'zh' ? '请输入联系电话' : 'Enter phone number'}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-300 mb-2 font-mono">
-                      {language === 'zh' ? '官方网站' : 'Official Website'}
-                    </label>
-                    <PixelInput
-                      value={formData.website}
-                      onChange={(e) => handleInputChange('website', e.target.value)}
-                      placeholder={language === 'zh' ? '请输入官网地址' : 'Enter website URL'}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-300 mb-2 font-mono">
-                      {language === 'zh' ? '团队规模 *' : 'Team Size *'}
-                    </label>
-                    <PixelSelect
-                      options={teamSizes}
-                      value={formData.teamSize}
-                      onChange={(e) => handleInputChange('teamSize', e.target.value)}
-                      placeholder={language === 'zh' ? '选择团队规模' : 'Select team size'}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <label className="block text-gray-300 mb-2 font-mono">
-                    {language === 'zh' ? '开发经验' : 'Development Experience'}
-                  </label>
-                  <PixelTextarea
-                    value={formData.experience}
-                    onChange={(e) => handleInputChange('experience', e.target.value)}
-                    placeholder={language === 'zh' ? '请描述工作室的开发经验和过往作品' : 'Describe studio development experience and past works'}
-                    rows={3}
-                  />
-                </div>
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* 一、参赛基本信息 */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-cyan-400 border-b border-cyan-500/30 pb-2">
+                {language === 'zh' ? '一、参赛基本信息' : '1. Basic Information'}
+              </h2>
 
-              {/* 项目信息 */}
+              {/* 赛道选择 */}
               <div>
-                <h3 className="text-2xl font-bold text-cyan-400 mb-4 font-mono">
-                  {language === 'zh' ? '🎨 参赛项目' : '🎨 Contest Project'}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-300 mb-2 font-mono">
-                      {language === 'zh' ? '项目标题 *' : 'Project Title *'}
-                    </label>
-                    <PixelInput
-                      value={formData.projectTitle}
-                      onChange={(e) => handleInputChange('projectTitle', e.target.value)}
-                      placeholder={language === 'zh' ? '请输入项目标题' : 'Enter project title'}
-                      required
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  {language === 'zh' ? '赛道选择（单选）' : 'Track Selection (Single Choice)'}
+                </label>
+                <div className="flex space-x-6">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="trackType"
+                      value="studio"
+                      checked={formData.trackType === 'studio'}
+                      onChange={(e) => handleInputChange('trackType', e.target.value)}
+                      className="w-4 h-4 text-cyan-600 bg-gray-700 border-gray-600 focus:ring-cyan-500"
                     />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-300 mb-2 font-mono">
-                      {language === 'zh' ? '项目类别 *' : 'Project Category *'}
-                    </label>
-                    <PixelSelect
-                      options={projectCategories}
-                      value={formData.projectCategory}
-                      onChange={(e) => handleInputChange('projectCategory', e.target.value)}
-                      placeholder={language === 'zh' ? '选择项目类别' : 'Select project category'}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <label className="block text-gray-300 mb-2 font-mono">
-                    {language === 'zh' ? '项目描述 *' : 'Project Description *'}
-                  </label>
-                  <PixelTextarea
-                    value={formData.projectDescription}
-                    onChange={(e) => handleInputChange('projectDescription', e.target.value)}
-                    placeholder={language === 'zh' ? '请详细描述参赛项目，包括创意理念、技术特色等' : 'Describe your contest project in detail, including creative concepts, technical features, etc.'}
-                    rows={4}
-                    required
-                  />
-                </div>
-                
-                <div className="mt-4">
-                  <label className="block text-gray-300 mb-2 font-mono">
-                    {language === 'zh' ? '项目链接' : 'Project Link'}
-                  </label>
-                  <PixelInput
-                    value={formData.projectLink}
-                    onChange={(e) => handleInputChange('projectLink', e.target.value)}
-                    placeholder={language === 'zh' ? '请输入项目展示链接（如GitHub、作品集等）' : 'Enter project showcase link (GitHub, portfolio, etc.)'}
-                  />
-                </div>
-                
-                <div className="mt-4">
-                  <label className="block text-gray-300 mb-2 font-mono">
-                    {language === 'zh' ? '钱包地址 *' : 'Wallet Address *'}
-                  </label>
-                  <PixelInput
-                    value={formData.walletAddress}
-                    onChange={(e) => handleInputChange('walletAddress', e.target.value)}
-                    placeholder={language === 'zh' ? '请输入您的钱包地址（用于奖励发放）' : 'Enter your wallet address (for reward distribution)'}
-                  />
-                </div>
-                
-                <div className="mt-4">
-                  <label className="block text-gray-300 mb-2 font-mono">
-                    {language === 'zh' ? '补充信息' : 'Additional Information'}
-                  </label>
-                  <PixelTextarea
-                    value={formData.additionalInfo}
-                    onChange={(e) => handleInputChange('additionalInfo', e.target.value)}
-                    placeholder={language === 'zh' ? '其他需要说明的信息' : 'Any other information you would like to share'}
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              {/* 提交按钮 */}
-              <div className="flex justify-center pt-6">
-                <PixelButton
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      {language === 'zh' ? '提交中...' : 'Submitting...'}
+                    <span className="ml-2 text-gray-300">
+                      {language === 'zh' ? '工作室赛道' : 'Studio Track'}
                     </span>
-                  ) : (
-                    `🚀 ${language === 'zh' ? '提交参赛申请' : 'Submit Application'}`
-                  )}
-                </PixelButton>
+                  </label>
+                </div>
               </div>
-            </form>
-          </PixelCard>
+
+              {/* 工作室名称 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {language === 'zh' ? '工作室名称（可选，用于展示榜单/宣传）' : 'Studio Name (Optional, for leaderboard/promotion)'}
+                </label>
+                <input
+                  type="text"
+                  value={formData.displayName}
+                  onChange={(e) => handleInputChange('displayName', e.target.value)}
+                  className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300"
+                  placeholder={language === 'zh' ? '请输入工作室名称' : 'Enter studio name'}
+                />
+              </div>
+
+              {/* 联系邮箱 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {language === 'zh' ? '联系邮箱' : 'Contact Email'} *
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  required
+                  className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300"
+                  placeholder={language === 'zh' ? '请输入联系邮箱' : 'Enter contact email'}
+                />
+              </div>
+
+              {/* Twitter账号 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Twitter 账号
+                </label>
+                <input
+                  type="text"
+                  value={formData.twitterAccount}
+                  onChange={(e) => handleInputChange('twitterAccount', e.target.value)}
+                  className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300"
+                  placeholder="@your_twitter_handle"
+                />
+              </div>
+
+              {/* Telegram账号 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {language === 'zh' ? 'Telegram账号（用于官方通知与奖励确认）' : 'Telegram Account (for official notifications and reward confirmation)'} *
+                </label>
+                <input
+                  type="text"
+                  value={formData.telegramAccount}
+                  onChange={(e) => handleInputChange('telegramAccount', e.target.value)}
+                  required
+                  className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300"
+                  placeholder="@your_telegram_handle"
+                />
+              </div>
+            </div>
+
+            {/* 二、参赛钱包信息 */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-cyan-400 border-b border-cyan-500/30 pb-2">
+                {language === 'zh' ? '二、参赛钱包信息' : '2. Wallet Information'}
+              </h2>
+              <p className="text-gray-400 text-sm">
+                {language === 'zh' 
+                  ? '提交的所有地址必须为真实有效的钱包地址。可在赛事期间补充或修改。截止日期后，地址将被锁定，不可再更换。奖励仅发放至锁定时的地址。'
+                  : 'All submitted addresses must be real and valid wallet addresses. Can be supplemented or modified during the contest period. After the deadline, addresses will be locked and cannot be changed. Rewards will only be distributed to locked addresses.'
+                }
+              </p>
+
+              {/* 主要参赛钱包地址 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {language === 'zh' ? '主要参赛钱包地址' : 'Main Contest Wallet Address'} *
+                </label>
+                <input
+                  type="text"
+                  value={formData.mainWalletAddress}
+                  onChange={(e) => handleInputChange('mainWalletAddress', e.target.value)}
+                  required
+                  className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300"
+                  placeholder={language === 'zh' ? '请输入主要参赛钱包地址' : 'Enter main contest wallet address'}
+                />
+              </div>
+
+              {/* 奖励发放地址 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'}
+                </label>
+                <input
+                  type="text"
+                  value={formData.rewardWalletAddress}
+                  onChange={(e) => handleInputChange('rewardWalletAddress', e.target.value)}
+                  className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300"
+                  placeholder={language === 'zh' ? '请输入奖励发放地址（可选）' : 'Enter reward distribution address (optional)'}
+                />
+              </div>
+            </div>
+
+            {/* 三、声明与确认 */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-cyan-400 border-b border-cyan-500/30 pb-2">
+                {language === 'zh' ? '三、声明与确认' : '3. Declarations and Confirmations'}
+              </h2>
+
+              <div className="space-y-4">
+                <label className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-800/30 transition-colors duration-200">
+                  <input
+                    type="checkbox"
+                    checked={formData.rulesAccepted}
+                    onChange={(e) => handleInputChange('rulesAccepted', e.target.checked)}
+                    className="w-5 h-5 text-cyan-600 bg-gray-700 border-gray-600 rounded focus:ring-cyan-500 mt-0.5"
+                  />
+                  <span className="text-gray-300 text-sm">
+                    {language === 'zh' 
+                      ? '本团队已阅读并理解《FlipFlop Mint大赛规则书（9.20 – 10.05）》'
+                      : 'Our team has read and understood the "FlipFlop Mint Contest Rules (9.20 – 10.05)"'
+                    }
+                  </span>
+                </label>
+
+                <label className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-800/30 transition-colors duration-200">
+                  <input
+                    type="checkbox"
+                    checked={formData.infoConfirmed}
+                    onChange={(e) => handleInputChange('infoConfirmed', e.target.checked)}
+                    className="w-5 h-5 text-cyan-600 bg-gray-700 border-gray-600 rounded focus:ring-cyan-500 mt-0.5"
+                  />
+                  <span className="text-gray-300 text-sm">
+                    {language === 'zh' 
+                      ? '确认所提交信息真实有效，若提供虚假信息，愿承担被取消参赛资格及奖励的后果'
+                      : 'Confirm that the submitted information is true and valid. If false information is provided, we are willing to bear the consequences of disqualification and reward cancellation'
+                    }
+                  </span>
+                </label>
+
+                <label className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-800/30 transition-colors duration-200">
+                  <input
+                    type="checkbox"
+                    checked={formData.lockAccepted}
+                    onChange={(e) => handleInputChange('lockAccepted', e.target.checked)}
+                    className="w-5 h-5 text-cyan-600 bg-gray-700 border-gray-600 rounded focus:ring-cyan-500 mt-0.5"
+                  />
+                  <span className="text-gray-300 text-sm">
+                    {language === 'zh' 
+                      ? '同意在截止日期锁定后，所有参赛信息不可再修改'
+                      : 'Agree that after the deadline lock, all contest information cannot be modified'
+                    }
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* 提交按钮 */}
+            <div className="text-center pt-6">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`px-12 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
+                  isSubmitting
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 shadow-lg hover:shadow-cyan-500/25'
+                }`}
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {language === 'zh' ? '提交中...' : 'Submitting...'}
+                  </span>
+                ) : (
+                  `🚀 ${language === 'zh' ? '提交参赛申请' : 'Submit Application'}`
+                )}
+              </button>
+            </div>
+          </form>
         </motion.div>
       </div>
+
+      {/* 成功提交弹窗 */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        message={language === 'zh' ? '您的工作室组报名已成功提交！期待您的团队在打狗大赛中展现创意！' : 'Your studio registration has been submitted successfully! Looking forward to your team\'s creativity in the Mint Contest!'}
+        buttonText={language === 'zh' ? '返回Mint大赛' : 'Back to Mint Contest'}
+        onButtonClick={() => {
+          setShowSuccessModal(false);
+          window.location.href = '/mint-contest';
+        }}
+      />
     </div>
   );
 }

@@ -1138,13 +1138,16 @@ export default function Profile() {
                           onClick={() => handleFormClick(reg, 'mint')}
                         >
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {reg.projectTitle || '未命名项目'}
+                            {reg.displayName || '未命名项目'}
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            类别: {reg.category === 'studio' ? '工作室组' : '个人组'}
+                            类别: {reg.trackType === 'studio' ? '工作室组' : '个人组'}
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
-                            项目类别: {reg.projectCategory || '未分类'}
+                            邮箱: {reg.email}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Telegram: {reg.telegramAccount}
                           </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               提交时间: {formatDate(reg.createTime)}
@@ -1548,12 +1551,14 @@ export default function Profile() {
                         {selectedForm.trackCategory || '未选择'}
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">其他赛道名称</label>
-                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.otherTrackName || '未填写'}
+                    {selectedForm.otherTrackName && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">其他赛道名称</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                          {selectedForm.otherTrackName}
+                        </div>
                       </div>
-                    </div>
+                    )}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">提交时间</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
@@ -1671,21 +1676,33 @@ export default function Profile() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目标题</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">显示名称</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.projectTitle || '未填写'}
+                        {selectedForm.displayName || '未填写'}
                       </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">参赛类别</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.category === 'studio' ? '工作室组' : '个人组'}
+                        {selectedForm.trackType === 'studio' ? '工作室组' : '个人组'}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目类别</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">联系邮箱</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.projectCategory || '未分类'}
+                        {selectedForm.email || '未填写'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Twitter账号</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.twitterAccount || '未填写'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telegram账号</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.telegramAccount || '未填写'}
                       </div>
                     </div>
                     <div>
@@ -1724,10 +1741,13 @@ export default function Profile() {
                     ) : (
                       <div className="flex items-center gap-2">
                         <div className="flex-1 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                          {walletAddress || '未填写'}
+                          {selectedForm.mainWalletAddress || '未填写'}
                         </div>
                         <button
-                          onClick={() => setEditingWalletAddress(true)}
+                          onClick={() => {
+                            setEditingWalletAddress(true);
+                            setWalletAddress(selectedForm.mainWalletAddress || '');
+                          }}
                           className="px-3 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
                         >
                           编辑
@@ -1736,39 +1756,14 @@ export default function Profile() {
                     )}
                   </div>
 
+                  {/* 奖励发放地址 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目描述</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">奖励发放地址</label>
                     <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                      {selectedForm.projectDescription || '未填写'}
+                      {selectedForm.rewardWalletAddress || '未填写'}
                     </div>
                   </div>
-                  
-                  {selectedForm.studioName && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">工作室名称</label>
-                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.studioName}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedForm.contactPerson && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">联系人</label>
-                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.contactPerson}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedForm.email && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">邮箱</label>
-                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.email}
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               )}
 
@@ -1800,12 +1795,14 @@ export default function Profile() {
                         {selectedForm.status === 'submitted' ? '已提交' : '草稿'}
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">其他赛道名称</label>
-                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.otherTrackName || '未填写'}
+                    {selectedForm.otherTrackName && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">其他赛道名称</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                          {selectedForm.otherTrackName}
+                        </div>
                       </div>
-                    </div>
+                    )}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">提交时间</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">

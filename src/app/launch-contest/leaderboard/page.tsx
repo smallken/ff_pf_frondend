@@ -10,13 +10,17 @@ export default function LaunchContestList() {
   const [selectedTrack, setSelectedTrack] = useState('all');
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const pageSize = 20; // 每页显示20条记录
 
   // 获取参赛名单数据
   useEffect(() => {
     const fetchRegistrations = async () => {
       try {
         setLoading(true);
-        const response = await launchContestService.getAllRegistrations(100, 1);
+        const response = await launchContestService.getAllRegistrations(pageSize, currentPage);
         if (response.code === 0) {
           // 按Mint进度排序（这里暂时使用模拟数据，因为Mint数据需要从Solana获取）
           const sortedData = response.data.records.sort((a: any, b: any) => {
@@ -26,6 +30,8 @@ export default function LaunchContestList() {
             return bProgress - aProgress;
           });
           setRegistrations(sortedData);
+          setTotalRecords(response.data.total);
+          setTotalPages(Math.ceil(response.data.total / pageSize));
         }
       } catch (error) {
         console.error('获取参赛名单失败:', error);
@@ -35,7 +41,7 @@ export default function LaunchContestList() {
     };
 
     fetchRegistrations();
-  }, []);
+  }, [currentPage, pageSize]); // 添加currentPage依赖
 
   // 模拟Mint进度数据（实际应该从Solana获取）
   const getMintProgress = (id: number) => {
@@ -221,6 +227,103 @@ export default function LaunchContestList() {
             </div>
           )}
         </motion.div>
+
+        {/* 分页器 */}
+        {!loading && totalPages > 1 && (
+          <motion.div 
+            className="flex justify-center items-center mt-12 space-x-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+          >
+            {/* 上一页按钮 */}
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-lg border transition-all duration-300 ${
+                currentPage === 1
+                  ? 'border-gray-600 text-gray-500 cursor-not-allowed'
+                  : 'border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-black'
+              }`}
+            >
+              {language === 'zh' ? '上一页' : 'Previous'}
+            </button>
+
+            {/* 页码显示 */}
+            <div className="flex items-center space-x-2">
+              {/* 第一页 */}
+              {currentPage > 3 && (
+                <>
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    className="px-3 py-2 rounded-lg border border-gray-600 text-gray-400 hover:border-cyan-500 hover:text-cyan-400 transition-all duration-300"
+                  >
+                    1
+                  </button>
+                  {currentPage > 4 && (
+                    <span className="text-gray-500">...</span>
+                  )}
+                </>
+              )}
+
+              {/* 当前页附近的页码 */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = Math.max(1, Math.min(totalPages, currentPage - 2 + i));
+                if (pageNum < 1 || pageNum > totalPages) return null;
+                
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`px-3 py-2 rounded-lg border transition-all duration-300 ${
+                      currentPage === pageNum
+                        ? 'border-cyan-500 bg-cyan-500 text-black font-medium'
+                        : 'border-gray-600 text-gray-400 hover:border-cyan-500 hover:text-cyan-400'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              {/* 最后一页 */}
+              {currentPage < totalPages - 2 && (
+                <>
+                  {currentPage < totalPages - 3 && (
+                    <span className="text-gray-500">...</span>
+                  )}
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    className="px-3 py-2 rounded-lg border border-gray-600 text-gray-400 hover:border-cyan-500 hover:text-cyan-400 transition-all duration-300"
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* 下一页按钮 */}
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-lg border transition-all duration-300 ${
+                currentPage === totalPages
+                  ? 'border-gray-600 text-gray-500 cursor-not-allowed'
+                  : 'border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-black'
+              }`}
+            >
+              {language === 'zh' ? '下一页' : 'Next'}
+            </button>
+
+            {/* 分页信息 */}
+            <div className="ml-6 text-gray-400 text-sm">
+              {language === 'zh' 
+                ? `第 ${currentPage} 页，共 ${totalPages} 页，总计 ${totalRecords} 条记录`
+                : `Page ${currentPage} of ${totalPages}, Total ${totalRecords} records`
+              }
+            </div>
+          </motion.div>
+        )}
 
         {/* 底部说明 */}
         <motion.div 

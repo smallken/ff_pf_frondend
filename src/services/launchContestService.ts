@@ -82,7 +82,7 @@ export const launchContestService = {
 
   // 获取我的参赛登记列表
   getMyRegistrations: async (pageSize: number = 10, current: number = 1): Promise<BaseResponse<{ records: LaunchContestRegistrationData[], total: number }>> => {
-    return request<{ records: LaunchContestRegistrationData[], total: number }>('POST', API_ENDPOINTS.LAUNCH_CONTEST.REGISTRATION.LIST, {
+    return request<{ records: LaunchContestRegistrationData[], total: number }>('POST', API_ENDPOINTS.LAUNCH_CONTEST.REGISTRATION.MY_LIST, {
       pageSize,
       current,
       sortField: 'createTime',
@@ -92,7 +92,7 @@ export const launchContestService = {
 
   // 获取所有参赛登记列表（用于排行榜/参赛名单）
   getAllRegistrations: async (pageSize: number = 100, current: number = 1): Promise<BaseResponse<{ records: LaunchContestRegistrationData[], total: number }>> => {
-    return request<{ records: LaunchContestRegistrationData[], total: number }>('POST', API_ENDPOINTS.LAUNCH_CONTEST.REGISTRATION.LIST, {
+    return request<{ records: LaunchContestRegistrationData[], total: number }>('POST', API_ENDPOINTS.LAUNCH_CONTEST.REGISTRATION.PUBLIC_LIST, {
       pageSize,
       current,
       sortField: 'createTime',

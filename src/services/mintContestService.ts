@@ -1,20 +1,16 @@
 import { API_CONFIG, API_ENDPOINTS, ERROR_CODES } from '../config/api';
 
 export interface MintContestRegistrationData {
-  category: string;
-  studioName?: string;
-  contactPerson?: string;
-  email: string;
-  phone?: string;
-  website?: string;
-  teamSize?: string;
-  experience?: string;
-  projectTitle: string;
-  projectDescription: string;
-  projectCategory: string;
-  projectLink?: string;
-  walletAddress: string;
-  additionalInfo?: string;
+  trackType: string; // studio/individual
+  displayName?: string; // 团队/个人名称（用于展示榜单/宣传）
+  email: string; // 联系邮箱
+  twitterAccount?: string; // Twitter账号
+  telegramAccount: string; // Telegram账号（用于官方通知与奖励确认）
+  mainWalletAddress: string; // 主要参赛钱包地址
+  rewardWalletAddress?: string; // 奖励发放地址
+  rulesAccepted: boolean; // 已阅读并理解规则书
+  infoConfirmed: boolean; // 确认所提交信息真实有效
+  lockAccepted: boolean; // 同意截止日期锁定后不可修改
 }
 
 interface BaseResponse<T> {

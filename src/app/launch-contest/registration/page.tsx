@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { launchContestService, LaunchContestRegistrationData } from '../../../services/launchContestService';
+import SuccessModal from '../../components/SuccessModal';
 
 export default function LaunchRegistration() {
   const { language } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [formData, setFormData] = useState({
     projectName: '',
     tokenName: '',
@@ -122,9 +124,7 @@ export default function LaunchRegistration() {
       const response = await launchContestService.submitRegistration(submissionData);
       
       if (response.code === 0) {
-        alert(language === 'zh' ? '参赛登记提交成功！' : 'Registration submitted successfully!');
-        // 可以在这里添加跳转逻辑
-        window.location.href = '/launch-contest';
+        setShowSuccessModal(true);
       } else {
         throw new Error(response.message || 'Submission failed');
       }
@@ -522,6 +522,18 @@ export default function LaunchRegistration() {
           </motion.div>
         </motion.form>
       </div>
+
+      {/* 成功提交弹窗 */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        message={language === 'zh' ? '您的参赛登记已成功提交！我们将尽快处理您的申请。' : 'Your registration has been submitted successfully! We will process your application soon.'}
+        buttonText={language === 'zh' ? '返回首页' : 'Back to Home'}
+        onButtonClick={() => {
+          setShowSuccessModal(false);
+          window.location.href = '/launch-contest';
+        }}
+      />
     </div>
   );
 }
