@@ -6,6 +6,7 @@ import DynamicLangHtml from "./components/DynamicLangHtml";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "../contexts/AuthContext";
+import { ModuleProvider } from "../contexts/ModuleContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,11 +39,13 @@ export default function RootLayout({
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              <DynamicLangHtml />
-              <Header />
-              <main className="min-h-screen">
-                {children}
-              </main>
+              <ModuleProvider>
+                <DynamicLangHtml />
+                <Header />
+                <main className="min-h-screen">
+                  {children}
+                </main>
+              </ModuleProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>

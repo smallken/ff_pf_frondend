@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { formService, userService, taskSubmissionService, activityApplicationService } from '../../services';
+import { launchContestService } from '../../services/launchContestService';
+import { mintContestService } from '../../services/mintContestService';
 import type { ApplicationForm, LoginUserVO, UserUpdateMyRequest, TaskSubmissionVO, ActivityApplication } from '../../types/api';
 import MonthlyRewardProgress from '../components/MonthlyRewardProgress';
 import MonthlyRewardHistory from '../components/MonthlyRewardHistory';
@@ -77,6 +79,67 @@ export default function Profile() {
   const [pageSize] = useState(10); // 每页显示10条
   const [totalRecords, setTotalRecords] = useState(0);
   const [allSubmissionHistory, setAllSubmissionHistory] = useState<SubmissionHistoryItem[]>([]);
+
+  // Launch和Mint大赛表单状态
+  const [launchRegistrations, setLaunchRegistrations] = useState<any[]>([]);
+  const [mintRegistrations, setMintRegistrations] = useState<any[]>([]);
+  const [launchDDQuestionnaires, setLaunchDDQuestionnaires] = useState<any[]>([]);
+  const [contestFormsLoading, setContestFormsLoading] = useState(false);
+  
+  // 弹窗相关状态
+  const [selectedForm, setSelectedForm] = useState<any>(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [editingWalletAddress, setEditingWalletAddress] = useState(false);
+  const [walletAddress, setWalletAddress] = useState('');
+
+  // 安全的日期格式化函数
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  // 处理表单点击显示弹窗
+  const handleFormClick = (form: any, type: 'launch' | 'mint' | 'dd') => {
+    setSelectedForm({ ...form, type });
+    setWalletAddress(form.walletAddress || '');
+    setEditingWalletAddress(false);
+    setShowFormModal(true);
+  };
+
+  // 关闭弹窗
+  const handleCloseModal = () => {
+    setShowFormModal(false);
+    setSelectedForm(null);
+    setEditingWalletAddress(false);
+    setWalletAddress('');
+  };
+
+  // 保存钱包地址修改
+  const handleSaveWalletAddress = async () => {
+    if (!selectedForm || selectedForm.type !== 'mint') return;
+    
+    try {
+      // 这里可以调用API更新钱包地址
+      // await mintContestService.updateWalletAddress(selectedForm.id, walletAddress);
+      alert('钱包地址更新成功！');
+      setEditingWalletAddress(false);
+      // 刷新数据
+      fetchContestForms();
+    } catch (error) {
+      console.error('更新钱包地址失败:', error);
+      alert('更新失败，请重试');
+    }
+  };
 
   // 获取用户详细信息
   const fetchUserInfo = async () => {
@@ -306,6 +369,63 @@ export default function Profile() {
     }
   };
 
+  // 获取Launch和Mint大赛表单数据
+  const fetchContestForms = async () => {
+    if (!isAuthenticated) return;
+    
+    setContestFormsLoading(true);
+    try {
+      console.log('🔄 开始获取Launch和Mint大赛表单数据...');
+      
+      const [launchRegs, mintRegs, ddQuestionnaires] = await Promise.all([
+        launchContestService.getMyRegistrations(10, 1).catch(err => {
+          console.warn('获取Launch大赛登记失败:', err);
+          return { data: { records: [], total: 0 } };
+        }),
+        mintContestService.getMyRegistrations(10, 1).catch(err => {
+          console.warn('获取Mint大赛登记失败:', err);
+          return { data: { records: [], total: 0 } };
+        }),
+        launchContestService.getMyDDQuestionnaires(10, 1).catch(err => {
+          console.warn('获取DD问答清单失败:', err);
+          return { data: { records: [], total: 0 } };
+        })
+      ]);
+
+      console.log('📊 大赛表单数据获取结果:', {
+        launchRegistrations: launchRegs.data.records.length,
+        mintRegistrations: mintRegs.data.records.length,
+        ddQuestionnaires: ddQuestionnaires.data.records.length
+      });
+
+      // 详细日志DD问答清单数据
+      console.log('🔍 DD问答清单详细数据:', ddQuestionnaires.data.records);
+      ddQuestionnaires.data.records.forEach((dd, index) => {
+        console.log(`DD问答清单 ${index + 1}:`, {
+          id: dd.id,
+          projectName: dd.projectName,
+          tokenContractAddress: dd.tokenContractAddress,
+          trackCategory: dd.trackCategory,
+          status: dd.status,
+          keyDataAtT0: dd.keyDataAtT0 ? '已填写' : '未填写',
+          trafficContribution: dd.trafficContribution ? '已填写' : '未填写',
+          projectQuality: dd.projectQuality ? '已填写' : '未填写',
+          narrativeConsensus: dd.narrativeConsensus ? '已填写' : '未填写',
+          teamEfficiency: dd.teamEfficiency ? '已填写' : '未填写',
+          nextSteps: dd.nextSteps ? '已填写' : '未填写'
+        });
+      });
+
+      setLaunchRegistrations(launchRegs.data.records);
+      setMintRegistrations(mintRegs.data.records);
+      setLaunchDDQuestionnaires(ddQuestionnaires.data.records);
+    } catch (error: any) {
+      console.error('获取大赛表单数据失败:', error);
+    } finally {
+      setContestFormsLoading(false);
+    }
+  };
+
   // 获取所有提交历史
   const fetchAllSubmissionHistory = async () => {
     if (!isAuthenticated) return;
@@ -423,7 +543,8 @@ export default function Profile() {
       fetchUserInfo(),
       fetchUserSubmissions(),
       fetchAllSubmissionHistory(),
-      fetchHasApproved()
+      fetchHasApproved(),
+      fetchContestForms()
     ]).catch(error => {
       console.error('获取数据失败:', error);
     });
@@ -518,6 +639,11 @@ export default function Profile() {
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{t('profile.page.title')}</h1>
         </div>
+
+        {/* 主要内容区域 - 两列布局 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* 左侧主要内容 */}
+          <div className="lg:col-span-2 space-y-8">
 
         {/* 用户信息卡片 */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
@@ -874,28 +1000,214 @@ export default function Profile() {
             </a>
           </div>
         </div>
+          </div>
+
+          {/* 右侧Launch和Mint大赛表单区域 */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Launch大赛表单 */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <span className="text-cyan-500 mr-2">🚀</span>
+                Launch大赛表单
+              </h3>
+              
+              {contestFormsLoading ? (
+                <div className="flex justify-center items-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-600"></div>
+                  <span className="ml-2 text-gray-600 dark:text-gray-300 text-sm">加载中...</span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* 参赛登记 */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">参赛登记</h4>
+                    {launchRegistrations.length === 0 ? (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">暂无登记记录</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {launchRegistrations.map((reg, index) => (
+                          <div 
+                            key={reg.id || index} 
+                            className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                            onClick={() => handleFormClick(reg, 'launch')}
+                          >
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {reg.projectName || '未命名项目'}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              赛道: {reg.trackCategory || '未选择'}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              提交时间: {formatDate(reg.createTime)}
+                            </div>
+                            <div className="mt-2 flex justify-between items-center">
+                              <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                                已提交
+                              </span>
+                              <span className="text-xs text-blue-600 dark:text-blue-400">点击查看</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-3">
+                      <a href="/launch-contest/registration" className="text-cyan-600 hover:text-cyan-500 text-sm font-medium">
+                        去参赛登记 →
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* DD问答清单 */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">DD问答清单</h4>
+                    {launchDDQuestionnaires.length === 0 ? (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">暂无问答记录</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {launchDDQuestionnaires.map((dd, index) => (
+                          <div 
+                            key={dd.id || index} 
+                            className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                            onClick={() => handleFormClick(dd, 'dd')}
+                          >
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {dd.projectName || '未命名项目'}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              状态: {dd.status === 'submitted' ? '已提交' : '草稿'}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              提交时间: {formatDate(dd.createTime)}
+                            </div>
+                            <div className="mt-2 flex justify-between items-center">
+                              <span className={`px-2 py-1 text-xs rounded-full ${
+                                dd.status === 'submitted' 
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
+                              }`}>
+                                {dd.status === 'submitted' ? '已提交' : '草稿'}
+                              </span>
+                              <span className="text-xs text-blue-600 dark:text-blue-400">点击查看</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-3">
+                      <a href="/launch-contest/dd-questionnaire" className="text-cyan-600 hover:text-cyan-500 text-sm font-medium">
+                        去填写问答 →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Mint大赛表单 */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <span className="text-pink-500 mr-2">🎨</span>
+                Mint大赛表单
+              </h3>
+              
+              {contestFormsLoading ? (
+                <div className="flex justify-center items-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-600"></div>
+                  <span className="ml-2 text-gray-600 dark:text-gray-300 text-sm">加载中...</span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {mintRegistrations.length === 0 ? (
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">暂无参赛记录</p>
+                      <div className="space-y-2">
+                        <a href="/mint-contest/studio" className="block w-full text-center bg-pink-500 text-white py-2 px-4 rounded-lg hover:bg-pink-600 transition-colors text-sm">
+                          工作室组报名
+                        </a>
+                        <a href="/mint-contest/individual" className="block w-full text-center bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 transition-colors text-sm">
+                          个人组报名
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {mintRegistrations.map((reg, index) => (
+                        <div 
+                          key={reg.id || index} 
+                          className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                          onClick={() => handleFormClick(reg, 'mint')}
+                        >
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {reg.projectTitle || '未命名项目'}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            类别: {reg.category === 'studio' ? '工作室组' : '个人组'}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            项目类别: {reg.projectCategory || '未分类'}
+                          </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              提交时间: {formatDate(reg.createTime)}
+                            </div>
+                            <div className="mt-2 flex justify-between items-center">
+                              <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                                已提交
+                              </span>
+                              <span className="text-xs text-blue-600 dark:text-blue-400">点击查看</span>
+                            </div>
+                        </div>
+                      ))}
+                      <div className="mt-3">
+                        <a href="/mint-contest/registration" className="text-pink-600 hover:text-pink-500 text-sm font-medium">
+                          去报名参赛 →
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 提交详情弹窗 */}
       {showSubmissionModal && selectedSubmission && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl transform animate-scaleIn">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {selectedSubmission.title} - {t('profile.submission.details')}
-              </h3>
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-5xl w-full max-h-[95vh] overflow-y-auto shadow-2xl transform transition-all duration-300 ease-out scale-100 opacity-100 border border-gray-200 dark:border-gray-700">
+            <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">📋</span>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {selectedSubmission.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {t('profile.submission.details')}
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={handleCloseSubmissionModal}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
+                className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors duration-200 group"
               >
-                ×
+                <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* 基本信息 */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">{t('profile.submission.basic.info')}</h4>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-6 border border-blue-100 dark:border-gray-600">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">ℹ️</span>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('profile.submission.basic.info')}</h4>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.time')}：</span>
@@ -1137,10 +1449,423 @@ export default function Profile() {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-end">
               <button
                 onClick={handleCloseSubmissionModal}
-                className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 大赛表单详情弹窗 */}
+      {showFormModal && selectedForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-5xl w-full max-h-[95vh] overflow-y-auto shadow-2xl transform transition-all duration-300 ease-out scale-100 opacity-100 border border-gray-200 dark:border-gray-700">
+            <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center space-x-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  selectedForm.type === 'launch' ? 'bg-gradient-to-r from-cyan-500 to-blue-600' :
+                  selectedForm.type === 'mint' ? 'bg-gradient-to-r from-pink-500 to-purple-600' :
+                  'bg-gradient-to-r from-green-500 to-teal-600'
+                }`}>
+                  <span className="text-white font-bold text-lg">
+                    {selectedForm.type === 'launch' ? '🚀' : selectedForm.type === 'mint' ? '🎨' : '📋'}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {selectedForm.type === 'launch' && 'Launch大赛参赛登记'}
+                    {selectedForm.type === 'mint' && 'Mint大赛参赛登记'}
+                    {selectedForm.type === 'dd' && 'DD问答清单'}
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    表单详情
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseModal}
+                className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors duration-200 group"
+              >
+                <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Launch大赛表单详情 */}
+              {selectedForm.type === 'launch' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目名称</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.projectName || '未填写'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">代币名称</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.tokenName || '未填写'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">代币合约地址</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.tokenContractAddress || '未填写'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">代币Logo</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.tokenLogo ? (
+                          <img 
+                            src={selectedForm.tokenLogo} 
+                            alt="代币Logo" 
+                            className="w-16 h-16 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling!.style.display = 'block';
+                            }}
+                          />
+                        ) : (
+                          <span className="text-gray-500">未上传</span>
+                        )}
+                        <span style={{display: 'none'}} className="text-red-500">Logo加载失败</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">所属赛道</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.trackCategory || '未选择'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">其他赛道名称</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.otherTrackName || '未填写'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">提交时间</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {formatDate(selectedForm.createTime)}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 项目信息 */}
+                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-6 border border-blue-100 dark:border-gray-600">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">🌐</span>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">项目信息</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目网站</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.website ? (
+                            <a href={selectedForm.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                              {selectedForm.website}
+                            </a>
+                          ) : (
+                            '未填写'
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Twitter</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.twitter ? (
+                            <a href={selectedForm.twitter} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                              {selectedForm.twitter}
+                            </a>
+                          ) : (
+                            '未填写'
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telegram</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.telegram ? (
+                            <a href={selectedForm.telegram} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                              {selectedForm.telegram}
+                            </a>
+                          ) : (
+                            '未填写'
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">团队规模</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.teamSize || '未填写'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 联系人信息 */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-6 border border-green-100 dark:border-gray-600">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">👤</span>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">联系人信息</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">联系人姓名</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.contactName || '未填写'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">职位角色</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.contactRole || '未填写'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">联系人Telegram</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.contactTelegram ? (
+                            <a href={selectedForm.contactTelegram} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                              {selectedForm.contactTelegram}
+                            </a>
+                          ) : (
+                            '未填写'
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">联系人邮箱</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.contactEmail ? (
+                            <a href={`mailto:${selectedForm.contactEmail}`} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                              {selectedForm.contactEmail}
+                            </a>
+                          ) : (
+                            '未填写'
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Mint大赛表单详情 */}
+              {selectedForm.type === 'mint' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目标题</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.projectTitle || '未填写'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">参赛类别</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.category === 'studio' ? '工作室组' : '个人组'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目类别</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.projectCategory || '未分类'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">提交时间</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {formatDate(selectedForm.createTime)}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 钱包地址 - 可编辑 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">钱包地址</label>
+                    {editingWalletAddress ? (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={walletAddress}
+                          onChange={(e) => setWalletAddress(e.target.value)}
+                          className="flex-1 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 p-3 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                          placeholder="请输入钱包地址"
+                        />
+                        <button
+                          onClick={handleSaveWalletAddress}
+                          className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
+                        >
+                          保存
+                        </button>
+                        <button
+                          onClick={() => setEditingWalletAddress(false)}
+                          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                        >
+                          取消
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                          {walletAddress || '未填写'}
+                        </div>
+                        <button
+                          onClick={() => setEditingWalletAddress(true)}
+                          className="px-3 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
+                        >
+                          编辑
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目描述</label>
+                    <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                      {selectedForm.projectDescription || '未填写'}
+                    </div>
+                  </div>
+                  
+                  {selectedForm.studioName && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">工作室名称</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.studioName}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedForm.contactPerson && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">联系人</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.contactPerson}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedForm.email && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">邮箱</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.email}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* DD问答清单详情 */}
+              {selectedForm.type === 'dd' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目名称</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.projectName || '未填写'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">代币合约地址</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.tokenContractAddress || '未填写'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">所属赛道</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.trackCategory || '未选择'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">状态</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.status === 'submitted' ? '已提交' : '草稿'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">其他赛道名称</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {selectedForm.otherTrackName || '未填写'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">提交时间</label>
+                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        {formatDate(selectedForm.createTime)}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 项目评估详情 */}
+                  <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-6 border border-orange-100 dark:border-gray-600">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">📈</span>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">项目评估详情</h4>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">T0关键数据</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.keyDataAtT0 || '未填写'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">流量贡献</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.trafficContribution || '未填写'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目质量</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.projectQuality || '未填写'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">叙事与共识</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.narrativeConsensus || '未填写'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">团队效率</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.teamEfficiency || '未填写'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">下一步规划</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.nextSteps || '未填写'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+              <button
+                onClick={handleCloseModal}
+                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
               >
                 关闭
               </button>

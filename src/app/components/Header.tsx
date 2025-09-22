@@ -2,15 +2,73 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
   const { user, logout, isAuthenticated } = useAuth();
+
+  // 确定当前模块
+  const getCurrentModule = () => {
+    if (pathname.startsWith('/pathfinders')) return 'pathfinders';
+    if (pathname.startsWith('/launch-contest')) return 'launch';
+    if (pathname.startsWith('/mint-contest')) return 'mint';
+    return 'pathport';
+  };
+
+  const currentModule = getCurrentModule();
+
+  // 获取模块特定的导航配置
+  const getModuleConfig = () => {
+    switch (currentModule) {
+      case 'pathfinders':
+        return {
+          logo: { icon: '👣', text: 'Flipflop Footprint', href: '/pathfinders' },
+          navItems: [
+            { href: '/pathfinders/honor', key: 'honor.title', color: 'blue' },
+            { href: '/pathfinders/ranking', key: 'ranking.title', color: 'emerald' },
+            { href: '/pathfinders/process', key: 'process.title', color: 'indigo' },
+            { href: '/pathfinders/forms', key: 'forms.title', color: 'purple' },
+          ]
+        };
+      case 'launch':
+        return {
+          logo: { icon: '🚀', text: 'Launch Contest', href: '/launch-contest' },
+          navItems: [
+            { href: '/launch-contest/rules', key: { zh: '大赛规则', en: 'Contest Rules' }, color: 'cyan' },
+            { href: '/launch-contest/registration', key: { zh: '参赛登记', en: 'Registration' }, color: 'blue' },
+            { href: '/launch-contest/leaderboard', key: { zh: '参赛名单', en: 'Participant List' }, color: 'purple' },
+            { href: '/launch-contest/timeline', key: { zh: '赛事时间线', en: 'Timeline' }, color: 'indigo' },
+            { href: '/launch-contest/dd-questionnaire', key: { zh: 'DD问答清单', en: 'DD Questionnaire' }, color: 'pink' },
+          ]
+        };
+      case 'mint':
+        return {
+          logo: { icon: '🎮', text: 'Mint Contest', href: '/mint-contest' },
+          navItems: [
+            { href: '/mint-contest/rules', key: { zh: '大赛规则', en: 'Contest Rules' }, color: 'pink' },
+            { href: '/mint-contest/registration', key: { zh: '参赛登记', en: 'Registration' }, color: 'red' },
+          ]
+        };
+      default: // pathport
+        return {
+          logo: { icon: '⛵', text: 'FlipFlop PathPort', href: '/' },
+          navItems: [
+            { href: '/pathfinders', key: { zh: '脚印计划', en: 'Footprint Program' }, color: 'blue' },
+            { href: '/launch-contest', key: { zh: 'Launch大赛', en: 'Launch Contest' }, color: 'cyan' },
+            { href: '/mint-contest', key: { zh: 'Mint大赛', en: 'Mint Contest' }, color: 'pink' },
+          ]
+        };
+    }
+  };
+
+  const moduleConfig = getModuleConfig();
 
   return (
     <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-lg border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50">
@@ -18,32 +76,47 @@ export default function Header() {
         <div className="flex justify-between items-center h-18">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-3 group">
-              <span className="text-3xl transform group-hover:scale-110 transition-transform duration-300">👣</span>
+            <Link href={moduleConfig.logo.href} className="flex items-center space-x-3 group">
+              <span className="text-3xl transform group-hover:scale-110 transition-transform duration-300">{moduleConfig.logo.icon}</span>
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent hover:from-purple-600 hover:to-blue-600 transition-all duration-300">
-                {t('home.title')}
+                {moduleConfig.logo.text}
               </span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-1">
-            <Link href="/honor" className="relative px-4 py-2 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 group">
-              <span className="relative z-10">{t('honor.title')}</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </Link>
-            <Link href="/ranking" className="relative px-4 py-2 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-300 group">
-              <span className="relative z-10">{t('ranking.title')}</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </Link>
-            <Link href="/process" className="relative px-4 py-2 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-300 group">
-              <span className="relative z-10">{t('process.title')}</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-blue-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </Link>
-            <Link href="/forms" className="relative px-4 py-2 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300 group">
-              <span className="relative z-10">{t('forms.title')}</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </Link>
+          <nav className={`hidden md:flex ${currentModule === 'mint' ? 'justify-center flex-1 mx-8' : 'space-x-0.5'}`}>
+            {moduleConfig.navItems.map((item) => {
+              const displayText = (() => {
+                if (currentModule === 'pathfinders') {
+                  return t(item.key as string);
+                } else if (currentModule === 'pathport' || currentModule === 'launch' || currentModule === 'mint') {
+                  return typeof item.key === 'object' 
+                    ? (item.key as any)[language as 'zh' | 'en']
+                    : item.key;
+                } else {
+                  return item.key as string;
+                }
+              })();
+
+              // 为Mint大赛导航添加特殊样式
+              const linkClassName = currentModule === 'mint' 
+                ? "relative mx-4 px-8 py-4 bg-gradient-to-r from-red-500/10 to-pink-500/10 border border-red-500/20 text-red-400 font-bold rounded-2xl hover:from-red-500/20 hover:to-pink-500/20 hover:border-red-400/40 hover:text-red-300 transition-all duration-300 group whitespace-nowrap shadow-lg hover:shadow-red-500/25 hover:scale-105 transform"
+                : "relative px-3 py-2 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 group whitespace-nowrap";
+
+              const backgroundClassName = currentModule === 'mint'
+                ? "absolute inset-0 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                : "absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300";
+
+              return (
+                <Link key={item.href} href={item.href} className={linkClassName}>
+                  <span className={`relative z-10 ${currentModule === 'mint' ? 'text-base font-bold' : 'text-sm'}`}>
+                    {displayText}
+                  </span>
+                  <div className={backgroundClassName}></div>
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Mobile menu button */}
@@ -149,34 +222,59 @@ export default function Header() {
           <div className="max-w-7xl mx-auto px-4 py-4 space-y-2">
             {/* Navigation Links */}
             <div className="space-y-1">
-              <Link 
-                href="/honor" 
-                className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                🏆 {t('honor.title')}
-              </Link>
-              <Link 
-                href="/ranking" 
-                className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-300"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                📊 {t('ranking.title')}
-              </Link>
-              <Link 
-                href="/process" 
-                className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-300"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                🔄 {t('process.title')}
-              </Link>
-              <Link 
-                href="/forms" 
-                className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                📝 {t('forms.title')}
-              </Link>
+              {moduleConfig.navItems.map((item) => {
+                const icons = {
+                  'honor.title': '🏆',
+                  'ranking.title': '📊',
+                  'process.title': '🔄',
+                  'forms.title': '📝',
+                  '脚印计划': '👣',
+                  'Footprint Program': '👣',
+                  'Launch大赛': '🚀',
+                  'Launch Contest': '🚀',
+                  'Mint大赛': '🎮',
+                  'Mint Contest': '🎮',
+                  '大赛规则': '📋',
+                  'Contest Rules': '📋',
+                  '参赛登记': '✍️',
+                  'Registration': '✍️',
+                  '参赛名单': '📋',
+                  'Participant List': '📋',
+                  '赛事时间线': '⏰',
+                  'Timeline': '⏰',
+                  'DD问答清单': '📝',
+                  'DD Questionnaire': '📝',
+                  '作品画廊': '🎨',
+                  'Gallery': '🎨',
+                };
+                const displayKey = (() => {
+                  if (currentModule === 'pathfinders') {
+                    return t(item.key as string);
+                  } else if (currentModule === 'pathport' || currentModule === 'launch' || currentModule === 'mint') {
+                    return typeof item.key === 'object' 
+                      ? (item.key as any)[language as 'zh' | 'en']
+                      : item.key;
+                  } else {
+                    return item.key as string;
+                  }
+                })();
+                const icon = icons[displayKey as keyof typeof icons] || '🔗';
+                
+                
+                return (
+                  <Link 
+                    key={item.href}
+                    href={item.href} 
+                    className="block px-4 py-3 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 whitespace-nowrap"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <span className="inline-flex items-center space-x-2">
+                      <span>{icon}</span>
+                      <span>{displayKey}</span>
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
 
             {/* User Actions for Mobile */}

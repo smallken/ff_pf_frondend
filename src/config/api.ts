@@ -89,6 +89,49 @@ export const API_ENDPOINTS = {
   FILE: {
     UPLOAD: '/file/upload',
   },
+  // Launch大赛相关
+  LAUNCH_CONTEST: {
+    REGISTRATION: {
+      ADD: '/launch-contest/registration/add',
+      UPDATE: '/launch-contest/registration/update',
+      DELETE: '/launch-contest/registration/delete',
+      GET: '/launch-contest/registration/get/vo',
+      LIST: '/launch-contest/registration/list/page/vo',
+    },
+    DD_QUESTIONNAIRE: {
+      ADD: '/launch-contest/dd-questionnaire/add',
+      UPDATE: '/launch-contest/dd-questionnaire/update',
+      GET: '/launch-contest/dd-questionnaire/get/vo',
+      LIST: '/launch-contest/dd-questionnaire/list/page/vo',
+      MY_LIST: '/launch-contest/dd-questionnaire/my/list/page/vo',
+    },
+    LEADERBOARD: {
+      GET: '/launch-contest/leaderboard',
+      LIST: '/launch-contest/leaderboard/list/page/vo',
+    },
+  },
+  // Mint大赛相关
+  MINT_CONTEST: {
+    REGISTRATION: {
+      ADD: '/mint-contest/registration/add',
+      UPDATE: '/mint-contest/registration/update',
+      DELETE: '/mint-contest/registration/delete',
+      GET: '/mint-contest/registration/get/vo',
+      LIST: '/mint-contest/registration/list/page/vo',
+      MY_LIST: '/mint-contest/registration/my/list/page/vo',
+    },
+    GALLERY: {
+      ADD: '/mint-contest/gallery/add',
+      UPDATE: '/mint-contest/gallery/update',
+      DELETE: '/mint-contest/gallery/delete',
+      GET: '/mint-contest/gallery/get/vo',
+      LIST: '/mint-contest/gallery/list/page/vo',
+    },
+    VOTE: {
+      ADD: '/mint-contest/vote/add',
+      DELETE: '/mint-contest/vote/delete',
+    },
+  },
 };
 
 // 请求状态码

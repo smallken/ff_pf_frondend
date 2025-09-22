@@ -131,6 +131,9 @@ export const request = {
 export const uploadFile = async (url: string, file: File, biz: string): Promise<any> => {
   const formData = new FormData();
   formData.append('file', file);
+  
+  // Spring Boot会自动将表单字段绑定到UploadFileRequest对象
+  // 所以我们需要使用对象的字段名
   formData.append('biz', biz);
 
   try {
@@ -141,17 +144,22 @@ export const uploadFile = async (url: string, file: File, biz: string): Promise<
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('HTTP Error Response:', errorText);
       throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
     }
 
     const result = await response.json();
+    console.log('Upload response:', result);
+    
     if (result.code !== ERROR_CODES.SUCCESS) {
       throw new Error(result.message || '上传失败');
     }
 
-    return result.data;
+    return result;
   } catch (error) {
-    handleError(error);
+    console.error('File upload error:', error);
+    throw error;
   }
 };
 

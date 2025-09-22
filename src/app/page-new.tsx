@@ -129,7 +129,7 @@ export default function PathPortHome() {
             {/* Enhanced title with gradient and animation */}
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 dark:from-blue-400 dark:via-purple-400 dark:to-cyan-400 bg-clip-text text-transparent">
-                {language === 'zh' ? 'FlipFlop PathPort' : 'FlipFlop PathPort'}
+                {language === 'zh' ? '所有赛事与计划的起点' : 'The Starting Point for All Events & Programs'}
               </span>
             </h1>
 
@@ -143,8 +143,15 @@ export default function PathPortHome() {
               </span>
             </p>
 
-            </div>
-            
+            {/* Enhanced description */}
+            <p className="text-base md:text-lg text-gray-600 dark:text-gray-400 mb-12 max-w-5xl mx-auto leading-relaxed">
+              {language === 'zh' 
+                ? 'FlipFlop PathPort，不只是一个起点，更是一切可能性的港湾。来自不同领域的创作者、建设者和梦想家，在这里汇聚，把他们的灵感与热情化为现实。从 Mint 到 Launch大赛，再到 Footprint脚印计划，每一次赛事与项目，都从这里出发，也在这里汇聚。'
+                : 'FlipFlop PathPort is more than just a starting point—it\'s a harbor of infinite possibilities. Creators, builders, and dreamers from different fields gather here to transform their inspiration and passion into reality. From Mint to Launch contests, to Footprint programs, every event and project begins here and converges here.'
+              }
+            </p>
+          </div>
+
           {/* Module Cards Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto mb-16">
             {moduleCards.map((card) => (
@@ -186,8 +193,8 @@ export default function PathPortHome() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                       </svg>
                     </span>
-                    </div>
                   </div>
+                </div>
               </div>
             ))}
           </div>
