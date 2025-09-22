@@ -1530,7 +1530,10 @@ export default function Profile() {
                             className="w-16 h-16 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling!.style.display = 'block';
+                              const nextSibling = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (nextSibling) {
+                                nextSibling.style.display = 'block';
+                              }
                             }}
                           />
                         ) : (
