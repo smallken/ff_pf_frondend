@@ -71,7 +71,7 @@ export default function MintContest() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.2 }}
           >
-            🎮 Flipflop Mint大赛
+            🎮 {language === 'zh' ? 'Flipflop Mint大赛' : 'Flipflop Mint Contest'}
           </motion.h1>
           
           <motion.h2 
@@ -80,7 +80,7 @@ export default function MintContest() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            铸造狂欢季正式开启！
+            {language === 'zh' ? '铸造狂欢季正式开启！' : 'Minting Carnival Season Officially Launched!'}
           </motion.h2>
 
           <motion.div 
@@ -93,13 +93,13 @@ export default function MintContest() {
               onClick={() => setShowRegistrationModal(true)}
               className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold rounded-xl hover:from-red-400 hover:to-pink-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
             >
-              现在报名
+              {language === 'zh' ? '现在报名' : 'Register Now'}
             </button>
             <a
               href="/mint-contest/rules"
               className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
             >
-              详细规则书
+              {language === 'zh' ? '详细规则书' : 'Detailed Rules'}
             </a>
           </motion.div>
         </motion.div>
@@ -113,33 +113,44 @@ export default function MintContest() {
         >
           <div className="bg-gradient-to-r from-gray-900/50 to-red-900/20 backdrop-blur-sm border border-red-500/30 rounded-2xl p-8">
             <p className="text-lg leading-relaxed mb-6">
-              从 <span className="text-red-400 font-bold">9月20日到10月05日</span>，Flipflop将迎来一场属于所有 
-              <span className="text-cyan-400 font-bold">工作室与个人玩家</span> 的链上挑战赛。
-              这不仅是一场关于 <span className="text-yellow-400 font-bold">现金奖励</span> 的角逐，更是一场检验 
-              <span className="text-green-400 font-bold">社区凝聚力与创造力</span> 的竞赛。
+              {language === 'zh' ? (
+                <>
+                  从 <span className="text-red-400 font-bold">9月20日到10月05日</span>，Flipflop将迎来一场属于所有 
+                  <span className="text-cyan-400 font-bold">工作室与个人玩家</span> 的链上挑战赛。
+                  这不仅是一场关于 <span className="text-yellow-400 font-bold">现金奖励</span> 的角逐，更是一场检验 
+                  <span className="text-green-400 font-bold">社区凝聚力与创造力</span> 的竞赛。
+                </>
+              ) : (
+                <>
+                  From <span className="text-red-400 font-bold">September 20th to October 5th</span>, Flipflop will host an on-chain challenge for all 
+                  <span className="text-cyan-400 font-bold">studios and individual players</span>.
+                  This is not just a competition for <span className="text-yellow-400 font-bold">cash rewards</span>, but also a test of 
+                  <span className="text-green-400 font-bold">community cohesion and creativity</span>.
+                </>
+              )}
             </p>
             
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <span className="text-2xl">💪</span>
-                <p>你可以用实力证明自己，在链上留下属于团队或个人的荣耀记录；</p>
+                <p>{language === 'zh' ? '你可以用实力证明自己，在链上留下属于团队或个人的荣耀记录；' : 'You can prove yourself with strength and leave glorious records on-chain for your team or individual achievements;'}</p>
               </div>
               <div className="flex items-start space-x-3">
                 <span className="text-2xl">🏆</span>
-                <p>你可以凭借一次次Mint，冲击排行榜，赢取最高 <span className="text-yellow-400 font-bold">1500 USDT</span> 的现金大奖；</p>
+                <p>{language === 'zh' ? '你可以凭借一次次Mint，冲击排行榜，赢取最高 ' : 'You can climb the leaderboard through continuous minting and win up to '}<span className="text-yellow-400 font-bold">1500 USDT</span>{language === 'zh' ? ' 的现金大奖；' : ' in cash prizes;'}</p>
               </div>
               <div className="flex items-start space-x-3">
                 <span className="text-2xl">🌟</span>
-                <p>你还将有机会获得项目方、基金、全球资源的关注与支持，打开更多合作与成长的机会。</p>
+                <p>{language === 'zh' ? '你还将有机会获得项目方、基金、全球资源的关注与支持，打开更多合作与成长的机会。' : 'You will also have the opportunity to gain attention and support from project teams, funds, and global resources, opening up more opportunities for collaboration and growth.'}</p>
               </div>
             </div>
 
             <div className="mt-6 p-4 bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-xl border border-blue-500/30">
               <p className="text-center font-semibold">
-                Flipflop相信：每一次Mint，不只是一个数字，更是推动整个生态向前的动力。在这场大赛中，没有边缘人，每一位参与者都是生态建设者。
+                {language === 'zh' ? 'Flipflop相信：每一次Mint，不只是一个数字，更是推动整个生态向前的动力。在这场大赛中，没有边缘人，每一位参与者都是生态建设者。' : 'Flipflop believes: Every mint is not just a number, but a driving force that propels the entire ecosystem forward. In this contest, there are no outsiders - every participant is an ecosystem builder.'}
               </p>
               <p className="text-center mt-2 text-cyan-400 font-bold">
-                现在，就是展示你与团队力量的最佳时机！
+                {language === 'zh' ? '现在，就是展示你与团队力量的最佳时机！' : 'Now is the perfect time to showcase your and your team\'s strength!'}
               </p>
             </div>
           </div>
@@ -153,10 +164,10 @@ export default function MintContest() {
           transition={{ duration: 0.8, delay: 1.0 }}
         >
           <h2 className="text-4xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-            参赛组别
+            {language === 'zh' ? '参赛组别' : 'Contest Categories'}
           </h2>
           <p className="text-center text-gray-300 mb-12 text-lg">
-            在打狗大赛里，不管你是团队还是个人，都能找到属于你的舞台：
+            {language === 'zh' ? '在打狗大赛里，不管你是团队还是个人，都能找到属于你的舞台：' : 'In the Mint Contest, whether you are a team or an individual, you can find your own stage:'}
           </p>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -169,23 +180,23 @@ export default function MintContest() {
             >
               <div className="text-center mb-6">
                 <div className="text-6xl mb-4">🐕</div>
-                <h3 className="text-2xl font-bold text-red-400 mb-2">工作室赛道</h3>
+                <h3 className="text-2xl font-bold text-red-400 mb-2">{language === 'zh' ? '工作室赛道' : 'Studio Track'}</h3>
               </div>
               
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-lg font-semibold text-cyan-400 mb-2">适合谁？</h4>
-                  <p>👉 社区主理人、项目孵化团队、运营工作室，或者任何有组织的小伙伴们。</p>
+                  <h4 className="text-lg font-semibold text-cyan-400 mb-2">{language === 'zh' ? '适合谁？' : 'Who is it for?'}</h4>
+                  <p>👉 {language === 'zh' ? '社区主理人、项目孵化团队、运营工作室，或者任何有组织的小伙伴们。' : 'Community managers, project incubation teams, operation studios, or any organized groups.'}</p>
                 </div>
                 
                 <div>
-                  <h4 className="text-lg font-semibold text-cyan-400 mb-2">怎么参赛？</h4>
-                  <p>👉 用一个统一的钱包地址报名，全队的Mint成绩都会算到一起。</p>
+                  <h4 className="text-lg font-semibold text-cyan-400 mb-2">{language === 'zh' ? '怎么参赛？' : 'How to participate?'}</h4>
+                  <p>👉 {language === 'zh' ? '用一个统一的钱包地址报名，全队的Mint成绩都会算到一起。' : 'Register with a unified wallet address, and all team minting achievements will be counted together.'}</p>
                 </div>
                 
                 <div>
-                  <h4 className="text-lg font-semibold text-cyan-400 mb-2">有什么优势？</h4>
-                  <p>👉 奖金更高，更能展现团队的实力与协作。优秀团队还有机会得到基金会和全球资源的优先扶持。</p>
+                  <h4 className="text-lg font-semibold text-cyan-400 mb-2">{language === 'zh' ? '有什么优势？' : 'What are the advantages?'}</h4>
+                  <p>👉 {language === 'zh' ? '奖金更高，更能展现团队的实力与协作。优秀团队还有机会得到基金会和全球资源的优先扶持。' : 'Higher prizes, better showcasing of team strength and collaboration. Excellent teams also have the opportunity to receive priority support from foundations and global resources.'}</p>
                 </div>
               </div>
               
@@ -194,7 +205,7 @@ export default function MintContest() {
                   href="/mint-contest/studio"
                   className="inline-block px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold rounded-lg hover:from-red-400 hover:to-pink-500 transition-all duration-300 transform hover:scale-105"
                 >
-                  工作室组报名
+                  {language === 'zh' ? '工作室组报名' : 'Studio Registration'}
                 </a>
               </div>
             </motion.div>
@@ -208,23 +219,23 @@ export default function MintContest() {
             >
               <div className="text-center mb-6">
                 <div className="text-6xl mb-4">🐾</div>
-                <h3 className="text-2xl font-bold text-blue-400 mb-2">个人赛道</h3>
+                <h3 className="text-2xl font-bold text-blue-400 mb-2">{language === 'zh' ? '个人赛道' : 'Individual Track'}</h3>
               </div>
               
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-lg font-semibold text-cyan-400 mb-2">适合谁？</h4>
-                  <p>👉 独立创作者、个人玩家，哪怕你是刚入门的小白，也完全可以参赛。</p>
+                  <h4 className="text-lg font-semibold text-cyan-400 mb-2">{language === 'zh' ? '适合谁？' : 'Who is it for?'}</h4>
+                  <p>👉 {language === 'zh' ? '独立创作者、个人玩家，哪怕你是刚入门的小白，也完全可以参赛。' : 'Independent creators, individual players, even if you are a beginner, you can fully participate.'}</p>
                 </div>
                 
                 <div>
-                  <h4 className="text-lg font-semibold text-cyan-400 mb-2">怎么参赛？</h4>
-                  <p>👉 直接用你自己的钱包地址参赛，单枪匹马也能冲击排行榜。</p>
+                  <h4 className="text-lg font-semibold text-cyan-400 mb-2">{language === 'zh' ? '怎么参赛？' : 'How to participate?'}</h4>
+                  <p>👉 {language === 'zh' ? '直接用你自己的钱包地址参赛，单枪匹马也能冲击排行榜。' : 'Participate directly with your own wallet address, and you can climb the leaderboard single-handedly.'}</p>
                 </div>
                 
                 <div>
-                  <h4 className="text-lg font-semibold text-cyan-400 mb-2">有什么优势？</h4>
-                  <p>👉 操作简单，上榜机会大。赢了还能提升个人影响力，获得官方和社区的认可。</p>
+                  <h4 className="text-lg font-semibold text-cyan-400 mb-2">{language === 'zh' ? '有什么优势？' : 'What are the advantages?'}</h4>
+                  <p>👉 {language === 'zh' ? '操作简单，上榜机会大。赢了还能提升个人影响力，获得官方和社区的认可。' : 'Simple operation, high chance of ranking. Winning can also enhance personal influence and gain recognition from officials and the community.'}</p>
                 </div>
               </div>
               
@@ -233,7 +244,7 @@ export default function MintContest() {
                   href="/mint-contest/individual"
                   className="inline-block px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-bold rounded-lg hover:from-blue-400 hover:to-cyan-500 transition-all duration-300 transform hover:scale-105"
                 >
-                  个人组报名
+                  {language === 'zh' ? '个人组报名' : 'Individual Registration'}
                 </a>
               </div>
             </motion.div>
@@ -242,10 +253,10 @@ export default function MintContest() {
           <div className="mt-8 text-center">
             <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 backdrop-blur-sm border border-green-500/30 rounded-xl p-6">
               <p className="text-lg font-semibold text-green-400">
-                📌 参赛门槛超低：只要在 Flipflop 平台完成 Mint，递交Mint地址，就能自动计入成绩。
+                📌 {language === 'zh' ? '参赛门槛超低：只要在 Flipflop 平台完成 Mint，递交Mint地址，就能自动计入成绩。' : 'Ultra-low entry threshold: Just complete Mint on the Flipflop platform and submit your Mint address to automatically count your achievements.'}
               </p>
               <p className="text-gray-300 mt-2">
-                不限国籍、不限经验，你敢Mint，我们就认！
+                {language === 'zh' ? '不限国籍、不限经验，你敢Mint，我们就认！' : 'No nationality or experience restrictions - if you dare to Mint, we recognize it!'}
               </p>
             </div>
           </div>

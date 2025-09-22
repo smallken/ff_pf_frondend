@@ -10,6 +10,7 @@ export default function LaunchRegistration() {
   const { language } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     projectName: '',
     tokenName: '',
@@ -56,6 +57,7 @@ export default function LaunchRegistration() {
     const file = e.target.files?.[0];
     if (file) {
       setFormData(prev => ({ ...prev, tokenLogo: file }));
+      setSelectedFile(file);
     }
   };
 
@@ -260,14 +262,28 @@ export default function LaunchRegistration() {
                 <label className="block text-gray-300 font-medium mb-2">
                   {language === 'zh' ? '代币Logo' : 'Token Logo'} <span className="text-red-400">*</span>
                 </label>
-                <input
-                  type="file"
-                  name="tokenLogo"
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  required
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-cyan-600 file:text-white hover:file:bg-cyan-500 transition-colors"
-                />
+                <div className="relative">
+                  <input
+                    type="file"
+                    name="tokenLogo"
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    required
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    id="tokenLogo-upload"
+                  />
+                  <label
+                    htmlFor="tokenLogo-upload"
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white cursor-pointer flex items-center justify-between hover:bg-gray-700/50 transition-colors"
+                  >
+                    <span className="text-gray-300">
+                      {selectedFile ? selectedFile.name : (language === 'zh' ? '选择文件' : 'Choose File')}
+                    </span>
+                    <span className="text-cyan-400 font-medium">
+                      {language === 'zh' ? '浏览' : 'Browse'}
+                    </span>
+                  </label>
+                </div>
                 <p className="text-sm text-gray-400 mt-1">
                   {language === 'zh' ? '请上传代币Logo图片（支持JPG、PNG格式）' : 'Please upload token logo image (JPG, PNG supported)'}
                 </p>

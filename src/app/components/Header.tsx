@@ -60,9 +60,9 @@ export default function Header() {
         return {
           logo: { icon: '⛵', text: 'FlipFlop PathPort', href: '/' },
           navItems: [
-            { href: '/pathfinders', key: { zh: '脚印计划', en: 'Footprint Program' }, color: 'blue' },
-            { href: '/launch-contest', key: { zh: 'Launch大赛', en: 'Launch Contest' }, color: 'cyan' },
-            { href: '/mint-contest', key: { zh: 'Mint大赛', en: 'Mint Contest' }, color: 'pink' },
+            { href: '/pathfinders', key: { zh: '脚印计划', en: 'Footprint Program' }, color: 'blue', icon: '👣' },
+            { href: '/launch-contest', key: { zh: 'Launch大赛', en: 'Launch Contest' }, color: 'cyan', icon: '🚀' },
+            { href: '/mint-contest', key: { zh: 'Mint大赛', en: 'Mint Contest' }, color: 'pink', icon: '🎮' },
           ]
         };
     }
@@ -85,7 +85,7 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className={`hidden md:flex ${currentModule === 'mint' ? 'justify-center flex-1 mx-8' : 'space-x-0.5'}`}>
+          <nav className={`hidden md:flex ${currentModule === 'mint' ? 'justify-center flex-1 mx-8' : currentModule === 'pathport' ? 'justify-center flex-1 mx-8' : 'space-x-0.5'}`}>
             {moduleConfig.navItems.map((item) => {
               const displayText = (() => {
                 if (currentModule === 'pathfinders') {
@@ -98,6 +98,46 @@ export default function Header() {
                   return item.key as string;
                 }
               })();
+
+              // 为主页导航添加特殊样式
+              if (currentModule === 'pathport') {
+                const getButtonStyle = (color: string) => {
+                  switch (color) {
+                    case 'blue':
+                      return {
+                        linkClass: "relative mx-4 px-6 py-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 text-blue-400 font-bold rounded-xl hover:from-blue-500/20 hover:to-purple-500/20 hover:border-blue-400/40 hover:text-blue-300 transition-all duration-300 group whitespace-nowrap shadow-lg hover:shadow-blue-500/25 hover:scale-105 transform",
+                        bgClass: "absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      };
+                    case 'cyan':
+                      return {
+                        linkClass: "relative mx-4 px-6 py-3 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 text-cyan-400 font-bold rounded-xl hover:from-cyan-500/20 hover:to-blue-500/20 hover:border-cyan-400/40 hover:text-cyan-300 transition-all duration-300 group whitespace-nowrap shadow-lg hover:shadow-cyan-500/25 hover:scale-105 transform",
+                        bgClass: "absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      };
+                    case 'pink':
+                      return {
+                        linkClass: "relative mx-4 px-6 py-3 bg-gradient-to-r from-pink-500/10 to-red-500/10 border border-pink-500/20 text-pink-400 font-bold rounded-xl hover:from-pink-500/20 hover:to-red-500/20 hover:border-pink-400/40 hover:text-pink-300 transition-all duration-300 group whitespace-nowrap shadow-lg hover:shadow-pink-500/25 hover:scale-105 transform",
+                        bgClass: "absolute inset-0 bg-gradient-to-r from-pink-500/20 to-red-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      };
+                    default:
+                      return {
+                        linkClass: "relative mx-4 px-6 py-3 bg-gradient-to-r from-gray-500/10 to-gray-600/10 border border-gray-500/20 text-gray-400 font-bold rounded-xl hover:from-gray-500/20 hover:to-gray-600/20 hover:border-gray-400/40 hover:text-gray-300 transition-all duration-300 group whitespace-nowrap shadow-lg hover:shadow-gray-500/25 hover:scale-105 transform",
+                        bgClass: "absolute inset-0 bg-gradient-to-r from-gray-500/20 to-gray-600/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      };
+                  }
+                };
+
+                const buttonStyle = getButtonStyle(item.color);
+                
+                return (
+                  <Link key={item.href} href={item.href} className={buttonStyle.linkClass}>
+                    <span className="relative z-10 text-sm font-bold flex items-center space-x-2">
+                      <span className="text-lg">{(item as any).icon}</span>
+                      <span>{displayText}</span>
+                    </span>
+                    <div className={buttonStyle.bgClass}></div>
+                  </Link>
+                );
+              }
 
               // 为Mint大赛导航添加特殊样式
               const linkClassName = currentModule === 'mint' 
@@ -121,14 +161,16 @@ export default function Header() {
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center space-x-2">
-            {/* Theme Toggle for mobile */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
-              title={t('theme.toggle')}
-            >
-              <span className="text-lg">{theme === 'light' ? '🌙' : '☀️'}</span>
-            </button>
+            {/* Theme Toggle for mobile - Hidden for Launch and Mint contests */}
+            {(currentModule !== 'launch' && currentModule !== 'mint') && (
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
+                title={t('theme.toggle')}
+              >
+                <span className="text-lg">{theme === 'light' ? '🌙' : '☀️'}</span>
+              </button>
+            )}
 
             {/* Language Toggle for mobile */}
             <button
@@ -165,14 +207,16 @@ export default function Header() {
 
           {/* Desktop Controls */}
           <div className="hidden md:flex items-center space-x-2">
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-110"
-              title={t('theme.toggle')}
-            >
-              <span className="text-lg">{theme === 'light' ? '🌙' : '☀️'}</span>
-            </button>
+            {/* Theme Toggle - Hidden for Launch and Mint contests */}
+            {(currentModule !== 'launch' && currentModule !== 'mint') && (
+              <button
+                onClick={toggleTheme}
+                className="p-3 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-110"
+                title={t('theme.toggle')}
+              >
+                <span className="text-lg">{theme === 'light' ? '🌙' : '☀️'}</span>
+              </button>
+            )}
 
             {/* Language Toggle */}
             <button
@@ -185,29 +229,29 @@ export default function Header() {
 
             {/* User Actions */}
             {isAuthenticated ? (
-              <div className="flex items-center space-x-3">
-                <Link href="/profile" className="px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300">
+              <div className="flex items-center space-x-2 whitespace-nowrap">
+                <Link href="/profile" className="px-2 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300">
                   {t('profile.title')}
                 </Link>
                 {user?.userRole === 'admin' && (
-                  <Link href="/admin" className="px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 font-medium rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300">
+                  <Link href="/admin" className="px-2 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 font-medium rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300">
                     {t('admin.title')}
                   </Link>
                 )}
-                <span className="text-gray-600 dark:text-gray-300 font-medium">{t('user.welcome')}, {user?.userName}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">{t('user.welcome')}, {user?.userName}</span>
                 <button 
                   onClick={logout}
-                  className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-2 rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-300 transform hover:-translate-y-0.5 font-medium"
+                  className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-300 transform hover:-translate-y-0.5 text-sm font-medium"
                 >
                   {t('user.logout')}
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
-                <Link href="/login" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300">
+              <div className="flex items-center space-x-2 whitespace-nowrap">
+                <Link href="/login" className="px-3 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300">
                   {t('login.title')}
                 </Link>
-                <Link href="/register" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 transform hover:-translate-y-0.5 font-semibold shadow-lg hover:shadow-xl">
+                <Link href="/register" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-1 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 transform hover:-translate-y-0.5 text-sm font-semibold shadow-lg hover:shadow-xl">
                   {t('register.title')}
                 </Link>
               </div>
