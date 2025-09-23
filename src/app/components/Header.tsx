@@ -48,7 +48,7 @@ export default function Header() {
         };
       case 'mint':
         return {
-          logo: { icon: '🎮', text: 'Flipflop mint competition', href: '/mint-contest' },
+          logo: { icon: '🎮', text: 'Flipflop Mint competition', href: '/mint-contest' },
           navItems: [
             { href: '/mint-contest/rules', key: { zh: '大赛规则', en: 'Contest Rules' }, color: 'pink' },
             { href: '/mint-contest/registration', key: { zh: '参赛登记', en: 'Registration' }, color: 'red' },
@@ -57,11 +57,7 @@ export default function Header() {
       default: // pathport
         return {
           logo: { icon: '⛵', text: 'FlipFlop PathPort', href: '/' },
-          navItems: [
-            { href: '/pathfinders', key: { zh: '脚印计划', en: 'Footprint Program' }, color: 'blue', icon: '👣' },
-            { href: '/launch-contest', key: { zh: 'Flipflop Launch 大赛', en: 'Flipflop Launch Competition' }, color: 'cyan', icon: '🚀' },
-            { href: '/mint-contest', key: { zh: 'Mint大赛', en: 'Flipflop mint competition' }, color: 'pink', icon: '🎮' },
-          ]
+          navItems: []
         };
     }
   };
@@ -97,58 +93,13 @@ export default function Header() {
                 }
               })();
 
-              // 为主页导航添加特殊样式
-              if (currentModule === 'pathport') {
-                const getButtonStyle = (color: string) => {
-                  switch (color) {
-                    case 'blue':
-                      return {
-                        linkClass: "relative mx-4 px-6 py-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 text-blue-400 font-bold rounded-xl hover:from-blue-500/20 hover:to-purple-500/20 hover:border-blue-400/40 hover:text-blue-300 transition-all duration-300 group whitespace-nowrap shadow-lg hover:shadow-blue-500/25 hover:scale-105 transform",
-                        bgClass: "absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      };
-                    case 'cyan':
-                      return {
-                        linkClass: "relative mx-4 px-6 py-3 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 text-cyan-400 font-bold rounded-xl hover:from-cyan-500/20 hover:to-blue-500/20 hover:border-cyan-400/40 hover:text-cyan-300 transition-all duration-300 group whitespace-nowrap shadow-lg hover:shadow-cyan-500/25 hover:scale-105 transform",
-                        bgClass: "absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      };
-                    case 'pink':
-                      return {
-                        linkClass: "relative mx-4 px-6 py-3 bg-gradient-to-r from-pink-500/10 to-red-500/10 border border-pink-500/20 text-pink-400 font-bold rounded-xl hover:from-pink-500/20 hover:to-red-500/20 hover:border-pink-400/40 hover:text-pink-300 transition-all duration-300 group whitespace-nowrap shadow-lg hover:shadow-pink-500/25 hover:scale-105 transform",
-                        bgClass: "absolute inset-0 bg-gradient-to-r from-pink-500/20 to-red-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      };
-                    default:
-                      return {
-                        linkClass: "relative mx-4 px-6 py-3 bg-gradient-to-r from-gray-500/10 to-gray-600/10 border border-gray-500/20 text-gray-400 font-bold rounded-xl hover:from-gray-500/20 hover:to-gray-600/20 hover:border-gray-400/40 hover:text-gray-300 transition-all duration-300 group whitespace-nowrap shadow-lg hover:shadow-gray-500/25 hover:scale-105 transform",
-                        bgClass: "absolute inset-0 bg-gradient-to-r from-gray-500/20 to-gray-600/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      };
-                  }
-                };
-
-                const buttonStyle = getButtonStyle(item.color);
-                
-                return (
-                  <Link key={item.href} href={item.href} className={buttonStyle.linkClass}>
-                    <span className="relative z-10 text-sm font-bold flex items-center space-x-2">
-                      <span className="text-lg">{(item as any).icon}</span>
-                      <span>{displayText}</span>
-                    </span>
-                    <div className={buttonStyle.bgClass}></div>
-                  </Link>
-                );
-              }
-
-              // 为Mint大赛导航添加特殊样式
-              const linkClassName = currentModule === 'mint' 
-                ? "relative mx-4 px-8 py-4 bg-gradient-to-r from-red-500/10 to-pink-500/10 border border-red-500/20 text-red-400 font-bold rounded-2xl hover:from-red-500/20 hover:to-pink-500/20 hover:border-red-400/40 hover:text-red-300 transition-all duration-300 group whitespace-nowrap shadow-lg hover:shadow-red-500/25 hover:scale-105 transform"
-                : "relative px-3 py-2 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 group whitespace-nowrap";
-
-              const backgroundClassName = currentModule === 'mint'
-                ? "absolute inset-0 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                : "absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300";
+              // 统一所有导航栏样式，使用简单的文本链接样式
+              const linkClassName = "relative px-3 py-2 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 group whitespace-nowrap";
+              const backgroundClassName = "absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300";
 
               return (
                 <Link key={item.href} href={item.href} className={linkClassName}>
-                  <span className={`relative z-10 ${currentModule === 'mint' ? 'text-base font-bold' : 'text-sm'}`}>
+                  <span className="relative z-10 text-sm">
                     {displayText}
                   </span>
                   <div className={backgroundClassName}></div>

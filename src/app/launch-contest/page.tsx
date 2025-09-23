@@ -99,8 +99,8 @@ export default function LaunchContestHome() {
             >
               {language === 'zh' ? (
                 <>
-                  这不是一场普通的比赛，而是 <span className="text-cyan-400 font-bold">专属于 Web3 Builder 与 Dreamer 的盛典</span>。
-                  无论你是打造应用的开发者、塑造叙事的 KOL，还是团结社群的组织者，只要你敢于用代币去定义未来，这里都欢迎你的加入。
+                  这不是一场普通的比赛，而是 <span className="text-cyan-400 font-bold">专属于 Web3 Builder 与 Dreamer 的盛典</span>。无论你是打造应用的开发者、塑造叙事的 KOL，还是团结社群的组织者，只要你敢于用代币去定义未来，这里都欢迎你的加
+                  入。
                 </>
               ) : (
                 <>
@@ -110,29 +110,6 @@ export default function LaunchContestHome() {
               )}
             </motion.p>
 
-            {/* 奖励亮点 */}
-            <motion.div 
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.6 }}
-            >
-              <div className="bg-gradient-to-br from-cyan-900/30 to-blue-900/30 backdrop-blur-sm border border-cyan-500/30 rounded-xl p-6 tech-glow">
-                <div className="text-3xl mb-3">💵</div>
-                <h3 className="text-cyan-400 font-bold mb-2">{language === 'zh' ? '现金奖励' : 'Cash Rewards'}</h3>
-                <p className="text-gray-300 text-sm">{language === 'zh' ? '让你的创意立即获得回报' : 'Get immediate returns for your creativity'}</p>
-              </div>
-              <div className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6 tech-glow">
-                <div className="text-3xl mb-3">🌐</div>
-                <h3 className="text-blue-400 font-bold mb-2">{language === 'zh' ? '全球曝光' : 'Global Exposure'}</h3>
-                <p className="text-gray-300 text-sm">{language === 'zh' ? '让你的项目被更多人看见' : 'Make your project visible to more people'}</p>
-              </div>
-              <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6 tech-glow">
-                <div className="text-3xl mb-3">🤝</div>
-                <h3 className="text-purple-400 font-bold mb-2">{language === 'zh' ? '资源扶持' : 'Resource Support'}</h3>
-                <p className="text-gray-300 text-sm">{language === 'zh' ? '让成长不止于此刻，而能走得更远' : 'Growth that extends beyond this moment'}</p>
-              </div>
-            </motion.div>
 
             {/* 行动按钮 */}
             <motion.div 
@@ -143,9 +120,9 @@ export default function LaunchContestHome() {
             >
               <a
                 href="/"
-                className="group relative px-6 py-2 border-2 border-gray-400 dark:border-gray-500 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg font-medium text-sm backdrop-blur-sm"
+                className="group relative px-8 py-3 bg-gradient-to-r from-blue-400 to-cyan-500 text-white rounded-2xl hover:from-blue-500 hover:to-cyan-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl font-semibold text-base min-w-[180px]"
               >
-                <span className="flex items-center justify-center">
+                <span className="relative z-10 flex items-center justify-center">
                   <span className="mr-2">⛵</span>
                   {language === 'zh' ? '返回港湾' : 'Back to PathPort'}
                 </span>
@@ -228,6 +205,22 @@ export default function LaunchContestHome() {
                     : 'Graduation means recognition and marks the beginning of a new phase. We will stand alongside every graduating project.'
                   }
                 </p>
+                
+                {/* 重要说明 */}
+                <div className="mt-6 p-4 bg-gradient-to-r from-cyan-900/20 to-blue-900/20 rounded-xl border border-cyan-500/20">
+                  <p className="text-sm text-cyan-200 mb-2">
+                    {language === 'zh' 
+                      ? '注：所有项目需在发币后，毕业前，递交参赛登记表，以满足领取毕业奖励的基本要求'
+                      : 'Note: All projects must submit a participation registration form after token issuance and before graduation to meet the basic requirements for receiving graduation rewards'
+                    }
+                  </p>
+                  <p className="text-sm text-cyan-200">
+                    {language === 'zh' 
+                      ? '现金奖励将在赛事结束后，统计，并统一时段发放，详情见大赛规则页'
+                      : 'Cash rewards will be tallied and distributed at a unified time after the event concludes. See the competition rules page for details'
+                    }
+                  </p>
+                </div>
               </motion.div>
 
               {/* 赛道排名奖励 */}

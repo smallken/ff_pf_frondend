@@ -88,33 +88,7 @@ export default function MintRegistration() {
                   <h3 className="text-2xl font-bold text-white font-mono mb-3">
                     {language === 'zh' ? '工作室组' : 'Studio Category'}
                   </h3>
-                  <p className="text-gray-300 mb-6 leading-relaxed">
-                    {language === 'zh' 
-                      ? '面向专业游戏工作室和开发团队，展示大型项目和完整作品。适合有完整团队和丰富开发经验的专业机构。'
-                      : 'For professional game studios and development teams, showcasing large-scale projects and complete works. Suitable for professional organizations with complete teams and rich development experience.'
-                    }
-                  </p>
                   
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center justify-center space-x-2">
-                      <span className="text-green-400">✓</span>
-                      <span className="text-sm text-gray-300">
-                        {language === 'zh' ? '团队规模：5人以上' : 'Team Size: 5+ members'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-center space-x-2">
-                      <span className="text-green-400">✓</span>
-                      <span className="text-sm text-gray-300">
-                        {language === 'zh' ? '完整项目展示' : 'Complete project showcase'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-center space-x-2">
-                      <span className="text-green-400">✓</span>
-                      <span className="text-sm text-gray-300">
-                        {language === 'zh' ? '专业评审标准' : 'Professional judging criteria'}
-                      </span>
-                    </div>
-                  </div>
                   
                   <div className={`inline-block px-6 py-3 font-mono font-bold border-4 rounded-none transition-all duration-300 ${
                     selectedCategory === 'studio'
@@ -152,33 +126,7 @@ export default function MintRegistration() {
                   <h3 className="text-2xl font-bold text-white font-mono mb-3">
                     {language === 'zh' ? '个人组' : 'Individual Category'}
                   </h3>
-                  <p className="text-gray-300 mb-6 leading-relaxed">
-                    {language === 'zh' 
-                      ? '面向独立开发者和个人创作者，展示创意作品和独特想法。适合个人艺术家、独立开发者和创意爱好者。'
-                      : 'For independent developers and individual creators, showcasing creative works and unique ideas. Suitable for individual artists, independent developers, and creative enthusiasts.'
-                    }
-                  </p>
-                  
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center justify-center space-x-2">
-                      <span className="text-green-400">✓</span>
-                      <span className="text-sm text-gray-300">
-                        {language === 'zh' ? '个人或小团队' : 'Individual or small team'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-center space-x-2">
-                      <span className="text-green-400">✓</span>
-                      <span className="text-sm text-gray-300">
-                        {language === 'zh' ? '创意作品展示' : 'Creative work showcase'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-center space-x-2">
-                      <span className="text-green-400">✓</span>
-                      <span className="text-sm text-gray-300">
-                        {language === 'zh' ? '灵活评审标准' : 'Flexible judging criteria'}
-                      </span>
-                    </div>
-                  </div>
+                 
                   
                   <div className={`inline-block px-6 py-3 font-mono font-bold border-4 rounded-none transition-all duration-300 ${
                     selectedCategory === 'individual'

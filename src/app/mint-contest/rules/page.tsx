@@ -137,6 +137,124 @@ export default function MintRules() {
                 📌 说明：奖金数额会根据参赛热度适度追加，但绝不会减少！
               </p>
             </div>
+
+            {/* 奖励表格 */}
+            <div className="bg-gradient-to-r from-yellow-900/20 to-orange-900/20 rounded-xl p-6 mb-6 border border-yellow-500/30">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="text-center">
+                  <h4 className="text-xl font-bold text-yellow-400 mb-3">🐕 工作室赛道</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">第一名</span>
+                      <span className="text-yellow-400 font-bold">1500 USDT</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">第二名</span>
+                      <span className="text-yellow-400 font-bold">1000 USDT</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">第三名</span>
+                      <span className="text-yellow-400 font-bold">500 USDT</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <h4 className="text-xl font-bold text-cyan-400 mb-3">👤 个人赛道</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">第一名</span>
+                      <span className="text-cyan-400 font-bold">800 USDT</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">第二名</span>
+                      <span className="text-cyan-400 font-bold">500 USDT</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">第三名</span>
+                      <span className="text-cyan-400 font-bold">300 USDT</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 额外权益 */}
+            <div className="mt-8">
+              <h3 className="text-2xl font-bold text-cyan-400 mb-4">🌟 额外权益</h3>
+              <p className="text-lg text-gray-300 mb-6">
+                本次大赛不仅仅提供现金奖励，获奖团队与个人还有机会获得 Flipflop 生态赋能的多重权益包括但不限于资源扶持、流量曝光、项目背书、平台话语权，助力你在 Web3 赛道走得更远：
+              </p>
+              
+              <div className="space-y-6">
+                {/* 1. 项目优先权 */}
+                <div className="bg-gradient-to-r from-blue-900/30 to-cyan-900/30 rounded-xl p-6 border border-blue-500/30">
+                  <h4 className="text-xl font-bold text-blue-400 mb-3">1. 项目优先权</h4>
+                  <ul className="space-y-2">
+                    <li className="flex items-start space-x-2">
+                      <span className="text-blue-400">•</span>
+                      <span className="text-gray-300">有机会直通 优质项目 Mint，抢先参与最具潜力的生态发行；</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-blue-400">•</span>
+                      <span className="text-gray-300">可优先获邀参与项目方 AMA（线上问答） 与 战略讨论，直接与核心团队沟通，掌握一手信息。</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* 2. 基金与资源扶持 */}
+                <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-xl p-6 border border-green-500/30">
+                  <h4 className="text-xl font-bold text-green-400 mb-3">2. 基金与资源扶持</h4>
+                  <ul className="space-y-2">
+                    <li className="flex items-start space-x-2">
+                      <span className="text-green-400">•</span>
+                      <span className="text-gray-300"><strong>基金支持：</strong>有机会得到由 Flipflop 基金或合作生态基金参与扶持，增加你项目的热度与流动性；</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-green-400">•</span>
+                      <span className="text-gray-300"><strong>全球资源接入：</strong>可享受包括国际合作伙伴、行业论坛、生态大会等曝光机会；</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* 3. 社区与流量支持 */}
+                <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-6 border border-purple-500/30">
+                  <h4 className="text-xl font-bold text-purple-400 mb-3">3. 社区与流量支持</h4>
+                  <ul className="space-y-2">
+                    <li className="flex items-start space-x-2">
+                      <span className="text-purple-400">•</span>
+                      <span className="text-gray-300"><strong>官方曝光：</strong>获奖名单将在 Flipflop 官网、社交媒体及合作媒体重点推送；</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-purple-400">•</span>
+                      <span className="text-gray-300"><strong>社区重点推荐：</strong>有机会获得社群话题引导与流量倾斜，帮助你扩大影响力；</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-purple-400">•</span>
+                      <span className="text-gray-300"><strong>跨社区合作：</strong>将优先考虑推荐至合作方社区，吸引更多潜在支持者。</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* 4. 平台发展参与权 */}
+                <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 rounded-xl p-6 border border-yellow-500/30">
+                  <h4 className="text-xl font-bold text-yellow-400 mb-3">4. 平台发展参与权</h4>
+                  <ul className="space-y-2">
+                    <li className="flex items-start space-x-2">
+                      <span className="text-yellow-400">•</span>
+                      <span className="text-gray-300">获奖团队和个人将有机会成为 <strong>"金狗工作室主理人"</strong>，获得专属荣誉称号；</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-yellow-400">•</span>
+                      <span className="text-gray-300">有机会直接参与 Flipflop 生态建设讨论与治理，成为平台发展过程中的核心一员；</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-yellow-400">•</span>
+                      <span className="text-gray-300">可被优先考虑，享有未来平台新功能的 <strong>优先体验权与建议权</strong>。</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* 评审方式 */}

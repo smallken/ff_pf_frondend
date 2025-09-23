@@ -6,7 +6,7 @@ export interface MintContestRegistrationData {
   email: string; // 联系邮箱
   twitterAccount?: string; // Twitter账号
   telegramAccount: string; // Telegram账号（用于官方通知与奖励确认）
-  mainWalletAddress: string; // 主要参赛钱包地址
+  mainWalletAddresses: string[]; // 主要参赛钱包地址数组
   rewardWalletAddress?: string; // 奖励发放地址
   rulesAccepted: boolean; // 已阅读并理解规则书
   infoConfirmed: boolean; // 确认所提交信息真实有效

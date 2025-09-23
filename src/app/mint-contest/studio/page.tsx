@@ -16,7 +16,7 @@ export default function StudioPage() {
     email: '',
     twitterAccount: '',
     telegramAccount: '',
-    mainWalletAddress: '',
+    mainWalletAddresses: [''],
     rewardWalletAddress: '',
     rulesAccepted: false,
     infoConfirmed: false,
@@ -46,7 +46,7 @@ export default function StudioPage() {
         email: formData.email,
         twitterAccount: formData.twitterAccount,
         telegramAccount: formData.telegramAccount,
-        mainWalletAddress: formData.mainWalletAddress,
+        mainWalletAddresses: formData.mainWalletAddresses.filter(addr => addr.trim() !== ''),
         rewardWalletAddress: formData.rewardWalletAddress,
         rulesAccepted: formData.rulesAccepted,
         infoConfirmed: formData.infoConfirmed,
@@ -215,15 +215,49 @@ export default function StudioPage() {
               {/* 主要参赛钱包地址 */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  {language === 'zh' ? '主要参赛钱包地址' : 'Main Contest Wallet Address'}
+                  {language === 'zh' ? '主要参赛钱包地址（在个人信息Mint大赛表单进行修改）' : 'Main Contest Wallet Address (Modify in Personal Info Mint Contest Form)'}
                 </label>
-                <input
-                  type="text"
-                  value={formData.mainWalletAddress}
-                  onChange={(e) => handleInputChange('mainWalletAddress', e.target.value)}
-                  className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300"
-                  placeholder={language === 'zh' ? '请输入主要参赛钱包地址（可选）' : 'Enter main contest wallet address (optional)'}
-                />
+                <div className="space-y-2">
+                  {formData.mainWalletAddresses.map((address, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={address}
+                        onChange={(e) => {
+                          const newAddresses = [...formData.mainWalletAddresses];
+                          newAddresses[index] = e.target.value;
+                          setFormData(prev => ({ ...prev, mainWalletAddresses: newAddresses }));
+                        }}
+                        className="flex-1 p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300"
+                        placeholder={language === 'zh' ? '请输入钱包地址（可选）' : 'Enter wallet address (optional)'}
+                      />
+                      {formData.mainWalletAddresses.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newAddresses = formData.mainWalletAddresses.filter((_, i) => i !== index);
+                            setFormData(prev => ({ ...prev, mainWalletAddresses: newAddresses }));
+                          }}
+                          className="px-3 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-500 transition-all duration-300"
+                        >
+                          {language === 'zh' ? '删除' : 'Delete'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        mainWalletAddresses: [...prev.mainWalletAddresses, ''] 
+                      }));
+                    }}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-lg hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 transform hover:scale-105"
+                  >
+                    {language === 'zh' ? '添加钱包' : 'Add Wallet'}
+                  </button>
+                </div>
               </div>
 
               {/* 奖励发放地址 */}

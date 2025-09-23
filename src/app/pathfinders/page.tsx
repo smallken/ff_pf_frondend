@@ -109,9 +109,9 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
               <a
                 href="/"
-                className="group relative px-6 py-2 border-2 border-gray-400 dark:border-gray-500 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg font-medium text-sm backdrop-blur-sm"
+                className="group relative px-8 py-3 bg-gradient-to-r from-pink-400 to-purple-500 text-white rounded-2xl hover:from-pink-500 hover:to-purple-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl font-semibold text-base min-w-[180px]"
               >
-                <span className="flex items-center justify-center">
+                <span className="relative z-10 flex items-center justify-center">
                   <span className="mr-2">⛵</span>
                   {language === 'zh' ? '返回港湾' : 'Back to PathPort'}
                 </span>

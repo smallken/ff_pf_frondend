@@ -14,25 +14,25 @@ const moduleCards = [
     subtitle: { zh: '每一枚脚印，都是共同的印记', en: 'Every footprint is a shared mark' },
     description: { zh: '这里是内容创作者的舞台，你的声音与作品，将与伙伴们一起留下足迹，共建属于大家的社区。', en: 'This is the stage for creators — where your voice and your work join others to co-build a community that belongs to all.' },
     icon: '👣',
-    gradient: 'from-blue-500 via-purple-500 to-cyan-500',
+    gradient: 'from-pink-300 via-pink-400 to-pink-500',
     href: '/pathfinders'
   },
   {
     id: 'launch',
-    title: { zh: 'Flipflop Launch 大赛', en: 'Flipflop Launch Competition' },
+    title: { zh: 'Launch 大赛', en: 'Launch Competition' },
     subtitle: { zh: '从这里点火，让梦想升空', en: 'Ignite your vision and watch it soar' },
     description: { zh: 'FlipFlop 是项目启航的港湾，也是驶向远方的起点，让你的代币从此被世界看见。', en: 'FlipFlop is the harbor where projects launch, the starting point for tokens to be seen by the world.' },
     icon: '🚀',
-    gradient: 'from-orange-400 via-orange-500 to-red-500',
+    gradient: 'from-blue-400 via-blue-500 to-blue-600',
     href: '/launch-contest'
   },
   {
     id: 'mint',
-    title: { zh: 'Mint 大赛', en: 'Mint Contest' },
+    title: { zh: 'Mint 大赛', en: 'Mint Competition' },
     subtitle: { zh: '投资的不只是代币，更是未来', en: "You're not just minting a token — you're investing in the future" },
     description: { zh: '每一次铸造，都是你与优质项目并肩前行的承诺，共享价值与成长。', en: 'Every mint is a commitment to grow alongside promising projects and share in their value.' },
     icon: '🎮',
-    gradient: 'from-pink-500 via-red-500 to-orange-500',
+    gradient: 'from-red-400 via-red-500 to-red-600',
     href: '/mint-contest'
   }
 ];
@@ -122,14 +122,14 @@ export default function PathPortHome() {
             <div className="inline-flex items-center px-5 py-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 backdrop-blur-sm border border-blue-200/30 dark:border-blue-700/30 rounded-full text-sm font-medium mb-6 shadow-lg animate-pulse">
               <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-ping"></span>
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
-                ⛵ {language === 'zh' ? 'FlipFlop PathPort 足迹港湾' : 'FlipFlop PathPort'}
+                  ⛵ 
               </span>
             </div>
 
             {/* Enhanced title with gradient and animation */}
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 dark:from-blue-400 dark:via-purple-400 dark:to-cyan-400 bg-clip-text text-transparent">
-                {language === 'zh' ? 'FlipFlop PathPort' : 'FlipFlop PathPort'}
+                {language === 'zh' ? 'FlipFlop PathPort 足迹港湾' : 'FlipFlop PathPort'}
               </span>
             </h1>
 

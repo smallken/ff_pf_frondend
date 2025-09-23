@@ -91,6 +91,8 @@ export default function Profile() {
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingWalletAddress, setEditingWalletAddress] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
+  const [editingWalletAddresses, setEditingWalletAddresses] = useState(false);
+  const [walletAddresses, setWalletAddresses] = useState<string[]>([]);
   const [editingRewardAddress, setEditingRewardAddress] = useState(false);
   const [rewardAddress, setRewardAddress] = useState('');
 
@@ -137,7 +139,7 @@ export default function Profile() {
       
       // 调用API更新钱包地址
       await mintContestService.updateRegistration(selectedForm.id, {
-        mainWalletAddress: walletAddress
+        mainWalletAddresses: [walletAddress]
       });
       
       console.log('✅ 钱包地址更新成功');
@@ -145,7 +147,7 @@ export default function Profile() {
       // 立即更新selectedForm状态，避免显示旧数据
       setSelectedForm((prev: any) => ({
         ...prev,
-        mainWalletAddress: walletAddress
+        mainWalletAddresses: [walletAddress]
       }));
       
       setEditingWalletAddress(false);
@@ -156,6 +158,38 @@ export default function Profile() {
       alert('钱包地址更新成功！');
     } catch (error) {
       console.error('❌ 更新钱包地址失败:', error);
+      alert('更新失败，请重试');
+    }
+  };
+
+  // 处理多个钱包地址保存
+  const handleSaveWalletAddresses = async () => {
+    if (!selectedForm || selectedForm.type !== 'mint') return;
+    
+    try {
+      console.log('🔄 开始更新钱包地址数组:', { id: selectedForm.id, walletAddresses });
+      
+      // 调用API更新钱包地址数组
+      await mintContestService.updateRegistration(selectedForm.id, {
+        mainWalletAddresses: walletAddresses.filter(addr => addr.trim() !== '')
+      });
+      
+      console.log('✅ 钱包地址数组更新成功');
+      
+      // 立即更新selectedForm状态，避免显示旧数据
+      setSelectedForm((prev: any) => ({
+        ...prev,
+        mainWalletAddresses: walletAddresses.filter(addr => addr.trim() !== '')
+      }));
+      
+      setEditingWalletAddresses(false);
+      
+      // 刷新数据
+      await fetchContestForms();
+      
+      alert('钱包地址数组更新成功！');
+    } catch (error) {
+      console.error('❌ 更新钱包地址数组失败:', error);
       alert('更新失败，请重试');
     }
   };
@@ -1791,21 +1825,105 @@ export default function Profile() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                          {selectedForm.mainWalletAddress || '未填写'}
+                        <div className="flex-1 space-y-2">
+                          {selectedForm.mainWalletAddresses && selectedForm.mainWalletAddresses.length > 0 ? (
+                            <>
+                              {selectedForm.mainWalletAddresses.map((address: string, index: number) => (
+                                <div key={index} className="flex items-center gap-2">
+                                  <div className="flex-1 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                    {address}
+                                  </div>
+                                </div>
+                              ))}
+                              <button
+                                onClick={() => {
+                                  setEditingWalletAddresses(true);
+                                  setWalletAddresses([...selectedForm.mainWalletAddresses]);
+                                }}
+                                className="w-full px-3 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
+                              >
+                                管理钱包地址
+                              </button>
+                            </>
+                          ) : (
+                            <div className="space-y-2">
+                              <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                未填写
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setEditingWalletAddresses(true);
+                                  setWalletAddresses(['']);
+                                }}
+                                className="w-full px-3 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
+                              >
+                                添加钱包地址
+                              </button>
+                            </div>
+                          )}
                         </div>
-                        <button
-                          onClick={() => {
-                            setEditingWalletAddress(true);
-                            setWalletAddress(selectedForm.mainWalletAddress || '');
-                          }}
-                          className="px-3 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
-                        >
-                          编辑
-                        </button>
                       </div>
                     )}
                   </div>
+
+                  {/* 钱包地址数组编辑 */}
+                  {editingWalletAddresses && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        管理钱包地址
+                      </h4>
+                      <div className="space-y-2">
+                        {walletAddresses.map((address, index) => (
+                          <div key={index} className="flex gap-2">
+                            <input
+                              type="text"
+                              value={address}
+                              onChange={(e) => {
+                                const newAddresses = [...walletAddresses];
+                                newAddresses[index] = e.target.value;
+                                setWalletAddresses(newAddresses);
+                              }}
+                              className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 focus:outline-none"
+                              placeholder="请输入钱包地址"
+                            />
+                            {walletAddresses.length > 1 && (
+                              <button
+                                onClick={() => {
+                                  const newAddresses = walletAddresses.filter((_, i) => i !== index);
+                                  setWalletAddresses(newAddresses);
+                                }}
+                                className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                              >
+                                删除
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => {
+                            setWalletAddresses([...walletAddresses, '']);
+                          }}
+                          className="w-full px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+                        >
+                          添加钱包地址
+                        </button>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSaveWalletAddresses}
+                          className="flex-1 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
+                        >
+                          保存
+                        </button>
+                        <button
+                          onClick={() => setEditingWalletAddresses(false)}
+                          className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                        >
+                          取消
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* 奖励发放地址 - 可编辑 */}
                   <div>
