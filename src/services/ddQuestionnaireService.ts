@@ -7,7 +7,7 @@ export interface DDQuestionnaireData {
   tokenContractAddress: string;
   trackCategory: string;
   otherTrackName?: string;
-  keyDataAtT0: string;
+  keyDataAtDeadline: string;
   trafficContribution: string;
   projectQuality: string;
   narrativeConsensus: string;

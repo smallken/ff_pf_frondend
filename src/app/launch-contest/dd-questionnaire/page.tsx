@@ -19,7 +19,7 @@ export default function DDQuestionnaireTest() {
     tokenContractAddress: '',
     trackCategory: '',
     otherTrackName: '',
-    keyDataAtT0: '',
+    keyDataAtDeadline: '',
     trafficContribution: '',
     projectQuality: '',
     narrativeConsensus: '',
@@ -133,8 +133,8 @@ export default function DDQuestionnaireTest() {
         return;
       }
 
-      if (!formData.keyDataAtT0.trim()) {
-        alert(language === 'zh' ? '请填写截止日T0的关键数据' : 'Please fill in key data at deadline T0');
+      if (!formData.keyDataAtDeadline.trim()) {
+        alert(language === 'zh' ? '请填写截止日2025年9月20日的关键数据' : 'Please fill in key data at deadline September 20, 2025');
         return;
       }
 
@@ -284,7 +284,7 @@ export default function DDQuestionnaireTest() {
         tokenContractAddress: formData.tokenContractAddress,
         trackCategory: formData.trackCategory,
         otherTrackName: formData.otherTrackName,
-        keyDataAtT0: formData.keyDataAtT0,
+        keyDataAtDeadline: formData.keyDataAtDeadline,
         trafficContribution: formData.trafficContribution,
         projectQuality: formData.projectQuality,
         narrativeConsensus: formData.narrativeConsensus,
@@ -349,8 +349,8 @@ export default function DDQuestionnaireTest() {
               </h4>
               <p className="text-sm leading-relaxed">
                 {language === 'zh' 
-                  ? '所有参赛项目需在截止日起7天内（T0 → T0+7天），登录 Flipflop 官网完成 DD 问答清单填写。'
-                  : 'All participating projects must complete the DD questionnaire on the Flipflop official website within 7 days from the deadline (T0 → T0+7 days).'
+                  ? '所有参赛项目需在截止日起7天内（2025年9月20日 → 2025年9月27日），登录 Flipflop 官网完成 DD 问答清单填写。'
+                  : 'All participating projects must complete the DD questionnaire on the Flipflop official website within 7 days from the deadline (September 20, 2025 → September 27, 2025).'
                 }
               </p>
             </div>
@@ -519,7 +519,7 @@ export default function DDQuestionnaireTest() {
                 <div>
                   <label className="text-gray-300 font-medium block mb-2">
                     <span className="text-red-400 mr-1">*</span>
-                    {language === 'zh' ? '截止日 T0 的关键数据：' : 'Key Data at Deadline T0:'}
+                    {language === 'zh' ? '截止日 2025年9月20日 的关键数据：' : 'Key Data at Deadline September 20, 2025:'}
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -569,8 +569,8 @@ export default function DDQuestionnaireTest() {
                       {language === 'zh' ? '已毕业可补充描述外盘目前相关数据：' : 'Additional external market data (for graduated projects):'}
                     </label>
                     <textarea
-                      value={formData.keyDataAtT0}
-                      onChange={(e) => handleInputChange('keyDataAtT0', e.target.value)}
+                      value={formData.keyDataAtDeadline}
+                      onChange={(e) => handleInputChange('keyDataAtDeadline', e.target.value)}
                       className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                       placeholder={language === 'zh' ? '请描述外盘相关数据' : 'Please describe external market data'}
                       rows={2}
@@ -610,7 +610,7 @@ export default function DDQuestionnaireTest() {
                     <div>
                       <label className="text-gray-300 font-medium block mb-2">
                         <span className="text-red-400 mr-1">*</span>
-                        {language === 'zh' ? '截止 T0，你们带来的新增用户或曝光规模是多少？' : 'By T0, what is the scale of new users or exposure you brought?'}
+                        {language === 'zh' ? '截止 2025年9月20日，你们带来的新增用户或曝光规模是多少？' : 'By September 20, 2025, what is the scale of new users or exposure you brought?'}
                       </label>
                       <textarea
                         value={formData.trafficContribution}
@@ -858,7 +858,7 @@ export default function DDQuestionnaireTest() {
                     <div>
                       <label className="text-gray-300 font-medium block mb-2">
                         <span className="text-red-400 mr-1">*</span>
-                        {language === 'zh' ? '截止 T0，你们的叙事是否得到过外部验证？（如媒体报道、KOL引用）' : 'By T0, has your narrative been externally validated? (e.g., media reports, KOL citations)'}
+                        {language === 'zh' ? '截止 2025年9月20日，你们的叙事是否得到过外部验证？（如媒体报道、KOL引用）' : 'By September 20, 2025, has your narrative been externally validated? (e.g., media reports, KOL citations)'}
                       </label>
                       <textarea
                         value={extendedFormData.externalValidation}
@@ -975,13 +975,13 @@ export default function DDQuestionnaireTest() {
                     <div>
                       <label className="text-gray-300 font-medium block mb-2">
                         <span className="text-red-400 mr-1">*</span>
-                        {language === 'zh' ? '截止 T0 已完成的关键动作（活动、迭代、合作）。' : 'Key actions completed by T0 (activities, iterations, cooperation).'}
+                        {language === 'zh' ? '截止 2025年9月20日 已完成的关键动作（活动、迭代、合作）。' : 'Key actions completed by September 20, 2025 (activities, iterations, cooperation).'}
                       </label>
                       <textarea
                         value={extendedFormData.completedActions}
                         onChange={(e) => handleExtendedInputChange('completedActions', e.target.value)}
                         className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
-                        placeholder={language === 'zh' ? '请描述截止T0已完成的关键动作' : 'Please describe key actions completed by T0'}
+                        placeholder={language === 'zh' ? '请描述截止2025年9月20日已完成的关键动作' : 'Please describe key actions completed by September 20, 2025'}
                         rows={2}
                       />
                     </div>
