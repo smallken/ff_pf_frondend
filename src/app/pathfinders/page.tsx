@@ -426,7 +426,7 @@ export default function Home() {
 
                 {/* Discord */}
                 <a
-                  href="https://discord.gg/flipflop"
+                  href="https://discord.com/invite/2kaGjSy6hr"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group relative overflow-hidden bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700"

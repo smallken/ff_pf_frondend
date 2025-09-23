@@ -489,7 +489,7 @@ export default function MintContest() {
 
             {/* Discord */}
             <a
-              href="https://discord.gg/flipflop"
+              href="https://discord.com/invite/2kaGjSy6hr"
               target="_blank"
               rel="noopener noreferrer"
               className="group relative overflow-hidden bg-gray-800/50 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-600/30"
