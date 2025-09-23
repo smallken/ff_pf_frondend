@@ -410,7 +410,6 @@ export default function Home() {
                     </div>
                     <div>
                       <div className="font-bold text-gray-900 dark:text-white text-lg">X (Twitter)</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">flipfloplaunch</div>
                       <div className="text-xs text-blue-500 mt-1">{t('home.social.twitter.update')}</div>
                     </div>
                   </div>
@@ -454,7 +453,6 @@ export default function Home() {
                     </div>
                     <div>
                       <div className="font-bold text-gray-900 dark:text-white text-lg">Telegram</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{t('home.social.global')}</div>
                       <div className="text-xs text-blue-500 mt-1">🌍 Global →</div>
                     </div>
                   </div>

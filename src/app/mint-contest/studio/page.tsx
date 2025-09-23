@@ -215,29 +215,29 @@ export default function StudioPage() {
               {/* 主要参赛钱包地址 */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  {language === 'zh' ? '主要参赛钱包地址' : 'Main Contest Wallet Address'} *
+                  {language === 'zh' ? '主要参赛钱包地址' : 'Main Contest Wallet Address'}
                 </label>
                 <input
                   type="text"
                   value={formData.mainWalletAddress}
                   onChange={(e) => handleInputChange('mainWalletAddress', e.target.value)}
-                  required
                   className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300"
-                  placeholder={language === 'zh' ? '请输入主要参赛钱包地址' : 'Enter main contest wallet address'}
+                  placeholder={language === 'zh' ? '请输入主要参赛钱包地址（可选）' : 'Enter main contest wallet address (optional)'}
                 />
               </div>
 
               {/* 奖励发放地址 */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  {language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'}
+                  {language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'} *
                 </label>
                 <input
                   type="text"
                   value={formData.rewardWalletAddress}
                   onChange={(e) => handleInputChange('rewardWalletAddress', e.target.value)}
+                  required
                   className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300"
-                  placeholder={language === 'zh' ? '请输入奖励发放地址（可选）' : 'Enter reward distribution address (optional)'}
+                  placeholder={language === 'zh' ? '请输入奖励发放地址' : 'Enter reward distribution address'}
                 />
               </div>
             </div>
@@ -245,6 +245,7 @@ export default function StudioPage() {
             {/* 三、声明与确认 */}
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-cyan-400 border-b border-cyan-500/30 pb-2">
+                <span className="text-red-400 mr-2">*</span>
                 {language === 'zh' ? '三、声明与确认' : '3. Declarations and Confirmations'}
               </h2>
 

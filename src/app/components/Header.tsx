@@ -39,18 +39,16 @@ export default function Header() {
         };
       case 'launch':
         return {
-          logo: { icon: '🚀', text: 'Launch Contest', href: '/launch-contest' },
+          logo: { icon: '🚀', text: 'Flipflop Launch Competition', href: '/launch-contest' },
           navItems: [
             { href: '/launch-contest/rules', key: { zh: '大赛规则', en: 'Contest Rules' }, color: 'cyan' },
-            { href: '/launch-contest/registration', key: { zh: '参赛登记', en: 'Registration' }, color: 'blue' },
+            { href: '/launch-contest/forms', key: { zh: '表格申请', en: 'Form Applications' }, color: 'blue' },
             { href: '/launch-contest/leaderboard', key: { zh: '参赛名单', en: 'Participant List' }, color: 'purple' },
-            { href: '/launch-contest/timeline', key: { zh: '赛事时间线', en: 'Timeline' }, color: 'indigo' },
-            { href: '/launch-contest/dd-questionnaire', key: { zh: 'DD问答清单', en: 'DD Questionnaire' }, color: 'pink' },
           ]
         };
       case 'mint':
         return {
-          logo: { icon: '🎮', text: 'Mint Contest', href: '/mint-contest' },
+          logo: { icon: '🎮', text: 'Flipflop mint competition', href: '/mint-contest' },
           navItems: [
             { href: '/mint-contest/rules', key: { zh: '大赛规则', en: 'Contest Rules' }, color: 'pink' },
             { href: '/mint-contest/registration', key: { zh: '参赛登记', en: 'Registration' }, color: 'red' },
@@ -61,8 +59,8 @@ export default function Header() {
           logo: { icon: '⛵', text: 'FlipFlop PathPort', href: '/' },
           navItems: [
             { href: '/pathfinders', key: { zh: '脚印计划', en: 'Footprint Program' }, color: 'blue', icon: '👣' },
-            { href: '/launch-contest', key: { zh: 'Launch大赛', en: 'Launch Contest' }, color: 'cyan', icon: '🚀' },
-            { href: '/mint-contest', key: { zh: 'Mint大赛', en: 'Mint Contest' }, color: 'pink', icon: '🎮' },
+            { href: '/launch-contest', key: { zh: 'Flipflop Launch 大赛', en: 'Flipflop Launch Competition' }, color: 'cyan', icon: '🚀' },
+            { href: '/mint-contest', key: { zh: 'Mint大赛', en: 'Flipflop mint competition' }, color: 'pink', icon: '🎮' },
           ]
         };
     }
@@ -277,15 +275,13 @@ export default function Header() {
                   'Launch大赛': '🚀',
                   'Launch Contest': '🚀',
                   'Mint大赛': '🎮',
-                  'Mint Contest': '🎮',
+                  'Flipflop mint competition': '🎮',
                   '大赛规则': '📋',
                   'Contest Rules': '📋',
                   '参赛登记': '✍️',
                   'Registration': '✍️',
                   '参赛名单': '📋',
                   'Participant List': '📋',
-                  '赛事时间线': '⏰',
-                  'Timeline': '⏰',
                   'DD问答清单': '📝',
                   'DD Questionnaire': '📝',
                   '作品画廊': '🎨',

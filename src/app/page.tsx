@@ -19,11 +19,11 @@ const moduleCards = [
   },
   {
     id: 'launch',
-    title: { zh: 'Launch 大赛', en: 'Launch Contest' },
+    title: { zh: 'Flipflop Launch 大赛', en: 'Flipflop Launch Competition' },
     subtitle: { zh: '从这里点火，让梦想升空', en: 'Ignite your vision and watch it soar' },
     description: { zh: 'FlipFlop 是项目启航的港湾，也是驶向远方的起点，让你的代币从此被世界看见。', en: 'FlipFlop is the harbor where projects launch, the starting point for tokens to be seen by the world.' },
     icon: '🚀',
-    gradient: 'from-cyan-400 via-blue-500 to-purple-600',
+    gradient: 'from-orange-400 via-orange-500 to-red-500',
     href: '/launch-contest'
   },
   {
@@ -122,7 +122,7 @@ export default function PathPortHome() {
             <div className="inline-flex items-center px-5 py-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 backdrop-blur-sm border border-blue-200/30 dark:border-blue-700/30 rounded-full text-sm font-medium mb-6 shadow-lg animate-pulse">
               <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-ping"></span>
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
-                ⛵ FlipFlop PathPort 足迹港湾
+                ⛵ {language === 'zh' ? 'FlipFlop PathPort 足迹港湾' : 'FlipFlop PathPort'}
               </span>
             </div>
 
@@ -192,22 +192,6 @@ export default function PathPortHome() {
             ))}
           </div>
 
-          {/* Call to Action */}
-          <div className="text-center">
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
-              {language === 'zh' ? '选择你的路径，开始你的旅程' : 'Choose Your Path · Start Your Journey'}
-            </p>
-            <button
-              onClick={handleJoinClick}
-              className="group relative px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold text-base shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-            >
-              <span className="relative z-10 flex items-center justify-center">
-                <span className="mr-2">🚀</span>
-                {language === 'zh' ? '立即加入' : 'Join Now'}
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
-            </button>
-          </div>
         </div>
       </section>
 

@@ -91,6 +91,8 @@ export default function Profile() {
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingWalletAddress, setEditingWalletAddress] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
+  const [editingRewardAddress, setEditingRewardAddress] = useState(false);
+  const [rewardAddress, setRewardAddress] = useState('');
 
   // 安全的日期格式化函数
   const formatDate = (dateString: string) => {
@@ -122,6 +124,8 @@ export default function Profile() {
     setSelectedForm(null);
     setEditingWalletAddress(false);
     setWalletAddress('');
+    setEditingRewardAddress(false);
+    setRewardAddress('');
   };
 
   // 保存钱包地址修改
@@ -129,14 +133,61 @@ export default function Profile() {
     if (!selectedForm || selectedForm.type !== 'mint') return;
     
     try {
-      // 这里可以调用API更新钱包地址
-      // await mintContestService.updateWalletAddress(selectedForm.id, walletAddress);
-      alert('钱包地址更新成功！');
+      console.log('🔄 开始更新钱包地址:', { id: selectedForm.id, walletAddress });
+      
+      // 调用API更新钱包地址
+      await mintContestService.updateRegistration(selectedForm.id, {
+        mainWalletAddress: walletAddress
+      });
+      
+      console.log('✅ 钱包地址更新成功');
+      
+      // 立即更新selectedForm状态，避免显示旧数据
+      setSelectedForm(prev => ({
+        ...prev,
+        mainWalletAddress: walletAddress
+      }));
+      
       setEditingWalletAddress(false);
+      
       // 刷新数据
-      fetchContestForms();
+      await fetchContestForms();
+      
+      alert('钱包地址更新成功！');
     } catch (error) {
-      console.error('更新钱包地址失败:', error);
+      console.error('❌ 更新钱包地址失败:', error);
+      alert('更新失败，请重试');
+    }
+  };
+
+  // 保存奖励发放地址修改
+  const handleSaveRewardAddress = async () => {
+    if (!selectedForm || selectedForm.type !== 'mint') return;
+    
+    try {
+      console.log('🔄 开始更新奖励发放地址:', { id: selectedForm.id, rewardAddress });
+      
+      // 调用API更新奖励发放地址
+      await mintContestService.updateRegistration(selectedForm.id, {
+        rewardWalletAddress: rewardAddress
+      });
+      
+      console.log('✅ 奖励发放地址更新成功');
+      
+      // 立即更新selectedForm状态，避免显示旧数据
+      setSelectedForm(prev => ({
+        ...prev,
+        rewardWalletAddress: rewardAddress
+      }));
+      
+      setEditingRewardAddress(false);
+      
+      // 刷新数据
+      await fetchContestForms();
+      
+      alert('奖励发放地址更新成功！');
+    } catch (error) {
+      console.error('❌ 更新奖励发放地址失败:', error);
       alert('更新失败，请重试');
     }
   };
@@ -1756,12 +1807,47 @@ export default function Profile() {
                     )}
                   </div>
 
-                  {/* 奖励发放地址 */}
+                  {/* 奖励发放地址 - 可编辑 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">奖励发放地址</label>
-                    <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                      {selectedForm.rewardWalletAddress || '未填写'}
-                    </div>
+                    {editingRewardAddress ? (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={rewardAddress}
+                          onChange={(e) => setRewardAddress(e.target.value)}
+                          className="flex-1 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 p-3 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                          placeholder="请输入奖励发放地址"
+                        />
+                        <button
+                          onClick={handleSaveRewardAddress}
+                          className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
+                        >
+                          保存
+                        </button>
+                        <button
+                          onClick={() => setEditingRewardAddress(false)}
+                          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                        >
+                          取消
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                          {selectedForm.rewardWalletAddress || '未填写'}
+                        </div>
+                        <button
+                          onClick={() => {
+                            setEditingRewardAddress(true);
+                            setRewardAddress(selectedForm.rewardWalletAddress || '');
+                          }}
+                          className="px-3 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
+                        >
+                          编辑
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                 </div>

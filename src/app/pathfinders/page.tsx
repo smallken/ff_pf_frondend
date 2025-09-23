@@ -404,7 +404,7 @@ export default function Home() {
             
             {/* Right side - Social media icons and links */}
             <div className="flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
                 {/* X (Twitter) */}
                 <a
                   href="https://x.com/flipfloplaunch"
@@ -419,7 +419,6 @@ export default function Home() {
                     </div>
                     <div>
                       <div className="font-bold text-gray-900 dark:text-white text-lg">X (Twitter)</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">flipfloplaunch</div>
                       <div className="text-xs text-blue-500 mt-1">{t('home.social.twitter.update')}</div>
                     </div>
                   </div>
@@ -441,7 +440,6 @@ export default function Home() {
                     </div>
                     <div>
                       <div className="font-bold text-gray-900 dark:text-white text-lg">Discord</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Community</div>
                       <div className="text-xs text-indigo-500 mt-1">{t('home.social.discord.chat')}</div>
                     </div>
                   </div>
@@ -463,13 +461,12 @@ export default function Home() {
                     </div>
                     <div>
                       <div className="font-bold text-gray-900 dark:text-white text-lg">Telegram</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{t('home.social.global')}</div>
                       <div className="text-xs text-blue-500 mt-1">🌍 Global →</div>
                     </div>
                   </div>
                 </a>
 
-                {/* Official FF Entry */}
+                {/* 官方ff入口 */}
                 <a
                   href="https://www.flipflop.plus/?utm_source=tokenpocket"
                   target="_blank"
@@ -482,18 +479,12 @@ export default function Home() {
                       <span className="text-2xl">🚀</span>
                     </div>
                     <div>
-                      <div className="font-bold text-gray-900 dark:text-white text-lg">
-                        {language === 'zh' ? '官方ff入口' : 'Official FF Entry'}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {language === 'zh' ? 'Flipflop官方平台' : 'Flipflop Official Platform'}
-                      </div>
-                      <div className="text-xs text-purple-500 mt-1">
-                        {language === 'zh' ? '立即访问 →' : 'Visit Now →'}
-                      </div>
+                      <div className="font-bold text-gray-900 dark:text-white text-lg">{t('home.social.official.title')}</div>
+                      <div className="text-xs text-purple-500 mt-1">{t('home.social.official.visit')}</div>
                     </div>
                   </div>
                 </a>
+
               </div>
             </div>
           </div>

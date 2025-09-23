@@ -42,21 +42,6 @@ export default function MintContest() {
       ></div>
 
       <div className="relative z-10 container mx-auto px-4 py-16">
-        {/* 返回港湾按钮 */}
-        <motion.div
-          className="mb-8"
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <a
-            href="/"
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-lg hover:from-blue-500 hover:to-cyan-500 transition-all duration-300 transform hover:scale-105 border-2 border-blue-500 hover:border-cyan-400"
-          >
-            <span className="mr-2">⛵</span>
-            {language === 'zh' ? '返回港湾' : 'Back to Harbor'}
-          </a>
-        </motion.div>
 
         {/* 主标题区域 */}
         <motion.div 
@@ -71,7 +56,7 @@ export default function MintContest() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.2 }}
           >
-            🎮 {language === 'zh' ? 'Flipflop Mint大赛' : 'Flipflop Mint Contest'}
+            🎮 {language === 'zh' ? 'Flipflop Mint大赛' : 'Flipflop Mint Competition'}
           </motion.h1>
           
           <motion.h2 
@@ -89,6 +74,16 @@ export default function MintContest() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
+            <a
+              href="/"
+              className="group relative px-6 py-2 border-2 border-gray-400 dark:border-gray-500 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg font-medium text-sm backdrop-blur-sm"
+            >
+              <span className="flex items-center justify-center">
+                <span className="mr-2">⛵</span>
+                {language === 'zh' ? '返回港湾' : 'Back to PathPort'}
+              </span>
+            </a>
+            
             <button
               onClick={() => setShowRegistrationModal(true)}
               className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold rounded-xl hover:from-red-400 hover:to-pink-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
@@ -462,7 +457,7 @@ export default function MintContest() {
           </div>
         </motion.div>
 
-        {/* 社交媒体 */}
+        {/* 加入我们 - 复用脚印计划的《加入我们》部分 */}
         <motion.div 
           className="text-center"
           initial={{ opacity: 0, y: 30 }}
@@ -470,12 +465,88 @@ export default function MintContest() {
           transition={{ duration: 0.8, delay: 2.8 }}
         >
           <h3 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-            社交媒体
+            {language === 'zh' ? '关注我们' : 'Follow Us'}
           </h3>
-          <div className="flex justify-center space-x-6">
-            <a href="#" className="text-3xl hover:text-cyan-400 transition-colors">𝕏</a>
-            <a href="#" className="text-3xl hover:text-blue-400 transition-colors">📱</a>
-            <a href="#" className="text-3xl hover:text-purple-400 transition-colors">💬</a>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            {/* X (Twitter) */}
+            <a
+              href="https://x.com/flipfloplaunch"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative overflow-hidden bg-gray-800/50 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-600/30"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+              <div className="relative z-10 flex items-center">
+                <div className="w-14 h-14 bg-gradient-to-r from-gray-900 to-black rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <span className="text-2xl text-white font-extrabold">X</span>
+                </div>
+                <div>
+                  <div className="font-bold text-white text-lg">X (Twitter)</div>
+                  <div className="text-xs text-blue-400 mt-1">{language === 'zh' ? '最新动态 →' : 'Latest Updates →'}</div>
+                </div>
+              </div>
+            </a>
+
+            {/* Discord */}
+            <a
+              href="https://discord.gg/flipflop"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative overflow-hidden bg-gray-800/50 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-600/30"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+              <div className="relative z-10 flex items-center">
+                <div className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-bold text-white text-lg">Discord</div>
+                  <div className="text-xs text-indigo-400 mt-1">{language === 'zh' ? '实时交流 →' : 'Real-time communication →'}</div>
+                </div>
+              </div>
+            </a>
+
+            {/* Telegram Global */}
+            <a
+              href="https://t.me/flipflopEng"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative overflow-hidden bg-gray-800/50 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-600/30"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+              <div className="relative z-10 flex items-center">
+                <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-bold text-white text-lg">Telegram</div>
+                  <div className="text-xs text-blue-400 mt-1">🌍 Global →</div>
+                </div>
+              </div>
+            </a>
+
+            {/* 官方ff入口 */}
+            <a
+              href="https://www.flipflop.plus/?utm_source=tokenpocket"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative overflow-hidden bg-gray-800/50 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-600/30"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+              <div className="relative z-10 flex items-center">
+                <div className="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <span className="text-2xl">🚀</span>
+                </div>
+                <div>
+                  <div className="font-bold text-white text-lg">{language === 'zh' ? '官方ff入口' : 'Official FF Portal'}</div>
+                  <div className="text-xs text-purple-400 mt-1">{language === 'zh' ? '立即访问 →' : 'Visit Now →'}</div>
+                </div>
+              </div>
+            </a>
           </div>
         </motion.div>
       </div>
