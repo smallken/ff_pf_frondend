@@ -167,8 +167,8 @@ export default function LaunchContestRulesPage() {
             </h1>
             <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
               {language === 'zh' 
-                ? 'Flipflop Launch 大赛规则书'
-                : 'Flipflop Launch Contest Rulebook'
+                ? 'Flipflop Launch 大赛规则书 2025.09.20 - 2025.12.31'
+                : 'Flipflop Launch Contest Rulebook 2025.09.20 - 2025.12.31'
               }
             </p>
           </motion.div>
