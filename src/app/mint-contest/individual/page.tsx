@@ -83,7 +83,7 @@ export default function IndividualPage() {
             href="/mint-contest"
             className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg hover:from-cyan-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105"
           >
-            ← {language === 'zh' ? '返回Mint大赛' : 'Back to Mint Contest'}
+            ← {language === 'zh' ? '返回Mint大赛' : 'Back to Mint Competition'}
           </a>
         </motion.div>
 
@@ -207,8 +207,8 @@ export default function IndividualPage() {
               </h2>
               <p className="text-gray-400 text-sm">
                 {language === 'zh' 
-                  ? '提交的所有地址必须为真实有效的钱包地址。可在赛事期间补充或修改。截止日期后，地址将被锁定，不可再更换。奖励仅发放至锁定时的地址。'
-                  : 'All submitted addresses must be real and valid wallet addresses. Can be supplemented or modified during the contest period. After the deadline, addresses will be locked and cannot be changed. Rewards will only be distributed to locked addresses.'
+                  ? '成功填写参赛登记表后，可在个人中心，修改/添加钱包地址信息'
+                  : 'After successfully filling out the registration form, you can modify/add wallet address information in the personal center'
                 }
               </p>
 
@@ -364,7 +364,7 @@ export default function IndividualPage() {
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
         message={language === 'zh' ? '您的个人组报名已成功提交！期待您在打狗大赛中的精彩表现！' : 'Your individual registration has been submitted successfully! Looking forward to your amazing performance in the Mint Contest!'}
-        buttonText={language === 'zh' ? '返回Mint大赛' : 'Back to Mint Contest'}
+        buttonText={language === 'zh' ? '返回Mint大赛' : 'Back to Mint Competition'}
         onButtonClick={() => {
           setShowSuccessModal(false);
           window.location.href = '/mint-contest';

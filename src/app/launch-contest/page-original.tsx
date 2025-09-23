@@ -106,15 +106,14 @@ export default function LaunchContestHome() {
 
             {/* 描述文字 */}
             <motion.p 
-              className="text-lg md:text-xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed"
+              className="text-lg md:text-xl text-gray-300 mb-12 max-w-6xl mx-auto leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.4 }}
             >
               {language === 'zh' ? (
                 <>
-                  这不是一场普通的比赛，而是 <span className="text-cyan-400 font-bold">专属于 Web3 Builder 与 Dreamer 的盛典</span>。
-                  无论你是打造应用的开发者、塑造叙事的 KOL，还是团结社群的组织者，只要你敢于用代币去定义未来，这里都欢迎你的加入。
+                  这不是一场普通的比赛，而是 <span className="text-cyan-400 font-bold">专属于 Web3 Builder 与 Dreamer 的盛典</span>。无论你是打造应用的开发者、塑造叙事的 KOL，还是团结社群的组织者，只要你敢于用代币去定义未来，这里都欢迎你的<span className="whitespace-nowrap">加入</span>。
                 </>
               ) : (
                 <>

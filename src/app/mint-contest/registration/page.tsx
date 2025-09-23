@@ -37,7 +37,7 @@ export default function MintRegistration() {
             className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-gray-800 to-gray-700 text-white font-bold rounded-lg hover:from-gray-700 hover:to-gray-600 transition-all duration-300 transform hover:scale-105 border-2 border-gray-600 hover:border-gray-500 font-mono"
           >
             <span className="mr-2">←</span>
-            {language === 'zh' ? '返回Mint大赛' : 'Back to Mint Contest'}
+            {language === 'zh' ? '返回Mint大赛' : 'Back to Mint Competition'}
           </a>
         </motion.div>
 
@@ -147,7 +147,7 @@ export default function MintRegistration() {
           </div>
         </motion.div>
 
-        {/* 重要提示 */}
+        {/* 钱包地址说明 */}
         <motion.div
           className="mb-8"
           initial={{ opacity: 0, y: 30 }}
@@ -156,26 +156,14 @@ export default function MintRegistration() {
         >
           <PixelCard>
             <div className="text-center">
-              <h3 className="text-xl font-bold text-yellow-400 font-mono mb-4">
-                {language === 'zh' ? '⚠️ 重要提示' : '⚠️ Important Notice'}
+              <h3 className="text-xl font-bold text-cyan-400 font-mono mb-4">
+                {language === 'zh' ? '💡 温馨提示' : '💡 Friendly Reminder'}
               </h3>
-              <div className="space-y-3 text-gray-300">
+              <div className="text-gray-300">
                 <p>
                   {language === 'zh' 
-                    ? '请仔细阅读大赛规则，确保您的作品符合参赛要求。'
-                    : 'Please read the contest rules carefully to ensure your work meets the requirements.'
-                  }
-                </p>
-                <p>
-                  {language === 'zh' 
-                    ? '每个参赛者/工作室最多可以提交3个作品。'
-                    : 'Each contestant/studio can submit a maximum of 3 works.'
-                  }
-                </p>
-                <p>
-                  {language === 'zh' 
-                    ? '报名截止时间：2024年1月31日 23:59'
-                    : 'Registration deadline: January 31, 2024 23:59'
+                    ? '成功填写参赛登记表后，可在个人中心，修改/添加钱包地址信息'
+                    : 'After successfully filling out the registration form, you can modify/add wallet address information in the personal center'
                   }
                 </p>
               </div>

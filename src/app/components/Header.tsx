@@ -48,7 +48,7 @@ export default function Header() {
         };
       case 'mint':
         return {
-          logo: { icon: '🎮', text: 'Flipflop Mint competition', href: '/mint-contest' },
+          logo: { icon: '🎮', text: 'Flipflop Mint Competition', href: '/mint-contest' },
           navItems: [
             { href: '/mint-contest/rules', key: { zh: '大赛规则', en: 'Contest Rules' }, color: 'pink' },
             { href: '/mint-contest/registration', key: { zh: '参赛登记', en: 'Registration' }, color: 'red' },

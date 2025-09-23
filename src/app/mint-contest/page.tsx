@@ -212,48 +212,57 @@ export default function MintContest() {
           transition={{ duration: 0.8, delay: 1.6 }}
         >
           <h2 className="text-4xl font-bold text-center mb-12 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-            奖励机制
+            {language === 'zh' ? '奖励机制' : 'Reward Mechanism'}
           </h2>
           
           <div className="bg-gradient-to-r from-gray-900/50 to-yellow-900/20 backdrop-blur-sm border border-yellow-500/30 rounded-2xl p-8">
             <p className="text-lg leading-relaxed mb-6">
-              我们为本次大赛准备了 <span className="text-yellow-400 font-bold text-2xl">总价值 30 万美金</span> 的长期奖金池，
-              每期赛事都会单独结算、透明发放，本期具体现金奖励如下：
+              {language === 'zh' ? (
+                <>
+                  我们为本次大赛准备了 <span className="text-yellow-400 font-bold text-2xl">总价值 30 万美金</span> 的长期奖金池，
+                  每期赛事都会单独结算、透明发放，本期具体现金奖励如下：
+                </>
+              ) : (
+                <>
+                  We have prepared a long-term prize pool with a <span className="text-yellow-400 font-bold text-2xl">total value of $300,000</span> for this competition.
+                  Each event will be settled separately and distributed transparently. The specific cash rewards for this period are as follows:
+                </>
+              )}
             </p>
             
             {/* 奖励表格占位符 */}
             <div className="bg-gradient-to-r from-yellow-900/20 to-orange-900/20 rounded-xl p-6 mb-6 border border-yellow-500/30">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="text-center">
-                  <h4 className="text-xl font-bold text-yellow-400 mb-3">🐕 工作室赛道</h4>
+                  <h4 className="text-xl font-bold text-yellow-400 mb-3">🐕 {language === 'zh' ? '工作室赛道' : 'Studio Track'}</h4>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span>第一名</span>
+                      <span>{language === 'zh' ? '第一名' : '1st Place'}</span>
                       <span className="text-yellow-400 font-bold">1500 USDT</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>第二名</span>
+                      <span>{language === 'zh' ? '第二名' : '2nd Place'}</span>
                       <span className="text-yellow-400 font-bold">800 USDT</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>第三名</span>
+                      <span>{language === 'zh' ? '第三名' : '3rd Place'}</span>
                       <span className="text-yellow-400 font-bold">400 USDT</span>
                     </div>
                   </div>
                 </div>
                 <div className="text-center">
-                  <h4 className="text-xl font-bold text-cyan-400 mb-3">🐾 个人赛道</h4>
+                  <h4 className="text-xl font-bold text-cyan-400 mb-3">🐾 {language === 'zh' ? '个人赛道' : 'Individual Track'}</h4>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span>第一名</span>
+                      <span>{language === 'zh' ? '第一名' : '1st Place'}</span>
                       <span className="text-cyan-400 font-bold">800 USDT</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>第二名</span>
+                      <span>{language === 'zh' ? '第二名' : '2nd Place'}</span>
                       <span className="text-cyan-400 font-bold">400 USDT</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>第三名</span>
+                      <span>{language === 'zh' ? '第三名' : '3rd Place'}</span>
                       <span className="text-cyan-400 font-bold">200 USDT</span>
                     </div>
                   </div>
@@ -263,15 +272,19 @@ export default function MintContest() {
             
             <div className="bg-gradient-to-r from-red-900/30 to-pink-900/30 rounded-xl p-4 mb-6">
               <p className="text-center font-semibold text-red-400">
-                📌 说明：奖金数额会根据参赛热度适度追加，但绝不会减少！
+                📌 {language === 'zh' ? '说明：奖金数额会根据参赛热度适度追加，但绝不会减少！' : 'Note: Prize amounts will be moderately increased based on participation enthusiasm, but will never be reduced!'}
               </p>
             </div>
 
             {/* 额外权益简要说明 */}
             <div className="mt-6 p-6 bg-gradient-to-r from-cyan-900/20 to-blue-900/20 rounded-xl border border-cyan-500/30">
-              <h3 className="text-2xl font-bold text-cyan-400 mb-4">🌟 额外权益</h3>
+              <h3 className="text-2xl font-bold text-cyan-400 mb-4">🌟 {language === 'zh' ? '额外权益' : 'Additional Benefits'}</h3>
               <p className="text-lg text-gray-300 leading-relaxed">
-                本次大赛不仅仅提供现金奖励，获奖团队与个人还有机会获得 Flipflop 生态赋能的多重权益包括但不限于资源扶持、流量曝光、项目背书、平台话语权，助力你在 Web3 赛道走得更远。
+                {language === 'zh' ? (
+                  '本次大赛不仅仅提供现金奖励，获奖团队与个人还有机会获得 Flipflop 生态赋能的多重权益包括但不限于资源扶持、流量曝光、项目背书、平台话语权，助力你在 Web3 赛道走得更远。'
+                ) : (
+                  'This competition not only provides cash rewards, but winning teams and individuals also have the opportunity to receive multiple benefits empowered by the Flipflop ecosystem, including but not limited to resource support, traffic exposure, project endorsement, and platform voice, helping you go further in the Web3 track.'
+                )}
               </p>
             </div>
 
@@ -286,35 +299,45 @@ export default function MintContest() {
           transition={{ duration: 0.8, delay: 1.8 }}
         >
           <h2 className="text-4xl font-bold text-center mb-12 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">
-            参赛流程
+            {language === 'zh' ? '参赛流程' : 'Participation Process'}
           </h2>
           
           <div className="space-y-6">
             {[
               {
                 step: '1',
-                title: '参赛登记',
-                content: '大赛开始时，Flipflop将同步开放「参赛信息表」。参赛者须填写有效的参赛钱包地址：工作室赛道：需提交统一参赛地址；个人赛道：填写个人钱包地址即可。在赛事进行期间，参赛者可根据实际情况对所填信息进行修改或补充。'
+                title: language === 'zh' ? '参赛登记' : 'Registration',
+                content: language === 'zh' 
+                  ? '大赛开始时，Flipflop将同步开放「参赛信息表」。参赛者须填写有效的参赛钱包地址：工作室赛道：需提交统一参赛地址；个人赛道：填写个人钱包地址即可。在赛事进行期间，参赛者可根据实际情况对所填信息进行修改或补充。'
+                  : 'When the competition begins, Flipflop will simultaneously open the "Registration Form". Participants must fill in valid wallet addresses: Studio Track: Submit a unified competition address; Individual Track: Fill in personal wallet address. During the competition, participants can modify or supplement the information based on actual circumstances.'
               },
               {
                 step: '2',
-                title: '地址锁定',
-                content: '官方将在赛事设定的最终截止日期锁定所有提交内容。一旦截止，参赛地址不可再修改或替换。最终奖励仅会发放至截止前登记的收款地址，请务必确认信息准确。'
+                title: language === 'zh' ? '地址锁定' : 'Address Lock',
+                content: language === 'zh'
+                  ? '官方将在赛事设定的最终截止日期锁定所有提交内容。一旦截止，参赛地址不可再修改或替换。最终奖励仅会发放至截止前登记的收款地址，请务必确认信息准确。'
+                  : 'Officials will lock all submitted content on the final deadline set for the competition. Once the deadline passes, competition addresses cannot be modified or replaced. Final rewards will only be distributed to the payment addresses registered before the deadline. Please ensure information accuracy.'
               },
               {
                 step: '3',
-                title: '参赛期（9月20日 – 10月05日）',
-                content: '所有参赛者可在大赛期间自由选择项目进行Mint操作。链上数据将自动记录，Refund部分金额不计入统计。'
+                title: language === 'zh' ? '参赛期（9月20日 – 10月05日）' : 'Competition Period (Sep 20 – Oct 05)',
+                content: language === 'zh'
+                  ? '所有参赛者可在大赛期间自由选择项目进行Mint操作。链上数据将自动记录，Refund部分金额不计入统计。'
+                  : 'All participants can freely choose projects for Mint operations during the competition period. On-chain data will be automatically recorded, with refund amounts not included in statistics.'
               },
               {
                 step: '4',
-                title: '结果公示',
-                content: '大赛结束后，官方将基于链上数据统计各参赛地址的实际投入金额。完整排名将在72小时公示期内于Flipflop官网、社交媒体及社区频道公开，并附带链上可查询地址链接。'
+                title: language === 'zh' ? '结果公示' : 'Results Announcement',
+                content: language === 'zh'
+                  ? '大赛结束后，官方将基于链上数据统计各参赛地址的实际投入金额。完整排名将在72小时公示期内于Flipflop官网、社交媒体及社区频道公开，并附带链上可查询地址链接。'
+                  : 'After the competition ends, officials will calculate the actual investment amounts of each competition address based on on-chain data. Complete rankings will be publicly announced on Flipflop official website, social media, and community channels during the 72-hour announcement period, with accompanying on-chain queryable address links.'
               },
               {
                 step: '5',
-                title: '奖励发放',
-                content: '公示期结束并确认无误后，奖金将由官方直接发放至参赛信息表中已锁定的收款钱包地址。奖励发放过程透明可查，Flipflop不会通过任何非官方渠道索取私钥、转账或手续费，请参赛者警惕诈骗风险。'
+                title: language === 'zh' ? '奖励发放' : 'Reward Distribution',
+                content: language === 'zh'
+                  ? '公示期结束并确认无误后，奖金将由官方直接发放至参赛信息表中已锁定的收款钱包地址。奖励发放过程透明可查，Flipflop不会通过任何非官方渠道索取私钥、转账或手续费，请参赛者警惕诈骗风险。'
+                  : 'After the announcement period ends and is confirmed error-free, prizes will be directly distributed by officials to the locked payment wallet addresses in the registration form. The reward distribution process is transparent and verifiable. Flipflop will not request private keys, transfers, or fees through any unofficial channels. Please beware of fraud risks.'
               }
             ].map((item, index) => (
               <motion.div
@@ -441,6 +464,37 @@ export default function MintContest() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
           >
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold text-white mb-2">选择你的赛道，并填写你的参赛信息</h3>
+              <p className="text-gray-300">请选择您要参加的赛道并填写相关信息</p>
+            </div>
+
+            <div className="space-y-4">
+              <a
+                href="/mint-contest/studio"
+                className="block w-full p-6 bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold rounded-xl hover:from-red-400 hover:to-pink-500 transition-all duration-300 transform hover:scale-105 text-center"
+                onClick={() => setShowRegistrationModal(false)}
+              >
+                <div className="text-2xl mb-3">🎮</div>
+                <div className="text-xl">工作室赛道</div>
+              </a>
+
+              <a
+                href="/mint-contest/individual"
+                className="block w-full p-6 bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-bold rounded-xl hover:from-blue-400 hover:to-cyan-500 transition-all duration-300 transform hover:scale-105 text-center"
+                onClick={() => setShowRegistrationModal(false)}
+              >
+                <div className="text-2xl mb-3">👤</div>
+                <div className="text-xl">个人赛道</div>
+              </a>
+            </div>
+
+            <button
+              onClick={() => setShowRegistrationModal(false)}
+              className="w-full mt-6 p-3 bg-gray-700 text-gray-300 rounded-xl hover:bg-gray-600 transition-colors"
+            >
+              取消
+            </button>
           </motion.div>
         </div>
       )}
