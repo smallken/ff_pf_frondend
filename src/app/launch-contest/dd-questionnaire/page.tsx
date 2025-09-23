@@ -12,24 +12,25 @@ export default function DDQuestionnaireTest() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   
-  // 表单数据状态
+  // 表单数据状态 - 合并所有字段
   const [formData, setFormData] = useState<DDQuestionnaireData>({
     registrationId: undefined, // 可选字段
     projectName: '',
     tokenContractAddress: '',
     trackCategory: '',
     otherTrackName: '',
-    keyDataAtDeadline: '',
+    holderAddressCount: '',
+    mintCompletion: '',
+    communityScale: '',
+    twitterFollowers: '',
+    externalMarketData: '',
     trafficContribution: '',
     projectQuality: '',
     narrativeConsensus: '',
     teamEfficiency: '',
     nextSteps: '',
     declarations: '',
-  });
-
-  // 扩展的问题状态
-  const [extendedFormData, setExtendedFormData] = useState({
+    
     // 流量贡献部分
     effectiveOperationMethod: '',
     productUserGrowth: '',
@@ -57,6 +58,13 @@ export default function DDQuestionnaireTest() {
     technicalTeamRatio: '',
     communityTeamSize: '',
     crisisManagement: '',
+    
+    // 声明与承诺复选框
+    truthfulness: false,
+    compliance: false,
+    taxCompliance: false,
+    intellectualProperty: false,
+    publicDisplay: false,
   });
 
   // 判断是否为产品型赛道
@@ -65,26 +73,9 @@ export default function DDQuestionnaireTest() {
   // 判断是否为社群型赛道
   const isCommunityTrack = selectedTrack === 'kol' || selectedTrack === 'ip' || selectedTrack === 'community';
 
-  // 声明与承诺复选框状态
-  const [declarationCheckboxes, setDeclarationCheckboxes] = useState({
-    truthfulness: false,
-    compliance: false,
-    taxCompliance: false,
-    intellectualProperty: false,
-    publicDisplay: false,
-  });
-
   // 处理输入变化
   const handleInputChange = (field: keyof DDQuestionnaireData, value: string) => {
     setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // 处理扩展表单数据变化
-  const handleExtendedInputChange = (field: keyof typeof extendedFormData, value: string) => {
-    setExtendedFormData(prev => ({
       ...prev,
       [field]: value
     }));
@@ -99,9 +90,9 @@ export default function DDQuestionnaireTest() {
     }));
   };
 
-  // 处理声明与承诺复选框变化
-  const handleDeclarationChange = (field: keyof typeof declarationCheckboxes, checked: boolean) => {
-    setDeclarationCheckboxes(prev => ({
+  // 处理复选框变化
+  const handleCheckboxChange = (field: keyof DDQuestionnaireData, checked: boolean) => {
+    setFormData(prev => ({
       ...prev,
       [field]: checked
     }));
@@ -133,8 +124,23 @@ export default function DDQuestionnaireTest() {
         return;
       }
 
-      if (!formData.keyDataAtDeadline.trim()) {
-        alert(language === 'zh' ? '请填写截止日2025年9月20日的关键数据' : 'Please fill in key data at deadline September 20, 2025');
+      if (!formData.holderAddressCount.trim()) {
+        alert(language === 'zh' ? '请填写持币地址数' : 'Please fill in holder address count');
+        return;
+      }
+
+      if (!formData.mintCompletion.trim()) {
+        alert(language === 'zh' ? '请填写Mint完成度' : 'Please fill in mint completion');
+        return;
+      }
+
+      if (!formData.communityScale.trim()) {
+        alert(language === 'zh' ? '请填写社区规模' : 'Please fill in community scale');
+        return;
+      }
+
+      if (!formData.twitterFollowers.trim()) {
+        alert(language === 'zh' ? '请填写推特粉丝数' : 'Please fill in twitter followers');
         return;
       }
 
@@ -164,64 +170,64 @@ export default function DDQuestionnaireTest() {
       }
 
       // 验证扩展表单数据 - 通用问题
-      if (!extendedFormData.effectiveOperationMethod.trim()) {
+      if (!formData.effectiveOperationMethod?.trim()) {
         alert(language === 'zh' ? '请填写最有效的运营方式' : 'Please fill in the most effective operational method');
         return;
       }
 
-      if (!extendedFormData.competitiveAdvantage.trim()) {
+      if (!formData.competitiveAdvantage?.trim()) {
         alert(language === 'zh' ? '请填写项目的竞争优势' : 'Please fill in the competitive advantages');
         return;
       }
 
-      if (!extendedFormData.externalValidation.trim()) {
+      if (!formData.externalValidation?.trim()) {
         alert(language === 'zh' ? '请填写外部验证情况' : 'Please fill in external validation');
         return;
       }
 
-      if (!extendedFormData.completedActions.trim()) {
+      if (!formData.completedActions?.trim()) {
         alert(language === 'zh' ? '请填写已完成的关键动作' : 'Please fill in completed key actions');
         return;
       }
 
       // 验证产品型赛道问题
       if (isProductTrack) {
-        if (!extendedFormData.productUserGrowth.trim()) {
+        if (!formData.productUserGrowth?.trim()) {
           alert(language === 'zh' ? '请填写产品功能带来的用户增长情况' : 'Please fill in product user growth');
           return;
         }
 
-        if (!extendedFormData.externalChannels.trim()) {
+        if (!formData.externalChannels?.trim()) {
           alert(language === 'zh' ? '请填写外部渠道流量导入情况' : 'Please fill in external channel traffic import');
           return;
         }
 
-        if (!extendedFormData.productStage.trim()) {
+        if (!formData.productStage?.trim()) {
           alert(language === 'zh' ? '请填写产品当前阶段和现状' : 'Please fill in product current stage');
           return;
         }
 
-        if (!extendedFormData.proudInnovations.trim()) {
+        if (!formData.proudInnovations?.trim()) {
           alert(language === 'zh' ? '请填写最自豪的创新功能或设计' : 'Please fill in proud innovations');
           return;
         }
 
-        if (!extendedFormData.productNarrativeExperience.trim()) {
+        if (!formData.productNarrativeExperience?.trim()) {
           alert(language === 'zh' ? '请填写产品叙事如何围绕技术/应用改变体验' : 'Please fill in product narrative experience');
           return;
         }
 
-        if (!extendedFormData.narrativeAdjustment.trim()) {
+        if (!formData.narrativeAdjustment?.trim()) {
           alert(language === 'zh' ? '请填写因用户反馈而调整叙事的情况' : 'Please fill in narrative adjustment');
           return;
         }
 
-        if (!extendedFormData.productIterationCycle.trim()) {
+        if (!formData.productIterationCycle?.trim()) {
           alert(language === 'zh' ? '请填写产品迭代周期和计划推进情况' : 'Please fill in product iteration cycle');
           return;
         }
 
-        if (!extendedFormData.technicalTeamRatio.trim()) {
+        if (!formData.technicalTeamRatio?.trim()) {
           alert(language === 'zh' ? '请填写团队技术开发力量配置' : 'Please fill in technical team ratio');
           return;
         }
@@ -229,49 +235,51 @@ export default function DDQuestionnaireTest() {
 
       // 验证社群型赛道问题
       if (isCommunityTrack) {
-        if (!extendedFormData.communityActivities.trim()) {
+        if (!formData.communityActivities?.trim()) {
           alert(language === 'zh' ? '请填写最有效的社群活动及其效果' : 'Please fill in community activities');
           return;
         }
 
-        if (!extendedFormData.spontaneousSpread.trim()) {
+        if (!formData.spontaneousSpread?.trim()) {
           alert(language === 'zh' ? '请填写自发的社群传播案例及其流量效果' : 'Please fill in spontaneous spread cases');
           return;
         }
 
-        if (!extendedFormData.communityNarrative.trim()) {
+        if (!formData.communityNarrative?.trim()) {
           alert(language === 'zh' ? '请填写社群的核心叙事和共鸣点' : 'Please fill in community narrative');
           return;
         }
 
-        if (!extendedFormData.governanceMechanisms.trim()) {
+        if (!formData.governanceMechanisms?.trim()) {
           alert(language === 'zh' ? '请填写治理或组织机制' : 'Please fill in governance mechanisms');
           return;
         }
 
-        if (!extendedFormData.recentCommunityActivity.trim()) {
+        if (!formData.recentCommunityActivity?.trim()) {
           alert(language === 'zh' ? '请填写最近一次社群活动如何强化叙事' : 'Please fill in recent community activity');
           return;
         }
 
-        if (!extendedFormData.memberContentCreation.trim()) {
+        if (!formData.memberContentCreation?.trim()) {
           alert(language === 'zh' ? '请填写社群成员主动产出叙事相关内容的案例' : 'Please fill in member content creation');
           return;
         }
 
-        if (!extendedFormData.communityTeamSize.trim()) {
+        if (!formData.communityTeamSize?.trim()) {
           alert(language === 'zh' ? '请填写社群运营团队的规模和分工' : 'Please fill in community team size');
           return;
         }
 
-        if (!extendedFormData.crisisManagement.trim()) {
+        if (!formData.crisisManagement?.trim()) {
           alert(language === 'zh' ? '请填写应对社群负面情绪或突发问题的方法' : 'Please fill in crisis management');
           return;
         }
       }
 
       // 验证声明与承诺复选框
-      const allDeclarationsChecked = Object.values(declarationCheckboxes).every(checked => checked);
+      const allDeclarationsChecked = formData.truthfulness && formData.compliance && 
+                                   formData.taxCompliance && formData.intellectualProperty && 
+                                   formData.publicDisplay;
       if (!allDeclarationsChecked) {
         alert(language === 'zh' ? '请勾选所有声明与承诺条款' : 'Please check all declaration and commitment terms');
         return;
@@ -279,19 +287,8 @@ export default function DDQuestionnaireTest() {
 
       // 调试日志：查看提交的数据
       console.log('🔍 提交DD问答清单数据:', formData);
-      console.log('🔍 各字段详情:', {
-        projectName: formData.projectName,
-        tokenContractAddress: formData.tokenContractAddress,
-        trackCategory: formData.trackCategory,
-        otherTrackName: formData.otherTrackName,
-        keyDataAtDeadline: formData.keyDataAtDeadline,
-        trafficContribution: formData.trafficContribution,
-        projectQuality: formData.projectQuality,
-        narrativeConsensus: formData.narrativeConsensus,
-        teamEfficiency: formData.teamEfficiency,
-        nextSteps: formData.nextSteps,
-        declarations: formData.declarations
-      });
+      console.log('🔍 字段总数:', Object.keys(formData).length);
+      console.log('🔍 所有字段详情:', formData);
 
       // 提交数据
       const result = await ddQuestionnaireService.submitDDQuestionnaire(formData);
@@ -349,8 +346,8 @@ export default function DDQuestionnaireTest() {
               </h4>
               <p className="text-sm leading-relaxed">
                 {language === 'zh' 
-                  ? '所有参赛项目需在截止日起7天内（2025年9月20日 → 2025年9月27日），登录 Flipflop 官网完成 DD 问答清单填写。'
-                  : 'All participating projects must complete the DD questionnaire on the Flipflop official website within 7 days from the deadline (September 20, 2025 → September 27, 2025).'
+                  ? '所有参赛项目需在截止日起7天内（T0 → T0+7天），登录 Flipflop 官网完成 DD 问答清单填写。'
+                  : 'All participating projects must complete the DD questionnaire on the Flipflop official website within 7 days from the deadline (T0 → T0+7 days).'
                 }
               </p>
             </div>
@@ -519,7 +516,7 @@ export default function DDQuestionnaireTest() {
                 <div>
                   <label className="text-gray-300 font-medium block mb-2">
                     <span className="text-red-400 mr-1">*</span>
-                    {language === 'zh' ? '截止日 2025年9月20日 的关键数据：' : 'Key Data at Deadline September 20, 2025:'}
+                    {language === 'zh' ? '截止日 T0 的关键数据：' : 'Key Data at Deadline T0:'}
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -528,6 +525,8 @@ export default function DDQuestionnaireTest() {
                       </label>
                       <input
                         type="number"
+                        value={formData.holderAddressCount}
+                        onChange={(e) => handleInputChange('holderAddressCount', e.target.value)}
                         className="w-full p-2 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-300"
                         placeholder="0"
                       />
@@ -538,6 +537,8 @@ export default function DDQuestionnaireTest() {
                       </label>
                       <input
                         type="number"
+                        value={formData.mintCompletion}
+                        onChange={(e) => handleInputChange('mintCompletion', e.target.value)}
                         className="w-full p-2 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-300"
                         placeholder="0"
                         max="100"
@@ -549,6 +550,8 @@ export default function DDQuestionnaireTest() {
                       </label>
                       <input
                         type="number"
+                        value={formData.communityScale}
+                        onChange={(e) => handleInputChange('communityScale', e.target.value)}
                         className="w-full p-2 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-300"
                         placeholder="0"
                       />
@@ -559,6 +562,8 @@ export default function DDQuestionnaireTest() {
                       </label>
                       <input
                         type="number"
+                        value={formData.twitterFollowers}
+                        onChange={(e) => handleInputChange('twitterFollowers', e.target.value)}
                         className="w-full p-2 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-300"
                         placeholder="0"
                       />
@@ -569,8 +574,8 @@ export default function DDQuestionnaireTest() {
                       {language === 'zh' ? '已毕业可补充描述外盘目前相关数据：' : 'Additional external market data (for graduated projects):'}
                     </label>
                     <textarea
-                      value={formData.keyDataAtDeadline}
-                      onChange={(e) => handleInputChange('keyDataAtDeadline', e.target.value)}
+                      value={formData.externalMarketData}
+                      onChange={(e) => handleInputChange('externalMarketData', e.target.value)}
                       className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                       placeholder={language === 'zh' ? '请描述外盘相关数据' : 'Please describe external market data'}
                       rows={2}
@@ -610,7 +615,7 @@ export default function DDQuestionnaireTest() {
                     <div>
                       <label className="text-gray-300 font-medium block mb-2">
                         <span className="text-red-400 mr-1">*</span>
-                        {language === 'zh' ? '截止 2025年9月20日，你们带来的新增用户或曝光规模是多少？' : 'By September 20, 2025, what is the scale of new users or exposure you brought?'}
+                        {language === 'zh' ? '截止 T0，你们带来的新增用户或曝光规模是多少？' : 'By T0, what is the scale of new users or exposure you brought?'}
                       </label>
                       <textarea
                         value={formData.trafficContribution}
@@ -626,8 +631,8 @@ export default function DDQuestionnaireTest() {
                         {language === 'zh' ? '在所有运营动作里，哪一种方式最有效果？（如 AMA、媒体、跨社区合作）' : 'Among all operational activities, which method was most effective? (e.g., AMA, media, cross-community cooperation)'}
                       </label>
                       <textarea
-                        value={extendedFormData.effectiveOperationMethod}
-                        onChange={(e) => handleExtendedInputChange('effectiveOperationMethod', e.target.value)}
+                        value={formData.effectiveOperationMethod}
+                        onChange={(e) => handleInputChange('effectiveOperationMethod', e.target.value)}
                         className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                         placeholder={language === 'zh' ? '请详细说明最有效的运营方式及其效果' : 'Please describe the most effective operational methods and their results in detail'}
                         rows={2}
@@ -649,8 +654,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '产品功能或迭代上线后，是否直接带来新增用户或交易？请举例说明。' : 'After product features or iterations were launched, did they directly bring new users or transactions? Please provide examples.'}
                         </label>
                         <textarea
-                          value={extendedFormData.productUserGrowth}
-                          onChange={(e) => handleExtendedInputChange('productUserGrowth', e.target.value)}
+                          value={formData.productUserGrowth}
+                          onChange={(e) => handleInputChange('productUserGrowth', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请举例说明产品功能带来的用户增长或交易增长' : 'Please provide examples of user growth or transaction growth brought by product features'}
                           rows={2}
@@ -662,8 +667,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '是否有外部渠道（应用商店、开发者社区、合作伙伴）帮助导入流量？' : 'Are there external channels (app stores, developer communities, partners) that help import traffic?'}
                         </label>
                         <textarea
-                          value={extendedFormData.externalChannels}
-                          onChange={(e) => handleExtendedInputChange('externalChannels', e.target.value)}
+                          value={formData.externalChannels}
+                          onChange={(e) => handleInputChange('externalChannels', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请描述外部渠道的流量导入情况' : 'Please describe traffic import from external channels'}
                           rows={2}
@@ -686,8 +691,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '哪些社群活动最有效地吸引了新成员？请描述。' : 'Which community activities most effectively attracted new members? Please describe.'}
                         </label>
                         <textarea
-                          value={extendedFormData.communityActivities}
-                          onChange={(e) => handleExtendedInputChange('communityActivities', e.target.value)}
+                          value={formData.communityActivities}
+                          onChange={(e) => handleInputChange('communityActivities', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请描述最有效的社群活动及其效果' : 'Please describe the most effective community activities and their results'}
                           rows={2}
@@ -699,8 +704,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '是否有自发的社群传播（Meme、二创、裂变案例）显著带来流量？' : 'Are there spontaneous community spreads (Meme, secondary creation, fission cases) that significantly brought traffic?'}
                         </label>
                         <textarea
-                          value={extendedFormData.spontaneousSpread}
-                          onChange={(e) => handleExtendedInputChange('spontaneousSpread', e.target.value)}
+                          value={formData.spontaneousSpread}
+                          onChange={(e) => handleInputChange('spontaneousSpread', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请描述自发的社群传播案例及其流量效果' : 'Please describe spontaneous community spread cases and their traffic effects'}
                           rows={2}
@@ -743,8 +748,8 @@ export default function DDQuestionnaireTest() {
                         {language === 'zh' ? '相比其他同类项目，你们最大的竞争优势在哪里？' : 'Compared to other similar projects, where is your biggest competitive advantage?'}
                       </label>
                       <textarea
-                        value={extendedFormData.competitiveAdvantage}
-                        onChange={(e) => handleExtendedInputChange('competitiveAdvantage', e.target.value)}
+                        value={formData.competitiveAdvantage}
+                        onChange={(e) => handleInputChange('competitiveAdvantage', e.target.value)}
                         className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                         placeholder={language === 'zh' ? '请详细说明项目的竞争优势' : 'Please describe the competitive advantages of the project in detail'}
                         rows={2}
@@ -766,8 +771,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '产品目前所处阶段（概念 / Demo / 内测 / 正式上线），请说明现状。' : 'What stage is the product currently in (concept / Demo / beta / officially launched)? Please describe the current status.'}
                         </label>
                         <textarea
-                          value={extendedFormData.productStage}
-                          onChange={(e) => handleExtendedInputChange('productStage', e.target.value)}
+                          value={formData.productStage}
+                          onChange={(e) => handleInputChange('productStage', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请详细说明产品当前阶段和现状' : 'Please describe the current stage and status of the product in detail'}
                           rows={2}
@@ -779,8 +784,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '迭代过程中，有哪些功能或设计是你们最自豪的创新？' : 'During the iteration process, which features or designs are you most proud of as innovations?'}
                         </label>
                         <textarea
-                          value={extendedFormData.proudInnovations}
-                          onChange={(e) => handleExtendedInputChange('proudInnovations', e.target.value)}
+                          value={formData.proudInnovations}
+                          onChange={(e) => handleInputChange('proudInnovations', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请详细描述最自豪的创新功能或设计' : 'Please describe the most proud innovative features or designs in detail'}
                           rows={2}
@@ -803,8 +808,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '社群的核心叙事是什么？为什么它能引起共鸣？' : 'What is the core narrative of the community? Why can it resonate?'}
                         </label>
                         <textarea
-                          value={extendedFormData.communityNarrative}
-                          onChange={(e) => handleExtendedInputChange('communityNarrative', e.target.value)}
+                          value={formData.communityNarrative}
+                          onChange={(e) => handleInputChange('communityNarrative', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请详细描述社群的核心叙事和共鸣点' : 'Please describe the core narrative and resonance points of the community in detail'}
                           rows={2}
@@ -816,8 +821,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '是否建立了稳定的治理或组织机制？（如投票、提案、联盟协作）' : 'Have stable governance or organizational mechanisms been established? (e.g., voting, proposals, alliance cooperation)'}
                         </label>
                         <textarea
-                          value={extendedFormData.governanceMechanisms}
-                          onChange={(e) => handleExtendedInputChange('governanceMechanisms', e.target.value)}
+                          value={formData.governanceMechanisms}
+                          onChange={(e) => handleInputChange('governanceMechanisms', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请详细描述治理或组织机制' : 'Please describe governance or organizational mechanisms in detail'}
                           rows={2}
@@ -858,11 +863,11 @@ export default function DDQuestionnaireTest() {
                     <div>
                       <label className="text-gray-300 font-medium block mb-2">
                         <span className="text-red-400 mr-1">*</span>
-                        {language === 'zh' ? '截止 2025年9月20日，你们的叙事是否得到过外部验证？（如媒体报道、KOL引用）' : 'By September 20, 2025, has your narrative been externally validated? (e.g., media reports, KOL citations)'}
+                        {language === 'zh' ? '截止 T0，你们的叙事是否得到过外部验证？（如媒体报道、KOL引用）' : 'By T0, has your narrative been externally validated? (e.g., media reports, KOL citations)'}
                       </label>
                       <textarea
-                        value={extendedFormData.externalValidation}
-                        onChange={(e) => handleExtendedInputChange('externalValidation', e.target.value)}
+                        value={formData.externalValidation}
+                        onChange={(e) => handleInputChange('externalValidation', e.target.value)}
                         className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                         placeholder={language === 'zh' ? '请描述外部验证情况，如媒体报道、KOL引用等' : 'Please describe external validation, such as media reports, KOL citations, etc.'}
                         rows={2}
@@ -884,8 +889,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '产品叙事是否围绕"技术/应用如何改变体验"？请说明。' : 'Does the product narrative revolve around "how technology/applications change experience"? Please explain.'}
                         </label>
                         <textarea
-                          value={extendedFormData.productNarrativeExperience}
-                          onChange={(e) => handleExtendedInputChange('productNarrativeExperience', e.target.value)}
+                          value={formData.productNarrativeExperience}
+                          onChange={(e) => handleInputChange('productNarrativeExperience', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请说明产品叙事如何围绕技术/应用改变体验' : 'Please explain how the product narrative revolves around technology/application changing experience'}
                           rows={2}
@@ -897,8 +902,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '是否因用户反馈而调整过叙事？举例说明。' : 'Have you adjusted the narrative based on user feedback? Please provide examples.'}
                         </label>
                         <textarea
-                          value={extendedFormData.narrativeAdjustment}
-                          onChange={(e) => handleExtendedInputChange('narrativeAdjustment', e.target.value)}
+                          value={formData.narrativeAdjustment}
+                          onChange={(e) => handleInputChange('narrativeAdjustment', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请举例说明因用户反馈而调整叙事的情况' : 'Please provide examples of narrative adjustments based on user feedback'}
                           rows={2}
@@ -921,8 +926,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '最近一次社群活动如何强化了叙事？' : 'How did the most recent community activity strengthen the narrative?'}
                         </label>
                         <textarea
-                          value={extendedFormData.recentCommunityActivity}
-                          onChange={(e) => handleExtendedInputChange('recentCommunityActivity', e.target.value)}
+                          value={formData.recentCommunityActivity}
+                          onChange={(e) => handleInputChange('recentCommunityActivity', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请描述最近一次社群活动如何强化叙事' : 'Please describe how the most recent community activity strengthened the narrative'}
                           rows={2}
@@ -934,8 +939,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '社群成员是否主动产出叙事相关的内容？请提供案例。' : 'Do community members actively produce narrative-related content? Please provide cases.'}
                         </label>
                         <textarea
-                          value={extendedFormData.memberContentCreation}
-                          onChange={(e) => handleExtendedInputChange('memberContentCreation', e.target.value)}
+                          value={formData.memberContentCreation}
+                          onChange={(e) => handleInputChange('memberContentCreation', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请提供社群成员主动产出叙事相关内容的案例' : 'Please provide cases of community members actively producing narrative-related content'}
                           rows={2}
@@ -975,13 +980,13 @@ export default function DDQuestionnaireTest() {
                     <div>
                       <label className="text-gray-300 font-medium block mb-2">
                         <span className="text-red-400 mr-1">*</span>
-                        {language === 'zh' ? '截止 2025年9月20日 已完成的关键动作（活动、迭代、合作）。' : 'Key actions completed by September 20, 2025 (activities, iterations, cooperation).'}
+                        {language === 'zh' ? '截止 T0 已完成的关键动作（活动、迭代、合作）。' : 'Key actions completed by T0 (activities, iterations, cooperation).'}
                       </label>
                       <textarea
-                        value={extendedFormData.completedActions}
-                        onChange={(e) => handleExtendedInputChange('completedActions', e.target.value)}
+                        value={formData.completedActions}
+                        onChange={(e) => handleInputChange('completedActions', e.target.value)}
                         className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
-                        placeholder={language === 'zh' ? '请描述截止2025年9月20日已完成的关键动作' : 'Please describe key actions completed by September 20, 2025'}
+                        placeholder={language === 'zh' ? '请描述截止T0已完成的关键动作' : 'Please describe key actions completed by T0'}
                         rows={2}
                       />
                     </div>
@@ -1001,8 +1006,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '产品迭代周期通常多久？能否按计划推进？' : 'How long is the product iteration cycle usually? Can it proceed according to plan?'}
                         </label>
                         <textarea
-                          value={extendedFormData.productIterationCycle}
-                          onChange={(e) => handleExtendedInputChange('productIterationCycle', e.target.value)}
+                          value={formData.productIterationCycle}
+                          onChange={(e) => handleInputChange('productIterationCycle', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请描述产品迭代周期和计划推进情况' : 'Please describe product iteration cycle and plan advancement'}
                           rows={2}
@@ -1014,8 +1019,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '团队是否具备全职技术开发力量？大约占比多少？' : 'Does the team have full-time technical development capabilities? What is the approximate proportion?'}
                         </label>
                         <textarea
-                          value={extendedFormData.technicalTeamRatio}
-                          onChange={(e) => handleExtendedInputChange('technicalTeamRatio', e.target.value)}
+                          value={formData.technicalTeamRatio}
+                          onChange={(e) => handleInputChange('technicalTeamRatio', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请描述团队技术开发力量配置' : 'Please describe team technical development capabilities'}
                           rows={2}
@@ -1038,8 +1043,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '社群运营团队的人数与分工是怎样的？' : 'What is the size and division of labor of the community operations team?'}
                         </label>
                         <textarea
-                          value={extendedFormData.communityTeamSize}
-                          onChange={(e) => handleExtendedInputChange('communityTeamSize', e.target.value)}
+                          value={formData.communityTeamSize}
+                          onChange={(e) => handleInputChange('communityTeamSize', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请描述社群运营团队的规模和分工' : 'Please describe the size and division of labor of the community operations team'}
                           rows={2}
@@ -1051,8 +1056,8 @@ export default function DDQuestionnaireTest() {
                           {language === 'zh' ? '遇到社群负面情绪或突发问题时，你们是如何应对的？' : 'When encountering negative community sentiment or sudden problems, how do you respond?'}
                         </label>
                         <textarea
-                          value={extendedFormData.crisisManagement}
-                          onChange={(e) => handleExtendedInputChange('crisisManagement', e.target.value)}
+                          value={formData.crisisManagement}
+                          onChange={(e) => handleInputChange('crisisManagement', e.target.value)}
                           className="w-full p-3 bg-gray-800/50 rounded-lg border border-gray-600 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none transition-all duration-300 min-h-[60px] resize-vertical"
                           placeholder={language === 'zh' ? '请描述应对社群负面情绪或突发问题的方法' : 'Please describe methods for dealing with negative community sentiment or sudden problems'}
                           rows={2}
@@ -1153,8 +1158,8 @@ export default function DDQuestionnaireTest() {
                   <label className="flex items-center text-gray-300 cursor-pointer hover:text-red-300 transition-colors">
                     <input
                       type="checkbox"
-                      checked={declarationCheckboxes.truthfulness}
-                      onChange={(e) => handleDeclarationChange('truthfulness', e.target.checked)}
+                      checked={formData.truthfulness}
+                      onChange={(e) => handleCheckboxChange('truthfulness', e.target.checked)}
                       className="mr-3 w-4 h-4 text-red-500 bg-gray-800 border-gray-600 rounded focus:ring-red-500 focus:ring-2"
                     />
                     {language === 'zh' ? '我们提交的信息和数据均为真实、有效，无伪造或虚假。' : 'The information and data we submit are all true and valid, without forgery or falsehood.'}
@@ -1162,8 +1167,8 @@ export default function DDQuestionnaireTest() {
                   <label className="flex items-center text-gray-300 cursor-pointer hover:text-red-300 transition-colors">
                     <input
                       type="checkbox"
-                      checked={declarationCheckboxes.compliance}
-                      onChange={(e) => handleDeclarationChange('compliance', e.target.checked)}
+                      checked={formData.compliance}
+                      onChange={(e) => handleCheckboxChange('compliance', e.target.checked)}
                       className="mr-3 w-4 h-4 text-red-500 bg-gray-800 border-gray-600 rounded focus:ring-red-500 focus:ring-2"
                     />
                     {language === 'zh' ? '若发现虚假/操纵，平台有权取消参赛或获奖资格。' : 'If fraud/manipulation is found, the platform has the right to cancel participation or award eligibility.'}
@@ -1171,8 +1176,8 @@ export default function DDQuestionnaireTest() {
                   <label className="flex items-center text-gray-300 cursor-pointer hover:text-red-300 transition-colors">
                     <input
                       type="checkbox"
-                      checked={declarationCheckboxes.taxCompliance}
-                      onChange={(e) => handleDeclarationChange('taxCompliance', e.target.checked)}
+                      checked={formData.taxCompliance}
+                      onChange={(e) => handleCheckboxChange('taxCompliance', e.target.checked)}
                       className="mr-3 w-4 h-4 text-red-500 bg-gray-800 border-gray-600 rounded focus:ring-red-500 focus:ring-2"
                     />
                     {language === 'zh' ? '我们遵守所在司法辖区的税务与合规要求。' : 'We comply with tax and compliance requirements in our jurisdiction.'}
@@ -1180,8 +1185,8 @@ export default function DDQuestionnaireTest() {
                   <label className="flex items-center text-gray-300 cursor-pointer hover:text-red-300 transition-colors">
                     <input
                       type="checkbox"
-                      checked={declarationCheckboxes.intellectualProperty}
-                      onChange={(e) => handleDeclarationChange('intellectualProperty', e.target.checked)}
+                      checked={formData.intellectualProperty}
+                      onChange={(e) => handleCheckboxChange('intellectualProperty', e.target.checked)}
                       className="mr-3 w-4 h-4 text-red-500 bg-gray-800 border-gray-600 rounded focus:ring-red-500 focus:ring-2"
                     />
                     {language === 'zh' ? '涉及的知识产权内容均为原创或合法授权，若有侵权责任自负。' : 'The intellectual property content involved is original or legally authorized, and any infringement liability is self-responsible.'}
@@ -1189,8 +1194,8 @@ export default function DDQuestionnaireTest() {
                   <label className="flex items-center text-gray-300 cursor-pointer hover:text-red-300 transition-colors">
                     <input
                       type="checkbox"
-                      checked={declarationCheckboxes.publicDisplay}
-                      onChange={(e) => handleDeclarationChange('publicDisplay', e.target.checked)}
+                      checked={formData.publicDisplay}
+                      onChange={(e) => handleCheckboxChange('publicDisplay', e.target.checked)}
                       className="mr-3 w-4 h-4 text-red-500 bg-gray-800 border-gray-600 rounded focus:ring-red-500 focus:ring-2"
                     />
                     {language === 'zh' ? '我们同意 Flipflop 平台对参赛材料进行公开展示和传播。' : 'We agree that Flipflop platform can publicly display and disseminate contest materials.'}

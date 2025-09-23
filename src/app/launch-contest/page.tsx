@@ -354,7 +354,7 @@ export default function LaunchContestHome() {
                 },
                 {
                   id: 2,
-                  title: language === 'zh' ? '截止日（2025年9月20日）' : 'Deadline (September 20, 2025)',
+                  title: language === 'zh' ? '截止日（T0）' : 'Deadline (T0)',
                   subtitle: language === 'zh' ? '统一基准点' : 'Unified Baseline',
                   icon: '📊',
                   color: 'from-blue-500 to-cyan-600',
@@ -364,8 +364,8 @@ export default function LaunchContestHome() {
                     {
                       title: language === 'zh' ? '数据快照' : 'Data Snapshot',
                       content: language === 'zh' 
-                        ? '平台将在 2025年9月20日 当日，对所有参赛项目进行链上与平台数据的统一快照；'
-                        : 'On September 20, 2025, the platform will take a unified snapshot of on-chain and platform data for all participating projects.'
+                        ? '平台将在 T0 当日，对所有参赛项目进行链上与平台数据的统一快照；'
+                        : 'On T0, the platform will take a unified snapshot of on-chain and platform data for all participating projects.'
                     },
                     {
                       title: language === 'zh' ? '评审基准' : 'Evaluation Baseline',
@@ -378,7 +378,7 @@ export default function LaunchContestHome() {
                 {
                   id: 3,
                   title: language === 'zh' ? '考核内容提交期' : 'Evaluation Content Submission',
-                  subtitle: language === 'zh' ? '2025年9月20日 → 2025年9月27日' : 'September 20, 2025 → September 27, 2025',
+                  subtitle: 'T0 → T0+7 ' + (language === 'zh' ? '天' : 'days'),
                   icon: '📝',
                   color: 'from-purple-500 to-violet-600',
                   borderColor: 'border-purple-500/30',
@@ -401,7 +401,7 @@ export default function LaunchContestHome() {
                 {
                   id: 4,
                   title: language === 'zh' ? '评审与公示期' : 'Review & Publicity Period',
-                  subtitle: language === 'zh' ? '2025年9月27日 → 2025年10月4日' : 'September 27, 2025 → October 4, 2025',
+                  subtitle: 'T0+7 → T0+14 ' + (language === 'zh' ? '天' : 'days'),
                   icon: '⚖️',
                   color: 'from-orange-500 to-red-600',
                   borderColor: 'border-orange-500/30',

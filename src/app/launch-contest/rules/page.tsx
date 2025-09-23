@@ -42,7 +42,7 @@ export default function LaunchContestRulesPage() {
       title: language === 'zh' ? '第四部分：赛事时间线' : 'Part 4: Contest Timeline',
       subsections: [
         { id: 'section4-1', title: language === 'zh' ? '1. 开放期' : '1. Open Period' },
-        { id: 'section4-2', title: language === 'zh' ? '2. 截止日（2025年9月20日）' : '2. Deadline (September 20, 2025)' },
+        { id: 'section4-2', title: language === 'zh' ? '2. 截止日（T0）' : '2. Deadline (T0)' },
         { id: 'section4-3', title: language === 'zh' ? '3. 考核内容提交期' : '3. Assessment Submission' },
         { id: 'section4-4', title: language === 'zh' ? '4. 评审与公示期' : '4. Review & Announcement' },
         { id: 'section4-5', title: language === 'zh' ? '5. Final Day（收官活动）' : '5. Final Day' }
@@ -572,9 +572,9 @@ export default function LaunchContestRulesPage() {
                   </div>
                   
                   <div className="bg-gray-800/30 rounded-xl p-6">
-                    <h4 className="text-xl font-bold text-orange-200 mb-4">{language === 'zh' ? '2. 截止日与DD（Due Diligence）问答清单递交（2025年9月20日 ~ 2025年9月27日）' : '2. Deadline & DD (Due Diligence) Questionnaire Submission (September 20, 2025 ~ September 27, 2025)'}</h4>
+                    <h4 className="text-xl font-bold text-orange-200 mb-4">{language === 'zh' ? '2. 截止日与DD（Due Diligence）问答清单递交（T0 ~ T0+7 天）' : '2. Deadline & DD (Due Diligence) Questionnaire Submission (T0 ~ T0+7 days)'}</h4>
                     <ul className="space-y-3 text-gray-300 text-sm">
-                      <li>• <span className="font-bold text-orange-400">{language === 'zh' ? '统一截止日 2025年9月20日：' : 'Unified Deadline September 20, 2025:'}</span>{language === 'zh' 
+                      <li>• <span className="font-bold text-orange-400">{language === 'zh' ? '统一截止日 T0：' : 'Unified Deadline T0:'}</span>{language === 'zh' 
                         ? '平台将在截止日锁定统计口径（包括链上数据、平台内盘数据及公开社媒快照）。'
                         : 'The platform will lock in statistical standards on the deadline (including on-chain data, platform internal market data, and public social media snapshots).'
                         }</li>
@@ -652,8 +652,8 @@ export default function LaunchContestRulesPage() {
                     <h4 className="text-lg font-bold text-cyan-200 mb-3">{language === 'zh' ? '时间口径' : 'Time Standards'}</h4>
                     <p className="text-gray-300 text-sm">
                       {language === 'zh' 
-                        ? '除非另行公告，所有统计以截止日 2025年9月20日 的数据快照为基准；DD问答清单填写窗口期间，新增数据仅作佐证参考。'
-                        : 'Unless otherwise announced, all statistics are based on the data snapshot at deadline September 20, 2025; during the DD questionnaire completion window, new data is for evidentiary reference only.'
+                        ? '除非另行公告，所有统计以截止日 T0 的数据快照为基准；DD问答清单填写窗口期间，新增数据仅作佐证参考。'
+                        : 'Unless otherwise announced, all statistics are based on the data snapshot at deadline T0; during the DD questionnaire completion window, new data is for evidentiary reference only.'
                       }
                     </p>
                   </div>
@@ -734,12 +734,12 @@ export default function LaunchContestRulesPage() {
               {/* 2. 截止日（T0） */}
               <div id="section4-2" className="bg-gradient-to-br from-gray-900/50 to-blue-900/20 backdrop-blur-sm border border-blue-500/30 rounded-2xl p-8">
                 <h3 className="text-3xl font-bold text-blue-300 mb-6">
-                  🔹 2. {language === 'zh' ? '截止日（2025年9月20日）' : 'Deadline (September 20, 2025)'}
+                  🔹 2. {language === 'zh' ? '截止日（T0）' : 'Deadline (T0)'}
                 </h3>
                 <p className="text-gray-300 mb-6">{language === 'zh' ? '截止日将作为赛事的统一基准点。' : 'The deadline will serve as the unified benchmark for the contest.'}</p>
                 <div className="space-y-4">
                   <div className="bg-gray-800/30 rounded-lg p-4">
-                    <p className="text-gray-300 text-sm">{language === 'zh' ? '平台将在 2025年9月20日 当日，对所有参赛项目进行链上与平台数据的统一快照；' : 'On September 20, 2025, the platform will take a unified snapshot of on-chain and platform data for all participating projects;'}</p>
+                    <p className="text-gray-300 text-sm">{language === 'zh' ? '平台将在 T0 当日，对所有参赛项目进行链上与平台数据的统一快照；' : 'On T0 day, the platform will take a unified snapshot of on-chain and platform data for all participating projects;'}</p>
                   </div>
                   <div className="bg-gray-800/30 rounded-lg p-4">
                     <p className="text-gray-300 text-sm">{language === 'zh' ? '此快照数据将作为最终评审与排名的重要参考，确保公平与一致性。' : 'This snapshot data will serve as an important reference for final review and ranking, ensuring fairness and consistency.'}</p>
@@ -750,7 +750,7 @@ export default function LaunchContestRulesPage() {
               {/* 3. 考核内容提交期 */}
               <div id="section4-3" className="bg-gradient-to-br from-gray-900/50 to-purple-900/20 backdrop-blur-sm border border-purple-500/30 rounded-2xl p-8">
                 <h3 className="text-3xl font-bold text-purple-300 mb-6">
-                  🔹 3. {language === 'zh' ? '考核内容提交期（2025年9月20日 → 2025年9月27日）' : 'Assessment Content Submission Period (September 20, 2025 → September 27, 2025)'}
+                  🔹 3. {language === 'zh' ? '考核内容提交期（T0 → T0+7 天）' : 'Assessment Content Submission Period (T0 → T0+7 Days)'}
                 </h3>
                 <p className="text-gray-300 mb-6">{language === 'zh' ? '截止日后，项目进入DD问答清单填写阶段。' : 'After the deadline, projects enter the DD questionnaire completion phase.'}</p>
                 <div className="space-y-4">
@@ -769,7 +769,7 @@ export default function LaunchContestRulesPage() {
               {/* 4. 评审与公示期 */}
               <div id="section4-4" className="bg-gradient-to-br from-gray-900/50 to-orange-900/20 backdrop-blur-sm border border-orange-500/30 rounded-2xl p-8">
                 <h3 className="text-3xl font-bold text-orange-300 mb-6">
-                  🔹 4. {language === 'zh' ? '评审与公示期（2025年9月27日 → 2025年10月4日）' : 'Review & Announcement Period (September 27, 2025 → October 4, 2025)'}
+                  🔹 4. {language === 'zh' ? '评审与公示期（T0+7 天 → T0+14 天）' : 'Review & Announcement Period (T0+7 Days → T0+14 Days)'}
                 </h3>
                 <p className="text-gray-300 mb-6">{language === 'zh' ? '这一阶段是对成果的全面检验与公开确认。' : 'This stage is a comprehensive examination and public confirmation of achievements.'}</p>
                 <div className="space-y-4">

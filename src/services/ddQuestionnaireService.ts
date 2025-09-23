@@ -7,13 +7,52 @@ export interface DDQuestionnaireData {
   tokenContractAddress: string;
   trackCategory: string;
   otherTrackName?: string;
-  keyDataAtDeadline: string;
+  holderAddressCount: string;
+  mintCompletion: string;
+  communityScale: string;
+  twitterFollowers: string;
+  externalMarketData: string;
   trafficContribution: string;
   projectQuality: string;
   narrativeConsensus: string;
   teamEfficiency: string;
   nextSteps: string;
   declarations: string;
+  
+  // ========== 流量贡献相关字段 ==========
+  effectiveOperationMethod?: string;
+  productUserGrowth?: string;
+  externalChannels?: string;
+  communityActivities?: string;
+  spontaneousSpread?: string;
+  
+  // ========== 项目质量相关字段 ==========
+  competitiveAdvantage?: string;
+  productStage?: string;
+  proudInnovations?: string;
+  communityNarrative?: string;
+  governanceMechanisms?: string;
+  
+  // ========== 叙事与共识相关字段 ==========
+  externalValidation?: string;
+  productNarrativeExperience?: string;
+  narrativeAdjustment?: string;
+  recentCommunityActivity?: string;
+  memberContentCreation?: string;
+  
+  // ========== 团队效率相关字段 ==========
+  completedActions?: string;
+  productIterationCycle?: string;
+  technicalTeamRatio?: string;
+  communityTeamSize?: string;
+  crisisManagement?: string;
+  
+  // ========== 声明与承诺复选框字段 ==========
+  truthfulness?: boolean;
+  compliance?: boolean;
+  taxCompliance?: boolean;
+  intellectualProperty?: boolean;
+  publicDisplay?: boolean;
 }
 
 // API响应类型

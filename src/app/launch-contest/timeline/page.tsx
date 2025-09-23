@@ -38,7 +38,7 @@ export default function LaunchTimeline() {
     },
     {
       id: 2,
-      title: language === 'zh' ? '截止日（2025年9月20日）' : 'Deadline (September 20, 2025)',
+      title: language === 'zh' ? '截止日（T0）' : 'Deadline (T0)',
       subtitle: language === 'zh' ? '统一基准点' : 'Unified Baseline',
       icon: '📊',
       color: 'from-blue-500 to-cyan-600',

@@ -341,19 +341,19 @@ export default function LaunchContestHome() {
                 },
                 { 
                   phase: language === 'zh' ? '截止日' : 'Deadline',
-                  duration: language === 'zh' ? '2025年9月20日' : 'September 20, 2025',
+                  duration: 'T0',
                   icon: '📊',
                   color: 'from-blue-500 to-cyan-600'
                 },
                 { 
                   phase: language === 'zh' ? '提交期' : 'Submission',
-                  duration: language === 'zh' ? '2025年9月20日 → 2025年9月27日' : 'September 20, 2025 → September 27, 2025',
+                  duration: 'T0 → T0+7',
                   icon: '📝',
                   color: 'from-purple-500 to-violet-600'
                 },
                 { 
                   phase: language === 'zh' ? '评审期' : 'Review',
-                  duration: language === 'zh' ? '2025年9月27日 → 2025年10月4日' : 'September 27, 2025 → October 4, 2025',
+                  duration: 'T0+7 → T0+14',
                   icon: '⚖️',
                   color: 'from-orange-500 to-red-600'
                 },

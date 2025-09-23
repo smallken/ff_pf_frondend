@@ -491,8 +491,11 @@ export default function Profile() {
           projectName: dd.projectName,
           tokenContractAddress: dd.tokenContractAddress,
           trackCategory: dd.trackCategory,
-          status: dd.status,
-          keyDataAtT0: dd.keyDataAtT0 ? '已填写' : '未填写',
+          holderAddressCount: dd.holderAddressCount ? '已填写' : '未填写',
+          mintCompletion: dd.mintCompletion ? '已填写' : '未填写',
+          communityScale: dd.communityScale ? '已填写' : '未填写',
+          twitterFollowers: dd.twitterFollowers ? '已填写' : '未填写',
+          externalMarketData: dd.externalMarketData ? '已填写' : '未填写',
           trafficContribution: dd.trafficContribution ? '已填写' : '未填写',
           projectQuality: dd.projectQuality ? '已填写' : '未填写',
           narrativeConsensus: dd.narrativeConsensus ? '已填写' : '未填写',
@@ -1158,20 +1161,10 @@ export default function Profile() {
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
                               {dd.projectName || '未命名项目'}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              状态: {dd.status === 'submitted' ? '已提交' : '草稿'}
-                            </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               提交时间: {formatDate(dd.createTime)}
                             </div>
-                            <div className="mt-2 flex justify-between items-center">
-                              <span className={`px-2 py-1 text-xs rounded-full ${
-                                dd.status === 'submitted' 
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
-                              }`}>
-                                {dd.status === 'submitted' ? '已提交' : '草稿'}
-                              </span>
+                            <div className="mt-2 flex justify-end items-center">
                               <span className="text-xs text-blue-600 dark:text-blue-400">点击查看</span>
                             </div>
                           </div>
@@ -1993,12 +1986,6 @@ export default function Profile() {
                         {selectedForm.trackCategory || '未选择'}
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">状态</label>
-                      <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.status === 'submitted' ? '已提交' : '草稿'}
-                      </div>
-                    </div>
                     {selectedForm.otherTrackName && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">其他赛道名称</label>
@@ -2025,9 +2012,33 @@ export default function Profile() {
                     </div>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">T0关键数据</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">持币地址数</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.keyDataAtT0 || '未填写'}
+                          {selectedForm.holderAddressCount || '未填写'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mint完成度</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.mintCompletion || '未填写'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">社区规模(TG/Discord人数)</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.communityScale || '未填写'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">推特粉丝数</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.twitterFollowers || '未填写'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">外盘相关数据</label>
+                        <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
+                          {selectedForm.externalMarketData || '未填写'}
                         </div>
                       </div>
                       <div>
