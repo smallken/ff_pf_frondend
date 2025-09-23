@@ -143,7 +143,7 @@ export default function Profile() {
       console.log('✅ 钱包地址更新成功');
       
       // 立即更新selectedForm状态，避免显示旧数据
-      setSelectedForm(prev => ({
+      setSelectedForm((prev: any) => ({
         ...prev,
         mainWalletAddress: walletAddress
       }));
@@ -175,7 +175,7 @@ export default function Profile() {
       console.log('✅ 奖励发放地址更新成功');
       
       // 立即更新selectedForm状态，避免显示旧数据
-      setSelectedForm(prev => ({
+      setSelectedForm((prev: any) => ({
         ...prev,
         rewardWalletAddress: rewardAddress
       }));
