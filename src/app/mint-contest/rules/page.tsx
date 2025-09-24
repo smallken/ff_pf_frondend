@@ -97,7 +97,7 @@ export default function MintRules() {
                   <h3 className="text-2xl font-bold text-red-400">{language === 'zh' ? '工作室赛道' : 'Studio Track'}</h3>
                 </div>
                 <div className="space-y-3 text-gray-300">
-                  <p><strong>{language === 'zh' ? '参赛方式：' : 'Participation Method:'}</strong>{language === 'zh' ? '以团队身份参赛，需提交统一参赛钱包地址' : 'Participate as a team, need to submit a unified competition wallet address'}</p>
+                  <p><strong>{language === 'zh' ? '参赛方式：' : 'Participation Method:'}</strong>{language === 'zh' ? '请工作室统一收集并上传成员钱包地址，建议使用少量统一钱包地址，以避免多地址统计带来的误差' : 'Please collect and upload team member wallet addresses uniformly, and it is recommended to use a small number of unified wallet addresses to avoid errors caused by multi-address statistics'}</p>
                   <p><strong>{language === 'zh' ? '适合人群：' : 'Target Audience:'}</strong>{language === 'zh' ? '社区主理人、项目孵化团队、运营工作室' : 'Community managers, project incubation teams, operation studios'}</p>
                   <div>
                     <strong>{language === 'zh' ? '优势亮点：' : 'Advantages:'}</strong>

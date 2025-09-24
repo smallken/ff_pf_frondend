@@ -56,6 +56,8 @@ export default function Profile() {
   const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistoryItem[]>([]);
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionHistoryItem | null>(null);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [showReviewMessageModal, setShowReviewMessageModal] = useState(false);
+  const [selectedReviewMessage, setSelectedReviewMessage] = useState('');
   const [userInfo, setUserInfo] = useState<LoginUserVO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -960,7 +962,7 @@ export default function Profile() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       {t('profile.submission.submitdate')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[100px]">
                       {t('profile.submission.operation')}
                     </th>
                   </tr>
@@ -997,8 +999,31 @@ export default function Profile() {
                               {getStatusText(submission.status)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {submission.reviewMessage || '-'}
+                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white max-w-xs">
+                            {submission.reviewMessage ? (
+                              <div className="relative">
+                                <div className="truncate">
+                                  {submission.reviewMessage.length > 50 
+                                    ? `${submission.reviewMessage.substring(0, 50)}...` 
+                                    : submission.reviewMessage
+                                  }
+                                </div>
+                                {submission.reviewMessage.length > 50 && (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedReviewMessage(submission.reviewMessage || '');
+                                      setShowReviewMessageModal(true);
+                                    }}
+                                    className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 text-xs ml-1"
+                                    title={submission.reviewMessage}
+                                  >
+                                    {language === 'zh' ? '查看全部' : 'View All'}
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              '-'
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             {score > 0 ? (
@@ -1012,10 +1037,10 @@ export default function Profile() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {new Date(submission.createTime).toLocaleDateString()}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <td className="px-6 py-4 text-sm font-medium min-w-[100px]">
                             <button
                               onClick={() => handleShowSubmissionDetail(submission)}
-                              className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                              className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 whitespace-nowrap"
                             >
                               {t('profile.submission.view.details')}
                             </button>
@@ -2084,6 +2109,46 @@ export default function Profile() {
               <button
                 onClick={handleCloseModal}
                 className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+              >
+                {language === 'zh' ? '关闭' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 审核信息弹窗 */}
+      {showReviewMessageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {language === 'zh' ? '审核信息' : 'Review Information'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowReviewMessageModal(false);
+                  setSelectedReviewMessage('');
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+              <div className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap leading-relaxed">
+                {selectedReviewMessage}
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => {
+                  setShowReviewMessageModal(false);
+                  setSelectedReviewMessage('');
+                }}
+                className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
               >
                 {language === 'zh' ? '关闭' : 'Close'}
               </button>

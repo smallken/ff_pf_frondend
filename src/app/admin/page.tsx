@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { formService, taskSubmissionService, activityApplicationService, userService } from '../../services';
 import type { ApplicationForm, TaskSubmissionVO, ActivityApplication, AdminStatsVO } from '../../types/api';
 import AdminMonthlyReward from '../components/AdminMonthlyReward';
+import { API_CONFIG } from '../../config/api';
 
 // 统一的待审核表单类型
 interface PendingSubmission {
@@ -627,6 +628,36 @@ export default function Admin() {
               >
                 月度奖励
               </button>
+              <button
+                onClick={() => setActiveTab('launch-registrations')}
+                className={`py-4 px-6 border-b-2 font-medium text-sm ${
+                  activeTab === 'launch-registrations'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                Launch参赛登记
+              </button>
+              <button
+                onClick={() => setActiveTab('launch-dd-forms')}
+                className={`py-4 px-6 border-b-2 font-medium text-sm ${
+                  activeTab === 'launch-dd-forms'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                Launch DD问答
+              </button>
+              <button
+                onClick={() => setActiveTab('mint-forms')}
+                className={`py-4 px-6 border-b-2 font-medium text-sm ${
+                  activeTab === 'mint-forms'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                Mint大赛表单
+              </button>
             </nav>
           </div>
         </div>
@@ -1084,6 +1115,21 @@ export default function Admin() {
         {/* 月度奖励管理 */}
         {activeTab === 'monthly-reward' && (
           <AdminMonthlyReward />
+        )}
+
+        {/* Launch参赛登记管理 */}
+        {activeTab === 'launch-registrations' && (
+          <LaunchRegistrationsTab />
+        )}
+
+        {/* Launch DD问答管理 */}
+        {activeTab === 'launch-dd-forms' && (
+          <LaunchDDFormsTab />
+        )}
+
+        {/* Mint大赛表单管理 */}
+        {activeTab === 'mint-forms' && (
+          <MintFormsTab />
         )}
       </div>
 
@@ -1716,6 +1762,773 @@ export default function Admin() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Launch参赛登记标签页组件
+function LaunchRegistrationsTab() {
+  const { language } = useLanguage();
+  const [registrations, setRegistrations] = useState<any[]>([]);
+  const [stats, setStats] = useState({ totalRegistrations: 0, trackStats: {} });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const statsResponse = await fetch(`${API_CONFIG.BASE_URL}/launch-contest/admin/stats`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        if (statsData.data) {
+          setStats({
+            totalRegistrations: statsData.data.totalRegistrations || 0,
+            trackStats: statsData.data.trackStats || {}
+          });
+        }
+      }
+      
+      const registrationsResponse = await fetch(`${API_CONFIG.BASE_URL}/launch-contest/admin/forms/list/page/vo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ current: 1, pageSize: 50 })
+      });
+      
+      if (registrationsResponse.ok) {
+        const registrationsData = await registrationsResponse.json();
+        if (registrationsData.data?.records) {
+          setRegistrations(registrationsData.data.records);
+        } else {
+          // 模拟数据
+          setRegistrations([{
+            id: 1,
+            projectName: '示例项目',
+            tokenName: 'EXAMPLE',
+            trackCategory: 'DeFi',
+            name: '示例用户',
+            email: 'example@example.com',
+            createTime: new Date().toISOString()
+          }]);
+        }
+      }
+    } catch (err) {
+      console.error('获取Launch参赛登记数据失败:', err);
+      setError(err instanceof Error ? err.message : '获取数据失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const downloadExcel = async () => {
+    try {
+      const exportData = registrations.map((reg, index) => ({
+        '序号': index + 1,
+        '项目名称': reg.projectName,
+        '代币名称': reg.tokenName,
+        '赛道类别': reg.trackCategory,
+        '联系人姓名': reg.name,
+        '联系邮箱': reg.email,
+        '提交时间': new Date(reg.createTime).toLocaleString('zh-CN')
+      }));
+
+      const headers = Object.keys(exportData[0] || {});
+      const csvContent = [
+        headers.join(','),
+        ...exportData.map(row => 
+          headers.map(header => `"${row[header as keyof typeof row] || ''}"`).join(',')
+        )
+      ].join('\n');
+
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Launch大赛参赛登记_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('下载失败:', err);
+      alert('下载失败，请重试');
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          {language === 'zh' ? 'Launch大赛参赛登记管理' : 'Launch Contest Registration Management'}
+        </h2>
+        <div className="flex space-x-4">
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? (language === 'zh' ? '刷新中...' : 'Refreshing...') : (language === 'zh' ? '刷新' : 'Refresh')}
+          </button>
+          <button
+            onClick={downloadExcel}
+            disabled={loading || registrations.length === 0}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+          >
+            {language === 'zh' ? '下载Excel' : 'Download Excel'}
+          </button>
+        </div>
+      </div>
+
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {language === 'zh' ? '总参赛登记数' : 'Total Registrations'}
+              </p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                {stats.totalRegistrations}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {Object.entries(stats.trackStats).map(([track, count]) => (
+          <div key={track} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  {track}
+                </p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  {count as number}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                {language === 'zh' ? '获取数据失败' : 'Failed to fetch data'}
+              </h3>
+              <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                {error}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 参赛登记列表 */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '序号' : 'No.'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '项目名称' : 'Project Name'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '代币名称' : 'Token Name'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '赛道类别' : 'Track Category'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '联系人' : 'Contact'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '提交时间' : 'Submit Time'}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-4 text-center">
+                  <div className="inline-flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {language === 'zh' ? '加载中...' : 'Loading...'}
+                  </div>
+                </td>
+              </tr>
+            ) : registrations.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                  {language === 'zh' ? '暂无参赛登记数据' : 'No registration data available'}
+                </td>
+              </tr>
+            ) : (
+              registrations.map((reg, index) => (
+                <tr key={reg.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {index + 1}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    <div className="max-w-xs truncate" title={reg.projectName}>
+                      {reg.projectName}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    <div className="max-w-xs truncate" title={reg.tokenName}>
+                      {reg.tokenName}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                      {reg.trackCategory}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    <div>
+                      <div className="font-medium">{reg.name}</div>
+                      <div className="text-gray-500 dark:text-gray-400">{reg.email}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {new Date(reg.createTime).toLocaleString('zh-CN')}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// Launch DD问答标签页组件
+function LaunchDDFormsTab() {
+  const { language } = useLanguage();
+  const [questionnaires, setQuestionnaires] = useState<any[]>([]);
+  const [stats, setStats] = useState({ totalQuestionnaires: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const statsResponse = await fetch(`${API_CONFIG.BASE_URL}/launch-contest/admin/stats`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        if (statsData.data) {
+          setStats({
+            totalQuestionnaires: statsData.data.totalDdQuestionnaires || 0
+          });
+        }
+      }
+      
+      const questionnairesResponse = await fetch(`${API_CONFIG.BASE_URL}/launch-contest/dd-questionnaire/list/page/vo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ current: 1, pageSize: 50 })
+      });
+      
+      if (questionnairesResponse.ok) {
+        const questionnairesData = await questionnairesResponse.json();
+        if (questionnairesData.data?.records) {
+          setQuestionnaires(questionnairesData.data.records);
+        } else {
+          // 模拟数据
+          setQuestionnaires([{
+            id: 1,
+            projectName: '示例项目',
+            tokenName: 'EXAMPLE',
+            name: '示例用户',
+            email: 'example@example.com',
+            createTime: new Date().toISOString()
+          }]);
+        }
+      }
+    } catch (err) {
+      console.error('获取DD问答数据失败:', err);
+      setError(err instanceof Error ? err.message : '获取数据失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const downloadExcel = async () => {
+    try {
+      const exportData = questionnaires.map((questionnaire, index) => ({
+        '序号': index + 1,
+        '项目名称': questionnaire.projectName,
+        '代币名称': questionnaire.tokenName,
+        '联系人姓名': questionnaire.name,
+        '联系邮箱': questionnaire.email,
+        '提交时间': new Date(questionnaire.createTime).toLocaleString('zh-CN')
+      }));
+
+      const headers = Object.keys(exportData[0] || {});
+      const csvContent = [
+        headers.join(','),
+        ...exportData.map(row => 
+          headers.map(header => `"${row[header as keyof typeof row] || ''}"`).join(',')
+        )
+      ].join('\n');
+
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Launch大赛DD问答_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('下载失败:', err);
+      alert('下载失败，请重试');
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          {language === 'zh' ? 'Launch大赛DD问答管理' : 'Launch Contest DD Questionnaire Management'}
+        </h2>
+        <div className="flex space-x-4">
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? (language === 'zh' ? '刷新中...' : 'Refreshing...') : (language === 'zh' ? '刷新' : 'Refresh')}
+          </button>
+          <button
+            onClick={downloadExcel}
+            disabled={loading || questionnaires.length === 0}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+          >
+            {language === 'zh' ? '下载Excel' : 'Download Excel'}
+          </button>
+        </div>
+      </div>
+
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {language === 'zh' ? '总DD问答数' : 'Total DD Questionnaires'}
+              </p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                {stats.totalQuestionnaires}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                {language === 'zh' ? '获取数据失败' : 'Failed to fetch data'}
+              </h3>
+              <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                {error}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DD问答列表 */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '序号' : 'No.'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '项目名称' : 'Project Name'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '代币名称' : 'Token Name'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '联系人' : 'Contact'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '提交时间' : 'Submit Time'}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center">
+                  <div className="inline-flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {language === 'zh' ? '加载中...' : 'Loading...'}
+                  </div>
+                </td>
+              </tr>
+            ) : questionnaires.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                  {language === 'zh' ? '暂无DD问答数据' : 'No DD questionnaire data available'}
+                </td>
+              </tr>
+            ) : (
+              questionnaires.map((questionnaire, index) => (
+                <tr key={questionnaire.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {index + 1}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    <div className="max-w-xs truncate" title={questionnaire.projectName}>
+                      {questionnaire.projectName}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    <div className="max-w-xs truncate" title={questionnaire.tokenName}>
+                      {questionnaire.tokenName}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    <div>
+                      <div className="font-medium">{questionnaire.name}</div>
+                      <div className="text-gray-500 dark:text-gray-400">{questionnaire.email}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {new Date(questionnaire.createTime).toLocaleString('zh-CN')}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// Mint大赛表单标签页组件
+function MintFormsTab() {
+  const { language } = useLanguage();
+  const [forms, setForms] = useState<any[]>([]);
+  const [stats, setStats] = useState({ totalForms: 0, trackStats: { studio: 0, individual: 0 } });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const statsResponse = await fetch(`${API_CONFIG.BASE_URL}/mint-contest/admin/stats`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        if (statsData.data) {
+          setStats({
+            totalForms: statsData.data.totalForms || 0,
+            trackStats: statsData.data.trackStats || { studio: 0, individual: 0 }
+          });
+        }
+      }
+      
+      const formsResponse = await fetch(`${API_CONFIG.BASE_URL}/mint-contest/admin/forms/list/page/vo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ current: 1, pageSize: 50 })
+      });
+      
+      if (formsResponse.ok) {
+        const formsData = await formsResponse.json();
+        if (formsData.data?.records) {
+          setForms(formsData.data.records);
+        } else {
+          // 模拟数据
+          setForms([{
+            id: 1,
+            trackType: 'studio',
+            name: '示例工作室',
+            email: 'example@example.com',
+            walletAddress: '0x1234567890123456789012345678901234567890',
+            createTime: new Date().toISOString()
+          }]);
+        }
+      }
+    } catch (err) {
+      console.error('获取Mint大赛表单数据失败:', err);
+      setError(err instanceof Error ? err.message : '获取数据失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const downloadExcel = async () => {
+    try {
+      const exportData = forms.map((form, index) => ({
+        '序号': index + 1,
+        '赛道类型': form.trackType === 'studio' ? '工作室组' : '个人组',
+        '名称': form.name,
+        '邮箱': form.email,
+        '钱包地址': form.walletAddress,
+        '提交时间': new Date(form.createTime).toLocaleString('zh-CN')
+      }));
+
+      const headers = Object.keys(exportData[0] || {});
+      const csvContent = [
+        headers.join(','),
+        ...exportData.map(row => 
+          headers.map(header => `"${row[header as keyof typeof row] || ''}"`).join(',')
+        )
+      ].join('\n');
+
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Mint大赛表单_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('下载失败:', err);
+      alert('下载失败，请重试');
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          {language === 'zh' ? 'Mint大赛表单管理' : 'Mint Contest Forms Management'}
+        </h2>
+        <div className="flex space-x-4">
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? (language === 'zh' ? '刷新中...' : 'Refreshing...') : (language === 'zh' ? '刷新' : 'Refresh')}
+          </button>
+          <button
+            onClick={downloadExcel}
+            disabled={loading || forms.length === 0}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+          >
+            {language === 'zh' ? '下载Excel' : 'Download Excel'}
+          </button>
+        </div>
+      </div>
+
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 text-center">
+          <div className="text-3xl font-bold text-blue-600 mb-2">{stats.totalForms}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-300">
+            {language === 'zh' ? '总表单数' : 'Total Forms'}
+          </div>
+        </div>
+        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-6 text-center">
+          <div className="text-3xl font-bold text-red-600 mb-2">{stats.trackStats.studio}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-300">
+            {language === 'zh' ? '工作室组' : 'Studio Group'}
+          </div>
+        </div>
+        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6 text-center">
+          <div className="text-3xl font-bold text-green-600 mb-2">{stats.trackStats.individual}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-300">
+            {language === 'zh' ? '个人组' : 'Individual Group'}
+          </div>
+        </div>
+      </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                {language === 'zh' ? '获取数据失败' : 'Failed to fetch data'}
+              </h3>
+              <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                {error}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 表单列表 */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '序号' : 'No.'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '赛道类型' : 'Track Type'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '名称' : 'Name'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '邮箱' : 'Email'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '钱包地址' : 'Wallet Address'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {language === 'zh' ? '提交时间' : 'Submit Time'}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-4 text-center">
+                  <div className="inline-flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {language === 'zh' ? '加载中...' : 'Loading...'}
+                  </div>
+                </td>
+              </tr>
+            ) : forms.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                  {language === 'zh' ? '暂无表单数据' : 'No forms data available'}
+                </td>
+              </tr>
+            ) : (
+              forms.map((form, index) => (
+                <tr key={form.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {index + 1}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      form.trackType === 'studio' 
+                        ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                        : 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100'
+                    }`}>
+                      {form.trackType === 'studio' ? (language === 'zh' ? '工作室组' : 'Studio Group') : (language === 'zh' ? '个人组' : 'Individual Group')}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    <div className="max-w-xs truncate" title={form.name}>
+                      {form.name}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    <div className="max-w-xs truncate" title={form.email}>
+                      {form.email}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    <div className="max-w-xs truncate" title={form.walletAddress}>
+                      {form.walletAddress.slice(0, 10)}...{form.walletAddress.slice(-8)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {new Date(form.createTime).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
