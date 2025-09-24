@@ -23,7 +23,7 @@ interface SubmissionHistoryItem {
 }
 
 export default function Profile() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   
@@ -130,19 +130,19 @@ export default function Profile() {
     setRewardAddress('');
   };
 
-  // 保存钱包地址修改
+  // 保存{language === 'zh' ? '钱包地址' : 'Wallet Address'}修改
   const handleSaveWalletAddress = async () => {
     if (!selectedForm || selectedForm.type !== 'mint') return;
     
     try {
-      console.log('🔄 开始更新钱包地址:', { id: selectedForm.id, walletAddress });
+      console.log(`🔄 开始更新${language === 'zh' ? '钱包地址' : 'Wallet Address'}:`, { id: selectedForm.id, walletAddress });
       
-      // 调用API更新钱包地址
+      // 调用API更新{language === 'zh' ? '钱包地址' : 'Wallet Address'}
       await mintContestService.updateRegistration(selectedForm.id, {
         mainWalletAddresses: [walletAddress]
       });
       
-      console.log('✅ 钱包地址更新成功');
+      console.log(`✅ ${language === 'zh' ? '钱包地址' : 'Wallet Address'}更新成功`);
       
       // 立即更新selectedForm状态，避免显示旧数据
       setSelectedForm((prev: any) => ({
@@ -155,26 +155,26 @@ export default function Profile() {
       // 刷新数据
       await fetchContestForms();
       
-      alert('钱包地址更新成功！');
+      alert(language === 'zh' ? '钱包地址更新成功！' : 'Wallet address updated successfully!');
     } catch (error) {
-      console.error('❌ 更新钱包地址失败:', error);
-      alert('更新失败，请重试');
+      console.error(`❌ 更新${language === 'zh' ? '钱包地址' : 'Wallet Address'}失败:`, error);
+      alert(language === 'zh' ? '更新失败，请重试' : 'Update failed, please try again');
     }
   };
 
-  // 处理多个钱包地址保存
+  // 处理多个{language === 'zh' ? '钱包地址' : 'Wallet Address'}保存
   const handleSaveWalletAddresses = async () => {
     if (!selectedForm || selectedForm.type !== 'mint') return;
     
     try {
-      console.log('🔄 开始更新钱包地址数组:', { id: selectedForm.id, walletAddresses });
+      console.log(`🔄 开始更新${language === 'zh' ? '钱包地址' : 'Wallet Address'}数组:`, { id: selectedForm.id, walletAddresses });
       
-      // 调用API更新钱包地址数组
+      // 调用API更新{language === 'zh' ? '钱包地址' : 'Wallet Address'}数组
       await mintContestService.updateRegistration(selectedForm.id, {
         mainWalletAddresses: walletAddresses.filter(addr => addr.trim() !== '')
       });
       
-      console.log('✅ 钱包地址数组更新成功');
+      console.log(`✅ ${language === 'zh' ? '钱包地址' : 'Wallet Address'}数组更新成功`);
       
       // 立即更新selectedForm状态，避免显示旧数据
       setSelectedForm((prev: any) => ({
@@ -187,26 +187,26 @@ export default function Profile() {
       // 刷新数据
       await fetchContestForms();
       
-      alert('钱包地址数组更新成功！');
+      alert(language === 'zh' ? '钱包地址数组更新成功！' : 'Wallet addresses updated successfully!');
     } catch (error) {
-      console.error('❌ 更新钱包地址数组失败:', error);
-      alert('更新失败，请重试');
+      console.error(`❌ 更新${language === 'zh' ? '钱包地址' : 'Wallet Address'}数组失败:`, error);
+      alert(language === 'zh' ? '更新失败，请重试' : 'Update failed, please try again');
     }
   };
 
-  // 保存奖励发放地址修改
+  // 保存{language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'}修改
   const handleSaveRewardAddress = async () => {
     if (!selectedForm || selectedForm.type !== 'mint') return;
     
     try {
-      console.log('🔄 开始更新奖励发放地址:', { id: selectedForm.id, rewardAddress });
+      console.log(`🔄 开始更新${language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'}:`, { id: selectedForm.id, rewardAddress });
       
-      // 调用API更新奖励发放地址
+      // 调用API更新{language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'}
       await mintContestService.updateRegistration(selectedForm.id, {
         rewardWalletAddress: rewardAddress
       });
       
-      console.log('✅ 奖励发放地址更新成功');
+      console.log(`✅ ${language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'}更新成功`);
       
       // 立即更新selectedForm状态，避免显示旧数据
       setSelectedForm((prev: any) => ({
@@ -219,10 +219,10 @@ export default function Profile() {
       // 刷新数据
       await fetchContestForms();
       
-      alert('奖励发放地址更新成功！');
+      alert(language === 'zh' ? '奖励发放地址更新成功！' : 'Reward distribution address updated successfully!');
     } catch (error) {
-      console.error('❌ 更新奖励发放地址失败:', error);
-      alert('更新失败，请重试');
+      console.error(`❌ 更新${language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'}失败:`, error);
+      alert(language === 'zh' ? '更新失败，请重试' : 'Update failed, please try again');
     }
   };
 
@@ -314,18 +314,18 @@ export default function Profile() {
         }
       }
       
-      // 检查钱包地址重复
+      // 检查{language === 'zh' ? '钱包地址' : 'Wallet Address'}重复
       if (editForm.walletAddress && editForm.walletAddress.trim()) {
         try {
-          console.log('🔍 检查钱包地址:', editForm.walletAddress.trim());
+          console.log(`🔍 检查${language === 'zh' ? '钱包地址' : 'Wallet Address'}:`, editForm.walletAddress.trim());
           const walletResult = await userService.checkFieldUniqueWithError('walletAddress', editForm.walletAddress.trim());
-          console.log('🔍 钱包地址检查结果:', walletResult);
+          console.log(`🔍 ${language === 'zh' ? '钱包地址' : 'Wallet Address'}检查结果:`, walletResult);
           if (!walletResult.isUnique && walletResult.errorMessage) {
-            console.log('🔍 钱包地址重复错误:', walletResult.errorMessage);
+            console.log(`🔍 ${language === 'zh' ? '钱包地址' : 'Wallet Address'}重复错误:`, walletResult.errorMessage);
             duplicateErrors.push(walletResult.errorMessage);
           }
         } catch (error: any) {
-          console.error('❌ 钱包地址检查失败:', error);
+          console.error(`❌ ${language === 'zh' ? '钱包地址' : 'Wallet Address'}检查失败:`, error);
           hasApiError = true;
         }
       }
@@ -361,7 +361,7 @@ export default function Profile() {
       // 如果没有重复字段但有API错误，显示通用错误
       if (hasApiError) {
         console.log('❌ 有API错误但没有重复字段，显示通用错误');
-        setError('检查信息重复性失败，请重试');
+        setError(language === 'zh' ? '检查信息重复性失败，请重试' : 'Failed to check information duplication, please try again');
         setEditLoading(false);
         return;
       }
@@ -384,7 +384,7 @@ export default function Profile() {
       
       // 显示成功提示
       setError('');
-      setSuccess('用户信息更新成功！');
+      setSuccess(language === 'zh' ? '用户信息更新成功！' : 'User information updated successfully!');
       
       // 3秒后自动隐藏成功提示
       setTimeout(() => {
@@ -409,7 +409,7 @@ export default function Profile() {
   // 发送邮箱验证码
   const handleSendEmailVerificationCode = async () => {
     if (!editForm.userEmail) {
-      setError('请先输入邮箱地址');
+      setError(language === 'zh' ? '请先输入邮箱地址' : 'Please enter email address first');
       return;
     }
 
@@ -417,11 +417,11 @@ export default function Profile() {
     try {
       await userService.sendEmailVerificationCode(editForm.userEmail);
       setEmailVerificationSent(true);
-      setSuccess('验证码已发送到您的邮箱，请查收');
+      setSuccess(language === 'zh' ? '验证码已发送到您的邮箱，请查收' : 'Verification code sent to your email, please check');
       setTimeout(() => setSuccess(''), 3000);
     } catch (error: any) {
       console.error('发送验证码失败:', error);
-      setError(error.message || '发送验证码失败');
+      setError(error.message || (language === 'zh' ? '发送验证码失败' : 'Failed to send verification code'));
     } finally {
       setEmailVerificationLoading(false);
     }
@@ -491,16 +491,16 @@ export default function Profile() {
           projectName: dd.projectName,
           tokenContractAddress: dd.tokenContractAddress,
           trackCategory: dd.trackCategory,
-          holderAddressCount: dd.holderAddressCount ? '已填写' : '未填写',
-          mintCompletion: dd.mintCompletion ? '已填写' : '未填写',
-          communityScale: dd.communityScale ? '已填写' : '未填写',
-          twitterFollowers: dd.twitterFollowers ? '已填写' : '未填写',
-          externalMarketData: dd.externalMarketData ? '已填写' : '未填写',
-          trafficContribution: dd.trafficContribution ? '已填写' : '未填写',
-          projectQuality: dd.projectQuality ? '已填写' : '未填写',
-          narrativeConsensus: dd.narrativeConsensus ? '已填写' : '未填写',
-          teamEfficiency: dd.teamEfficiency ? '已填写' : '未填写',
-          nextSteps: dd.nextSteps ? '已填写' : '未填写'
+          holderAddressCount: dd.holderAddressCount ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
+          mintCompletion: dd.mintCompletion ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
+          communityScale: dd.communityScale ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
+          twitterFollowers: dd.twitterFollowers ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
+          externalMarketData: dd.externalMarketData ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
+          trafficContribution: dd.trafficContribution ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
+          projectQuality: dd.projectQuality ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
+          narrativeConsensus: dd.narrativeConsensus ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
+          teamEfficiency: dd.teamEfficiency ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
+          nextSteps: dd.nextSteps ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled')
         });
       });
 
@@ -807,7 +807,7 @@ export default function Profile() {
                       value={editForm.emailVerificationCode}
                       onChange={(e) => handleInputChange('emailVerificationCode', e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="邮箱验证码"
+                      placeholder={language === 'zh' ? '邮箱验证码' : 'Email Verification Code'}
                     />
                     <button
                       type="button"
@@ -815,7 +815,7 @@ export default function Profile() {
                       disabled={emailVerificationLoading || !editForm.userEmail}
                       className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                     >
-                      {emailVerificationLoading ? '发送中...' : '发送验证码'}
+                      {emailVerificationLoading ? (language === 'zh' ? '发送中...' : 'Sending...') : (language === 'zh' ? '发送验证码' : 'Send Code')}
                     </button>
                   </div>
                 </div>
@@ -830,11 +830,11 @@ export default function Profile() {
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Footprint</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{language === 'zh' ? 'Footprint' : 'Footprint'}</label>
               <p className="mt-1 text-blue-600 dark:text-blue-400 font-bold">{userInfo?.userPoints || 0}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Twitter</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{language === 'zh' ? 'Twitter' : 'Twitter'}</label>
               {isEditing ? (
                 <input
                   type="text"
@@ -848,7 +848,7 @@ export default function Profile() {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Telegram</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{language === 'zh' ? 'Telegram' : 'Telegram'}</label>
               {isEditing ? (
                 <input
                   type="text"
@@ -987,7 +987,10 @@ export default function Profile() {
                       return (
                         <tr key={`${submission.type}-${submission.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {submission.title}
+                            {submission.type === 'application' ? t('profile.submission.application') :
+                             submission.type === 'activity' ? t('profile.submission.activity') :
+                             submission.type === 'task' ? t('profile.submission.achievement') :
+                             submission.title}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(submission.status)}`}>
@@ -1030,7 +1033,7 @@ export default function Profile() {
           {totalRecords > pageSize && (
             <div className="mt-6 flex items-center justify-between">
               <div className="text-sm text-gray-700 dark:text-gray-300">
-                显示第 {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalRecords)} 条，共 {totalRecords} 条记录
+                {language === 'zh' ? `显示第 ${(currentPage - 1) * pageSize + 1} - ${Math.min(currentPage * pageSize, totalRecords)} 条，共 ${totalRecords} 条记录` : `Showing ${(currentPage - 1) * pageSize + 1} - ${Math.min(currentPage * pageSize, totalRecords)} of ${totalRecords} records`}
               </div>
               <div className="flex items-center space-x-2">
                 <button
@@ -1038,7 +1041,7 @@ export default function Profile() {
                   disabled={currentPage === 1}
                   className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
-                  上一页
+                  {language === 'zh' ? '上一页' : 'Previous'}
                 </button>
                 
                 {/* 页码按钮 */}
@@ -1076,7 +1079,7 @@ export default function Profile() {
                   disabled={currentPage === totalPages}
                   className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
-                  下一页
+                  {language === 'zh' ? '下一页' : 'Next'}
                 </button>
               </div>
             </div>
@@ -1096,21 +1099,21 @@ export default function Profile() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                 <span className="text-cyan-500 mr-2">🚀</span>
-                Launch大赛表单
+                {language === 'zh' ? 'Launch大赛表单' : 'Launch Contest Form'}
               </h3>
               
               {contestFormsLoading ? (
                 <div className="flex justify-center items-center py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-600"></div>
-                  <span className="ml-2 text-gray-600 dark:text-gray-300 text-sm">加载中...</span>
+                  <span className="ml-2 text-gray-600 dark:text-gray-300 text-sm">{language === 'zh' ? '加载中...' : 'Loading...'}</span>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {/* 参赛登记 */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">参赛登记</h4>
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{language === 'zh' ? '参赛登记' : 'Contest Registration'}</h4>
                     {launchRegistrations.length === 0 ? (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">暂无登记记录</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{language === 'zh' ? '暂无登记记录' : 'No registration records'}</p>
                     ) : (
                       <div className="space-y-2">
                         {launchRegistrations.map((reg, index) => (
@@ -1120,19 +1123,19 @@ export default function Profile() {
                             onClick={() => handleFormClick(reg, 'launch')}
                           >
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {reg.projectName || '未命名项目'}
+                              {reg.projectName || (language === 'zh' ? '未命名项目' : 'Untitled Project')}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              赛道: {reg.trackCategory || '未选择'}
+                              {language === 'zh' ? '赛道' : 'Track'}: {reg.trackCategory || (language === 'zh' ? '未选择' : 'Not selected')}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
-                              提交时间: {formatDate(reg.createTime)}
+                              {language === 'zh' ? '提交时间' : 'Submission Time'}: {formatDate(reg.createTime)}
                             </div>
                             <div className="mt-2 flex justify-between items-center">
                               <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
-                                已提交
+                                {language === 'zh' ? '已提交' : 'Submitted'}
                               </span>
-                              <span className="text-xs text-blue-600 dark:text-blue-400">点击查看</span>
+                              <span className="text-xs text-blue-600 dark:text-blue-400">{language === 'zh' ? '点击查看' : 'Click to view'}</span>
                             </div>
                           </div>
                         ))}
@@ -1140,16 +1143,16 @@ export default function Profile() {
                     )}
                     <div className="mt-3">
                       <a href="/launch-contest/registration" className="text-cyan-600 hover:text-cyan-500 text-sm font-medium">
-                        去参赛登记 →
+                        {language === 'zh' ? '去参赛登记' : 'Go to Contest Registration'} →
                       </a>
                     </div>
                   </div>
 
                   {/* DD问答清单 */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">DD问答清单</h4>
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{language === 'zh' ? 'DD问答清单' : 'DD Questionnaire'}</h4>
                     {launchDDQuestionnaires.length === 0 ? (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">暂无问答记录</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{language === 'zh' ? '暂无问答记录' : 'No questionnaire records'}</p>
                     ) : (
                       <div className="space-y-2">
                         {launchDDQuestionnaires.map((dd, index) => (
@@ -1159,13 +1162,13 @@ export default function Profile() {
                             onClick={() => handleFormClick(dd, 'dd')}
                           >
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {dd.projectName || '未命名项目'}
+                              {dd.projectName || (language === 'zh' ? '未命名项目' : 'Untitled Project')}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
-                              提交时间: {formatDate(dd.createTime)}
+                              {language === 'zh' ? '提交时间' : 'Submission Time'}: {formatDate(dd.createTime)}
                             </div>
                             <div className="mt-2 flex justify-end items-center">
-                              <span className="text-xs text-blue-600 dark:text-blue-400">点击查看</span>
+                              <span className="text-xs text-blue-600 dark:text-blue-400">{language === 'zh' ? '点击查看' : 'Click to view'}</span>
                             </div>
                           </div>
                         ))}
@@ -1173,7 +1176,7 @@ export default function Profile() {
                     )}
                     <div className="mt-3">
                       <a href="/launch-contest/dd-questionnaire" className="text-cyan-600 hover:text-cyan-500 text-sm font-medium">
-                        去填写问答 →
+                        {language === 'zh' ? '去填写问答' : 'Go to Fill Q&A'} →
                       </a>
                     </div>
                   </div>
@@ -1185,25 +1188,25 @@ export default function Profile() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                 <span className="text-pink-500 mr-2">🎨</span>
-                Mint大赛表单
+                {language === 'zh' ? 'Mint大赛表单' : 'Mint Contest Form'}
               </h3>
               
               {contestFormsLoading ? (
                 <div className="flex justify-center items-center py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-600"></div>
-                  <span className="ml-2 text-gray-600 dark:text-gray-300 text-sm">加载中...</span>
+                  <span className="ml-2 text-gray-600 dark:text-gray-300 text-sm">{language === 'zh' ? '加载中...' : 'Loading...'}</span>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {mintRegistrations.length === 0 ? (
                     <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">暂无参赛记录</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{language === 'zh' ? '暂无参赛记录' : 'No contest records'}</p>
                       <div className="space-y-2">
                         <a href="/mint-contest/studio" className="block w-full text-center bg-pink-500 text-white py-2 px-4 rounded-lg hover:bg-pink-600 transition-colors text-sm">
-                          工作室组报名
+                          {language === 'zh' ? '工作室组报名' : 'Studio Registration'}
                         </a>
                         <a href="/mint-contest/individual" className="block w-full text-center bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 transition-colors text-sm">
-                          个人组报名
+                          {language === 'zh' ? '个人组报名' : 'Individual Registration'}
                         </a>
                       </div>
                     </div>
@@ -1216,31 +1219,31 @@ export default function Profile() {
                           onClick={() => handleFormClick(reg, 'mint')}
                         >
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {reg.displayName || '未命名项目'}
+                            {reg.displayName || (language === 'zh' ? '未命名项目' : 'Untitled Project')}
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            类别: {reg.trackType === 'studio' ? '工作室组' : '个人组'}
+                            {language === 'zh' ? '类别' : 'Category'}: {reg.trackType === 'studio' ? (language === 'zh' ? '工作室组' : 'Studio Group') : (language === 'zh' ? '个人组' : 'Individual Group')}
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
-                            邮箱: {reg.email}
+                            {language === 'zh' ? '邮箱' : 'Email'}: {reg.email}
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             Telegram: {reg.telegramAccount}
                           </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
-                              提交时间: {formatDate(reg.createTime)}
+                              {language === 'zh' ? '提交时间' : 'Submission Time'}: {formatDate(reg.createTime)}
                             </div>
                             <div className="mt-2 flex justify-between items-center">
                               <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
-                                已提交
+                                {language === 'zh' ? '已提交' : 'Submitted'}
                               </span>
-                              <span className="text-xs text-blue-600 dark:text-blue-400">点击查看</span>
+                              <span className="text-xs text-blue-600 dark:text-blue-400">{language === 'zh' ? '点击查看' : 'Click to view'}</span>
                             </div>
                         </div>
                       ))}
                       <div className="mt-3">
                         <a href="/mint-contest/registration" className="text-pink-600 hover:text-pink-500 text-sm font-medium">
-                          去报名参赛 →
+                          {language === 'zh' ? '去报名参赛' : 'Go to Register'} →
                         </a>
                       </div>
                     </div>
@@ -1535,7 +1538,7 @@ export default function Profile() {
                 onClick={handleCloseSubmissionModal}
                 className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
               >
-                关闭
+                {language === 'zh' ? '关闭' : 'Close'}
               </button>
             </div>
           </div>
@@ -1559,12 +1562,12 @@ export default function Profile() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {selectedForm.type === 'launch' && 'Launch大赛参赛登记'}
-                    {selectedForm.type === 'mint' && 'Mint大赛参赛登记'}
-                    {selectedForm.type === 'dd' && 'DD问答清单'}
+                    {selectedForm.type === 'launch' && (language === 'zh' ? 'Launch大赛参赛登记' : 'Launch Contest Registration')}
+                    {selectedForm.type === 'mint' && (language === 'zh' ? 'Mint大赛参赛登记' : 'Mint Contest Registration')}
+                    {selectedForm.type === 'dd' && (language === 'zh' ? 'DD问答清单' : 'DD Questionnaire')}
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    表单详情
+                    {language === 'zh' ? '表单详情' : 'Form Details'}
                   </p>
                 </div>
               </div>
@@ -1584,30 +1587,30 @@ export default function Profile() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目名称</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '项目名称' : 'Project Name'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.projectName || '未填写'}
+                        {selectedForm.projectName || (language === 'zh' ? '未填写' : 'Not filled')}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">代币名称</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '代币名称' : 'Token Name'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.tokenName || '未填写'}
+                        {selectedForm.tokenName || (language === 'zh' ? '未填写' : 'Not filled')}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">代币合约地址</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '代币合约地址' : 'Token Contract Address'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.tokenContractAddress || '未填写'}
+                        {selectedForm.tokenContractAddress || (language === 'zh' ? '未填写' : 'Not filled')}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">代币Logo</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '代币Logo' : 'Token Logo'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                         {selectedForm.tokenLogo ? (
                           <img 
                             src={selectedForm.tokenLogo} 
-                            alt="代币Logo" 
+                            alt="{language === 'zh' ? '代币Logo' : 'Token Logo'}" 
                             className="w-16 h-16 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
@@ -1618,51 +1621,51 @@ export default function Profile() {
                             }}
                           />
                         ) : (
-                          <span className="text-gray-500">未上传</span>
+                          <span className="text-gray-500">{language === 'zh' ? '未上传' : 'Not uploaded'}</span>
                         )}
-                        <span style={{display: 'none'}} className="text-red-500">Logo加载失败</span>
+                        <span style={{display: 'none'}} className="text-red-500">{language === 'zh' ? 'Logo加载失败' : 'Logo loading failed'}</span>
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">所属赛道</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '所属赛道' : 'Track Category'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                         {selectedForm.trackCategory || '未选择'}
                       </div>
                     </div>
                     {selectedForm.otherTrackName && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">其他赛道名称</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '其他赛道名称' : 'Other Track Name'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                           {selectedForm.otherTrackName}
                         </div>
                       </div>
                     )}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">提交时间</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '提交时间' : 'Submission Time'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                         {formatDate(selectedForm.createTime)}
                       </div>
                     </div>
                   </div>
                   
-                  {/* 项目信息 */}
+                  {/* {language === 'zh' ? '项目信息' : 'Project Information'} */}
                   <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-6 border border-blue-100 dark:border-gray-600">
                     <div className="flex items-center space-x-2 mb-4">
                       <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                         <span className="text-white text-xs">🌐</span>
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">项目信息</h4>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{language === 'zh' ? '项目信息' : 'Project Information'}</h4>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目网站</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '项目网站' : 'Project Website'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
                           {selectedForm.website ? (
                             <a href={selectedForm.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
                               {selectedForm.website}
                             </a>
                           ) : (
-                            '未填写'
+                            (language === 'zh' ? '未填写' : 'Not filled')
                           )}
                         </div>
                       </div>
@@ -1674,7 +1677,7 @@ export default function Profile() {
                               {selectedForm.twitter}
                             </a>
                           ) : (
-                            '未填写'
+                            (language === 'zh' ? '未填写' : 'Not filled')
                           )}
                         </div>
                       </div>
@@ -1686,61 +1689,61 @@ export default function Profile() {
                               {selectedForm.telegram}
                             </a>
                           ) : (
-                            '未填写'
+                            (language === 'zh' ? '未填写' : 'Not filled')
                           )}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">团队规模</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '团队规模' : 'Team Size'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.teamSize || '未填写'}
+                          {selectedForm.teamSize || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  {/* 联系人信息 */}
+                  {/* {language === 'zh' ? '联系人信息' : 'Contact Information'} */}
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-6 border border-green-100 dark:border-gray-600">
                     <div className="flex items-center space-x-2 mb-4">
                       <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                         <span className="text-white text-xs">👤</span>
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">联系人信息</h4>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{language === 'zh' ? '联系人信息' : 'Contact Information'}</h4>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">联系人姓名</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '联系人姓名' : 'Contact Name'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.contactName || '未填写'}
+                          {selectedForm.contactName || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">职位角色</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '职位角色' : 'Position Role'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.contactRole || '未填写'}
+                          {selectedForm.contactRole || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">联系人Telegram</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '联系人Telegram' : 'Contact Telegram'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
                           {selectedForm.contactTelegram ? (
                             <a href={selectedForm.contactTelegram} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
                               {selectedForm.contactTelegram}
                             </a>
                           ) : (
-                            '未填写'
+                            (language === 'zh' ? '未填写' : 'Not filled')
                           )}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">联系人邮箱</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '联系人邮箱' : 'Contact Email'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
                           {selectedForm.contactEmail ? (
                             <a href={`mailto:${selectedForm.contactEmail}`} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
                               {selectedForm.contactEmail}
                             </a>
                           ) : (
-                            '未填写'
+                            (language === 'zh' ? '未填写' : 'Not filled')
                           )}
                         </div>
                       </div>
@@ -1754,46 +1757,46 @@ export default function Profile() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">显示名称</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '显示名称' : 'Display Name'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.displayName || '未填写'}
+                        {selectedForm.displayName || (language === 'zh' ? '未填写' : 'Not filled')}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">参赛类别</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '参赛类别' : 'Contest Category'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.trackType === 'studio' ? '工作室组' : '个人组'}
+                        {selectedForm.trackType === 'studio' ? (language === 'zh' ? '工作室组' : 'Studio Group') : (language === 'zh' ? '个人组' : 'Individual Group')}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">联系邮箱</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '联系邮箱' : 'Contact Email'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.email || '未填写'}
+                        {selectedForm.email || (language === 'zh' ? '未填写' : 'Not filled')}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Twitter账号</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? 'Twitter账号' : 'Twitter Account'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.twitterAccount || '未填写'}
+                        {selectedForm.twitterAccount || (language === 'zh' ? '未填写' : 'Not filled')}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telegram账号</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? 'Telegram账号' : 'Telegram Account'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.telegramAccount || '未填写'}
+                        {selectedForm.telegramAccount || (language === 'zh' ? '未填写' : 'Not filled')}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">提交时间</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '提交时间' : 'Submission Time'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                         {formatDate(selectedForm.createTime)}
                       </div>
                     </div>
                   </div>
                   
-                  {/* 钱包地址 - 可编辑 */}
+                  {/* {language === 'zh' ? '钱包地址' : 'Wallet Address'} - 可编辑 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">钱包地址</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '钱包地址' : 'Wallet Address'}</label>
                     {editingWalletAddress ? (
                       <div className="flex gap-2">
                         <input
@@ -1801,19 +1804,19 @@ export default function Profile() {
                           value={walletAddress}
                           onChange={(e) => setWalletAddress(e.target.value)}
                           className="flex-1 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 p-3 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                          placeholder="请输入钱包地址"
+                          placeholder="请输入{language === 'zh' ? '钱包地址' : 'Wallet Address'}"
                         />
                         <button
                           onClick={handleSaveWalletAddress}
                           className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
                         >
-                          保存
+                          {language === 'zh' ? '保存' : 'Save'}
                         </button>
                         <button
                           onClick={() => setEditingWalletAddress(false)}
                           className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
                         >
-                          取消
+                          {language === 'zh' ? '取消' : 'Cancel'}
                         </button>
                       </div>
                     ) : (
@@ -1835,13 +1838,13 @@ export default function Profile() {
                                 }}
                                 className="w-full px-3 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
                               >
-                                管理钱包地址
+                                {language === 'zh' ? '管理钱包地址' : 'Manage Wallet Address'}
                               </button>
                             </>
                           ) : (
                             <div className="space-y-2">
                               <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                                未填写
+                                {language === 'zh' ? '未填写' : 'Not filled'}
                               </div>
                               <button
                                 onClick={() => {
@@ -1850,7 +1853,7 @@ export default function Profile() {
                                 }}
                                 className="w-full px-3 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
                               >
-                                添加钱包地址
+                                {language === 'zh' ? '添加钱包地址' : 'Add Wallet Address'}
                               </button>
                             </div>
                           )}
@@ -1859,11 +1862,11 @@ export default function Profile() {
                     )}
                   </div>
 
-                  {/* 钱包地址数组编辑 */}
+                  {/* {language === 'zh' ? '钱包地址' : 'Wallet Address'}数组编辑 */}
                   {editingWalletAddresses && (
                     <div className="space-y-3">
                       <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        管理钱包地址
+                        {language === 'zh' ? '管理钱包地址' : 'Manage Wallet Address'}
                       </h4>
                       <div className="space-y-2">
                         {walletAddresses.map((address, index) => (
@@ -1877,7 +1880,7 @@ export default function Profile() {
                                 setWalletAddresses(newAddresses);
                               }}
                               className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 focus:outline-none"
-                              placeholder="请输入钱包地址"
+                              placeholder="请输入{language === 'zh' ? '钱包地址' : 'Wallet Address'}"
                             />
                             {walletAddresses.length > 1 && (
                               <button
@@ -1887,7 +1890,7 @@ export default function Profile() {
                                 }}
                                 className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
                               >
-                                删除
+                                {language === 'zh' ? '删除' : 'Delete'}
                               </button>
                             )}
                           </div>
@@ -1898,7 +1901,7 @@ export default function Profile() {
                           }}
                           className="w-full px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
                         >
-                          添加钱包地址
+                          {language === 'zh' ? '添加钱包地址' : 'Add Wallet Address'}
                         </button>
                       </div>
                       <div className="flex gap-2">
@@ -1906,21 +1909,21 @@ export default function Profile() {
                           onClick={handleSaveWalletAddresses}
                           className="flex-1 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
                         >
-                          保存
+                          {language === 'zh' ? '保存' : 'Save'}
                         </button>
                         <button
                           onClick={() => setEditingWalletAddresses(false)}
                           className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
                         >
-                          取消
+                          {language === 'zh' ? '取消' : 'Cancel'}
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {/* 奖励发放地址 - 可编辑 */}
+                  {/* {language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'} - 可编辑 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">奖励发放地址</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'}</label>
                     {editingRewardAddress ? (
                       <div className="flex gap-2">
                         <input
@@ -1928,25 +1931,25 @@ export default function Profile() {
                           value={rewardAddress}
                           onChange={(e) => setRewardAddress(e.target.value)}
                           className="flex-1 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 p-3 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                          placeholder="请输入奖励发放地址"
+                          placeholder="请输入{language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'}"
                         />
                         <button
                           onClick={handleSaveRewardAddress}
                           className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
                         >
-                          保存
+                          {language === 'zh' ? '保存' : 'Save'}
                         </button>
                         <button
                           onClick={() => setEditingRewardAddress(false)}
                           className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
                         >
-                          取消
+                          {language === 'zh' ? '取消' : 'Cancel'}
                         </button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
                         <div className="flex-1 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                          {selectedForm.rewardWalletAddress || '未填写'}
+                          {selectedForm.rewardWalletAddress || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                         <button
                           onClick={() => {
@@ -1955,7 +1958,7 @@ export default function Profile() {
                           }}
                           className="px-3 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-sm"
                         >
-                          编辑
+                          {language === 'zh' ? '编辑' : 'Edit'}
                         </button>
                       </div>
                     )}
@@ -1969,106 +1972,106 @@ export default function Profile() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目名称</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '项目名称' : 'Project Name'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.projectName || '未填写'}
+                        {selectedForm.projectName || (language === 'zh' ? '未填写' : 'Not filled')}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">代币合约地址</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '代币合约地址' : 'Token Contract Address'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                        {selectedForm.tokenContractAddress || '未填写'}
+                        {selectedForm.tokenContractAddress || (language === 'zh' ? '未填写' : 'Not filled')}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">所属赛道</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '所属赛道' : 'Track Category'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                         {selectedForm.trackCategory || '未选择'}
                       </div>
                     </div>
                     {selectedForm.otherTrackName && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">其他赛道名称</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '其他赛道名称' : 'Other Track Name'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                           {selectedForm.otherTrackName}
                         </div>
                       </div>
                     )}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">提交时间</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '提交时间' : 'Submission Time'}</label>
                       <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                         {formatDate(selectedForm.createTime)}
                       </div>
                     </div>
                   </div>
                   
-                  {/* 项目评估详情 */}
+                  {/* {language === 'zh' ? '项目评估详情' : 'Project Evaluation Details'} */}
                   <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-6 border border-orange-100 dark:border-gray-600">
                     <div className="flex items-center space-x-2 mb-4">
                       <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                         <span className="text-white text-xs">📈</span>
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">项目评估详情</h4>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{language === 'zh' ? '项目评估详情' : 'Project Evaluation Details'}</h4>
                     </div>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">持币地址数</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '持币地址数' : 'Holder Address Count'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.holderAddressCount || '未填写'}
+                          {selectedForm.holderAddressCount || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mint完成度</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? 'Mint完成度' : 'Mint Completion'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.mintCompletion || '未填写'}
+                          {selectedForm.mintCompletion || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">社区规模(TG/Discord人数)</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '社区规模(TG/Discord人数)' : 'Community Scale (TG/Discord Members)'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.communityScale || '未填写'}
+                          {selectedForm.communityScale || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">推特粉丝数</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '推特粉丝数' : 'Twitter Followers'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.twitterFollowers || '未填写'}
+                          {selectedForm.twitterFollowers || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">外盘相关数据</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '外盘相关数据' : 'External Market Data'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.externalMarketData || '未填写'}
+                          {selectedForm.externalMarketData || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">流量贡献</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '流量贡献' : 'Traffic Contribution'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.trafficContribution || '未填写'}
+                          {selectedForm.trafficContribution || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">项目质量</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '项目质量' : 'Project Quality'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.projectQuality || '未填写'}
+                          {selectedForm.projectQuality || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">叙事与共识</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '叙事与共识' : 'Narrative & Consensus'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.narrativeConsensus || '未填写'}
+                          {selectedForm.narrativeConsensus || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">团队效率</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '团队效率' : 'Team Efficiency'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.teamEfficiency || '未填写'}
+                          {selectedForm.teamEfficiency || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">下一步规划</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{language === 'zh' ? '下一步规划' : 'Next Steps'}</label>
                         <div className="text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-600 p-3 rounded-lg">
-                          {selectedForm.nextSteps || '未填写'}
+                          {selectedForm.nextSteps || (language === 'zh' ? '未填写' : 'Not filled')}
                         </div>
                       </div>
                     </div>
@@ -2082,7 +2085,7 @@ export default function Profile() {
                 onClick={handleCloseModal}
                 className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
               >
-                关闭
+                {language === 'zh' ? '关闭' : 'Close'}
               </button>
             </div>
           </div>

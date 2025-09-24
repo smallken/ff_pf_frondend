@@ -91,8 +91,20 @@ export const REWARD_REQUIREMENTS = {
 
 // 奖励等级名称
 export const REWARD_LEVEL_NAMES = {
-  [REWARD_LEVELS.BASIC]: '基础级别',
-  [REWARD_LEVELS.ADVANCED1]: '进阶一',
-  [REWARD_LEVELS.ADVANCED2]: '进阶二',
-  [REWARD_LEVELS.ADVANCED3]: '进阶三'
+  [REWARD_LEVELS.BASIC]: {
+    zh: '基础级别',
+    en: 'Basic Level'
+  },
+  [REWARD_LEVELS.ADVANCED1]: {
+    zh: '进阶一',
+    en: 'Advanced I'
+  },
+  [REWARD_LEVELS.ADVANCED2]: {
+    zh: '进阶二',
+    en: 'Advanced II'
+  },
+  [REWARD_LEVELS.ADVANCED3]: {
+    zh: '进阶三',
+    en: 'Advanced III'
+  }
 } as const;

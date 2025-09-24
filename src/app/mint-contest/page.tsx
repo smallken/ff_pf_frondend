@@ -133,7 +133,7 @@ export default function MintContest() {
                 
                 <div>
                   <h4 className="text-lg font-semibold text-cyan-400 mb-2">{language === 'zh' ? '怎么参赛？' : 'How to participate?'}</h4>
-                  <p>👉 {language === 'zh' ? '用一个统一的钱包地址报名，全队的Mint成绩都会算到一起。' : 'Register with a unified wallet address, and all team minting achievements will be counted together.'}</p>
+                  <p>👉 {language === 'zh' ? '请工作室统一收集并上传成员钱包地址，建议使用少量统一钱包地址，以避免多地址统计带来的误差。' : 'Please collect and upload team member wallet addresses uniformly, and it is recommended to use a small number of unified wallet addresses to avoid errors caused by multi-address statistics.'}</p>
                 </div>
                 
                 <div>

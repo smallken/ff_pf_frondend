@@ -42,9 +42,10 @@ interface LevelCardProps {
   progress: number;
   isCurrent: boolean;
   isAchieved: boolean;
+  language: string;
 }
 
-const LevelCard: React.FC<LevelCardProps> = ({ level, progress, isCurrent, isAchieved }) => {
+const LevelCard: React.FC<LevelCardProps> = ({ level, progress, isCurrent, isAchieved, language }) => {
   const getLevelColor = () => {
     if (isAchieved) return 'bg-green-100 dark:bg-green-900/20 border-green-300 dark:border-green-700';
     if (isCurrent) return 'bg-blue-100 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700';
@@ -58,7 +59,7 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, progress, isCurrent, isAch
   };
 
   const requirements = REWARD_REQUIREMENTS[level as keyof typeof REWARD_REQUIREMENTS];
-  const levelName = REWARD_LEVEL_NAMES[level as keyof typeof REWARD_LEVEL_NAMES];
+  const levelName = REWARD_LEVEL_NAMES[level as keyof typeof REWARD_LEVEL_NAMES]?.[language as 'zh' | 'en'] || level;
 
   return (
     <div className={`p-4 rounded-lg border-2 ${getLevelColor()}`}>
@@ -110,7 +111,7 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, progress, isCurrent, isAch
 };
 
 export default function MockMonthlyRewardProgress() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [progress, setProgress] = useState<MonthlyRewardProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -254,24 +255,28 @@ export default function MockMonthlyRewardProgress() {
           progress={calculateLevelProgress(REWARD_LEVELS.BASIC)}
           isCurrent={currentLevel === REWARD_LEVELS.BASIC}
           isAchieved={isLevelAchieved(REWARD_LEVELS.BASIC)}
+          language={language}
         />
         <LevelCard
           level={REWARD_LEVELS.ADVANCED1}
           progress={calculateLevelProgress(REWARD_LEVELS.ADVANCED1)}
           isCurrent={currentLevel === REWARD_LEVELS.ADVANCED1}
           isAchieved={isLevelAchieved(REWARD_LEVELS.ADVANCED1)}
+          language={language}
         />
         <LevelCard
           level={REWARD_LEVELS.ADVANCED2}
           progress={calculateLevelProgress(REWARD_LEVELS.ADVANCED2)}
           isCurrent={currentLevel === REWARD_LEVELS.ADVANCED2}
           isAchieved={isLevelAchieved(REWARD_LEVELS.ADVANCED2)}
+          language={language}
         />
         <LevelCard
           level={REWARD_LEVELS.ADVANCED3}
           progress={calculateLevelProgress(REWARD_LEVELS.ADVANCED3)}
           isCurrent={currentLevel === REWARD_LEVELS.ADVANCED3}
           isAchieved={isLevelAchieved(REWARD_LEVELS.ADVANCED3)}
+          language={language}
         />
       </div>
 
@@ -286,7 +291,7 @@ export default function MockMonthlyRewardProgress() {
             </div>
             <div className="ml-3">
               <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-                当前等级: {REWARD_LEVEL_NAMES[currentLevel as keyof typeof REWARD_LEVEL_NAMES]}
+                当前等级: {REWARD_LEVEL_NAMES[currentLevel as keyof typeof REWARD_LEVEL_NAMES]?.[language as 'zh' | 'en'] || currentLevel}
               </h3>
               <p className="text-sm text-blue-700 dark:text-blue-300">
                 奖励金额: {REWARD_REQUIREMENTS[currentLevel as keyof typeof REWARD_REQUIREMENTS].amount} USDT
