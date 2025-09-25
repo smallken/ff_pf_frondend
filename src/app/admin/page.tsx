@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { formService, taskSubmissionService, activityApplicationService, userService } from '../../services';
+import { formService, taskSubmissionService, activityApplicationService, userService, monthlyRewardService } from '../../services';
 import type { ApplicationForm, TaskSubmissionVO, ActivityApplication, AdminStatsVO } from '../../types/api';
 import AdminMonthlyReward from '../components/AdminMonthlyReward';
 import { API_CONFIG } from '../../config/api';
@@ -67,8 +67,14 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState('forms');
   const [pendingSubmissions, setPendingSubmissions] = useState<PendingSubmission[]>([]);
   const [reviewedSubmissions, setReviewedSubmissions] = useState<ReviewedSubmission[]>([]);
+  const [allReviewedSubmissions, setAllReviewedSubmissions] = useState<ReviewedSubmission[]>([]); // 存储所有数据
   const [selectedSubmission, setSelectedSubmission] = useState<PendingSubmission | null>(null);
   const [selectedReviewedSubmission, setSelectedReviewedSubmission] = useState<ReviewedSubmission | null>(null);
+  
+  // 已审核表单分页状态
+  const [reviewedCurrentPage, setReviewedCurrentPage] = useState(1);
+  const [reviewedPageSize] = useState(20);
+  const [reviewedTotal, setReviewedTotal] = useState(0);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showReviewedModal, setShowReviewedModal] = useState(false);
   const [reviewForm, setReviewForm] = useState({
@@ -76,6 +82,17 @@ export default function Admin() {
     points: 0
   });
   const [reviewLoading, setReviewLoading] = useState(false);
+  
+  // 贡献参考表显示状态
+  const [showContributionReference, setShowContributionReference] = useState(false);
+  
+  // 4种提交类别次数状态
+  const [categoryCounts, setCategoryCounts] = useState({
+    promotion: 0,
+    short: 0,
+    long: 0,
+    community: 0
+  });
   
   // 编辑已审核表单的状态
   const [isEditingReviewed, setIsEditingReviewed] = useState(false);
@@ -118,7 +135,8 @@ export default function Admin() {
     return true;
   });
 
-  const filteredReviewedSubmissions = reviewedSubmissions.filter(submission => {
+  // 基于所有数据进行筛选
+  const filteredAllReviewedSubmissions = allReviewedSubmissions.filter(submission => {
     if (filters.user && !submission.userName.toLowerCase().includes(filters.user.toLowerCase()) && 
         !submission.userEmail.toLowerCase().includes(filters.user.toLowerCase())) {
       return false;
@@ -139,6 +157,13 @@ export default function Admin() {
     return true;
   });
 
+  // 计算筛选后的分页数据
+  const filteredReviewedSubmissions = (() => {
+    const startIndex = (reviewedCurrentPage - 1) * reviewedPageSize;
+    const endIndex = startIndex + reviewedPageSize;
+    return filteredAllReviewedSubmissions.slice(startIndex, endIndex);
+  })();
+
   // 重置筛选
   const resetFilters = () => {
     setFilters({
@@ -147,6 +172,7 @@ export default function Admin() {
       status: '',
       dateRange: ''
     });
+    setReviewedCurrentPage(1); // 重置到第一页
   };
   
   // 统计数据状态
@@ -177,7 +203,7 @@ export default function Admin() {
       
       const [applicationForms, taskSubmissions, activityApplications] = await Promise.all([
         formService.getFormList({ status: 0, current: 1, pageSize: 20 }), // 0-待审核
-        taskSubmissionService.getAllTaskSubmissions({ current: 1, pageSize: 20 }), // 获取所有，然后过滤
+        taskSubmissionService.getAllTaskSubmissions({ reviewStatus: 0, current: 1, pageSize: 20 }), // 0-待审核
         activityApplicationService.getAllApplications({ reviewStatus: 0, current: 1, pageSize: 20 }) // 0-待审核
       ]);
 
@@ -200,9 +226,8 @@ export default function Admin() {
       });
 
       // 添加待审核的任务提交
-      taskSubmissions.records
-        .filter(task => task && task.id && (task.reviewStatus || 0) === 0)
-        .forEach(task => {
+      taskSubmissions.records.forEach(task => {
+        if (task && task.id) {
           pending.push({
             id: task.id,
             type: 'task',
@@ -213,7 +238,8 @@ export default function Admin() {
             createTime: task.createTime || new Date().toISOString(),
             data: task
           });
-        });
+        }
+      });
 
       // 添加待审核的活动申请
       activityApplications.records.forEach(activity => {
@@ -247,20 +273,74 @@ export default function Admin() {
     }
   };
 
-  // 获取所有已审核表单
-  const fetchReviewedSubmissions = async () => {
+  // 获取所有已审核表单数据（获取多页数据）
+  const fetchAllReviewedData = async () => {
+    const maxPageSize = 20; // 后端API限制最大页面大小为20
+    const allData = {
+      approvedForms: [],
+      rejectedForms: [],
+      approvedTaskSubmissions: [],
+      rejectedTaskSubmissions: [],
+      approvedActivities: [],
+      rejectedActivities: []
+    };
+
+    // 获取所有页面的数据
+    const fetchAllPages = async (service: any, params: any, dataKey: string) => {
+      let currentPage = 1;
+      let hasMore = true;
+      const allRecords = [];
+
+      while (hasMore) {
+        const response = await service({ ...params, current: currentPage, pageSize: maxPageSize });
+        if (response.records && response.records.length > 0) {
+          allRecords.push(...response.records);
+          hasMore = response.records.length === maxPageSize;
+          currentPage++;
+        } else {
+          hasMore = false;
+        }
+      }
+      return allRecords;
+    };
+
+    // 并行获取所有类型的所有数据
+    const [approvedForms, rejectedForms, approvedTaskSubmissions, rejectedTaskSubmissions, approvedActivities, rejectedActivities] = await Promise.all([
+      fetchAllPages(formService.getFormList, { status: 1 }, 'approvedForms'),
+      fetchAllPages(formService.getFormList, { status: 2 }, 'rejectedForms'),
+      fetchAllPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 1 }, 'approvedTaskSubmissions'),
+      fetchAllPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 2 }, 'rejectedTaskSubmissions'),
+      fetchAllPages(activityApplicationService.getAllApplications, { reviewStatus: 1 }, 'approvedActivities'),
+      fetchAllPages(activityApplicationService.getAllApplications, { reviewStatus: 2 }, 'rejectedActivities')
+    ]);
+
+    return {
+      approvedForms: { records: approvedForms },
+      rejectedForms: { records: rejectedForms },
+      approvedTaskSubmissions: { records: approvedTaskSubmissions },
+      rejectedTaskSubmissions: { records: rejectedTaskSubmissions },
+      approvedActivities: { records: approvedActivities },
+      rejectedActivities: { records: rejectedActivities }
+    };
+  };
+
+  // 获取已审核表单（支持分页）
+  const fetchReviewedSubmissions = async (page: number = reviewedCurrentPage) => {
     try {
       setReviewedLoading(true);
       setError(''); // 清除之前的错误
       
-      // 并行获取所有已审核的表单数据
-      const [approvedForms, rejectedForms, taskSubmissions, approvedActivities, rejectedActivities] = await Promise.all([
-        formService.getFormList({ status: 1, current: 1, pageSize: 20 }), // 已通过的申请表
-        formService.getFormList({ status: 2, current: 1, pageSize: 20 }), // 已拒绝的申请表
-        taskSubmissionService.getAllTaskSubmissions({ current: 1, pageSize: 20 }), // 所有任务提交
-        activityApplicationService.getAllApplications({ reviewStatus: 1, current: 1, pageSize: 20 }), // 已通过的活动申请
-        activityApplicationService.getAllApplications({ reviewStatus: 2, current: 1, pageSize: 20 })  // 已拒绝的活动申请
-      ]);
+      console.log('🔍 开始获取已审核表单数据...', { page, pageSize: reviewedPageSize });
+      const { approvedForms, rejectedForms, approvedTaskSubmissions, rejectedTaskSubmissions, approvedActivities, rejectedActivities } = await fetchAllReviewedData();
+      
+      console.log('📊 已审核表单数据获取结果:', {
+        approvedForms: approvedForms?.records?.length || 0,
+        rejectedForms: rejectedForms?.records?.length || 0,
+        approvedTaskSubmissions: approvedTaskSubmissions?.records?.length || 0,
+        rejectedTaskSubmissions: rejectedTaskSubmissions?.records?.length || 0,
+        approvedActivities: approvedActivities?.records?.length || 0,
+        rejectedActivities: rejectedActivities?.records?.length || 0
+      });
 
       const reviewed: ReviewedSubmission[] = [];
 
@@ -284,9 +364,20 @@ export default function Admin() {
       });
 
       // 添加已审核的任务提交（通过和拒绝）
-      taskSubmissions.records
-        .filter(task => task && task.id && (task.reviewStatus || 0) !== 0)
-        .forEach(task => {
+      console.log('📝 处理已审核的任务提交:', {
+        approvedTasks: approvedTaskSubmissions?.records || [],
+        rejectedTasks: rejectedTaskSubmissions?.records || []
+      });
+      
+      [...approvedTaskSubmissions.records, ...rejectedTaskSubmissions.records].forEach(task => {
+        if (task && task.id) {
+          console.log('✅ 添加已审核任务提交:', {
+            id: task.id,
+            name: task.name,
+            reviewStatus: task.reviewStatus,
+            createTime: task.createTime,
+            updateTime: task.updateTime
+          });
           reviewed.push({
             id: task.id,
             type: 'task',
@@ -300,7 +391,8 @@ export default function Admin() {
             reviewScore: task.reviewScore || 0,
             data: task
           });
-        });
+        }
+      });
 
       // 添加已审核的活动申请（通过和拒绝）
       [...approvedActivities.records, ...rejectedActivities.records].forEach(activity => {
@@ -328,13 +420,46 @@ export default function Admin() {
         return timeB - timeA;
       });
       
-      setReviewedSubmissions(reviewed);
+      // 计算总数据量
+      const totalCount = reviewed.length;
+      
+      // 前端分页：计算当前页的数据
+      const startIndex = (page - 1) * reviewedPageSize;
+      const endIndex = startIndex + reviewedPageSize;
+      const currentPageData = reviewed.slice(startIndex, endIndex);
+      
+      console.log('📊 分页信息:', {
+        currentPage: page,
+        pageSize: reviewedPageSize,
+        totalCount,
+        startIndex,
+        endIndex,
+        currentPageDataLength: currentPageData.length,
+        breakdown: {
+          approvedForms: approvedForms?.records?.length || 0,
+          rejectedForms: rejectedForms?.records?.length || 0,
+          approvedTaskSubmissions: approvedTaskSubmissions?.records?.length || 0,
+          rejectedTaskSubmissions: rejectedTaskSubmissions?.records?.length || 0,
+          approvedActivities: approvedActivities?.records?.length || 0,
+          rejectedActivities: rejectedActivities?.records?.length || 0
+        }
+      });
+      
+      setAllReviewedSubmissions(reviewed); // 存储所有数据
+      setReviewedSubmissions(currentPageData);
+      setReviewedTotal(totalCount);
     } catch (error: any) {
       console.error('获取已审核表单失败:', error);
       setError(error.message || t('admin.error.fetch.reviewed'));
     } finally {
       setReviewedLoading(false);
     }
+  };
+
+  // 处理已审核表单分页
+  const handleReviewedPageChange = (page: number) => {
+    setReviewedCurrentPage(page);
+    // 不需要重新获取数据，因为筛选后的数据已经在内存中
   };
 
   // 获取统计数据
@@ -372,6 +497,8 @@ export default function Admin() {
   const handleCloseReviewModal = () => {
     setShowReviewModal(false);
     setSelectedSubmission(null);
+    setShowContributionReference(false); // 重置贡献参考表显示状态
+    setCategoryCounts({ promotion: 0, short: 0, long: 0, community: 0 }); // 重置类别次数
     setReviewForm({
       reviewMessage: '',
       points: 0
@@ -394,6 +521,14 @@ export default function Admin() {
       reviewMessage: '',
       reviewScore: 0
     });
+  };
+
+  // 处理类别次数变化
+  const handleCategoryCountChange = (category: string, delta: number) => {
+    setCategoryCounts(prev => ({
+      ...prev,
+      [category]: Math.max(0, prev[category as keyof typeof prev] + delta)
+    }));
   };
 
   // 开始编辑已审核表单
@@ -445,7 +580,7 @@ export default function Admin() {
         await activityApplicationService.reviewApplication({
           id: selectedReviewedSubmission.id,
           reviewStatus: editReviewedForm.status,
-          reviewMessage: editReviewedForm.reviewMessage,
+          reviewComment: editReviewedForm.reviewMessage, // 后端使用reviewComment字段
           reviewScore: editReviewedForm.reviewScore
         });
       }
@@ -508,11 +643,65 @@ export default function Admin() {
           reviewMessage: reviewForm.reviewMessage,
           reviewScore: points
         });
+
+        // 如果审核通过，累加月度奖励次数
+        if (status === 1) {
+          try {
+            // 获取当前年月
+            const currentDate = new Date();
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1;
+
+            // 根据成果提交表中的实际任务类别计算累加次数
+            const taskData = selectedSubmission.data as any;
+            const tasks = taskData.tasks || [];
+            
+            // 统计各类别的任务数量
+            const taskCounts = {
+              promotion: 0,
+              short: 0,
+              long: 0,
+              community: 0
+            };
+            
+            tasks.forEach((task: any) => {
+              const category = task.submissionCategory;
+              if (category === 'promotion') taskCounts.promotion++;
+              else if (category === 'short') taskCounts.short++;
+              else if (category === 'long') taskCounts.long++;
+              else if (category === 'community') taskCounts.community++;
+            });
+
+            // 构建累加次数数据
+            const incrementData = {
+              userId: selectedSubmission.data.userId,
+              year: year,
+              month: month,
+              promotionIncrement: taskCounts.promotion, // 传播类增加次数
+              shortIncrement: taskCounts.short, // 短篇原创增加次数
+              longIncrement: taskCounts.long, // 长篇原创增加次数
+              communityIncrement: taskCounts.community // 社区类增加次数
+            };
+
+            // 调用累加次数接口
+            console.log('🔍 准备累加月度奖励次数:', incrementData);
+            console.log('🔍 成果提交表任务详情:', tasks);
+            console.log('🔍 任务类别统计:', taskCounts);
+            console.log('🔍 用户ID:', selectedSubmission.data.userId);
+            console.warn('⚠️ 重要提醒：如果分数被错误修改，可能是后端的refreshMonthlyRewardScores接口被调用了！');
+            const result = await monthlyRewardService.incrementMonthlyRewardScores(incrementData);
+            console.log('🔍 月度奖励次数累加结果:', result);
+            console.log('✅ 累加完成时间:', new Date().toISOString());
+          } catch (error) {
+            console.error('更新月度奖励数据失败:', error);
+            // 不阻止审核流程，只记录错误
+          }
+        }
       } else if (selectedSubmission.type === 'activity') {
         await activityApplicationService.reviewApplication({
           id: selectedSubmission.id,
           reviewStatus: status,
-          reviewMessage: reviewForm.reviewMessage,
+          reviewComment: reviewForm.reviewMessage, // 后端使用reviewComment字段
           reviewScore: points
         });
       }
@@ -533,13 +722,22 @@ export default function Admin() {
       if (activeTab === 'forms') {
         fetchPendingSubmissions();
       } else if (activeTab === 'reviewed') {
-        fetchReviewedSubmissions();
+        // 切换到已审核表单时重置分页状态
+        setReviewedCurrentPage(1);
+        fetchReviewedSubmissions(1);
       } else if (activeTab === 'stats') {
         fetchStats();
       }
       // 月度奖励模块的数据获取在组件内部处理
     }
   }, [isAuthenticated, user, activeTab]);
+
+  // 监听筛选条件变化，重置到第一页
+  useEffect(() => {
+    if (activeTab === 'reviewed') {
+      setReviewedCurrentPage(1);
+    }
+  }, [filters, activeTab]);
 
   // 权限检查
   if (!isAuthenticated) {
@@ -880,7 +1078,7 @@ export default function Admin() {
                 <span className="ml-2 text-gray-600 dark:text-gray-300">{t('admin.loading')}</span>
               </div>
             ) : (
-            <div className="overflow-x-auto">
+              <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
@@ -963,7 +1161,58 @@ export default function Admin() {
                     )}
                 </tbody>
               </table>
-            </div>
+              </div>
+            )}
+            
+            {/* 分页组件 */}
+            {filteredAllReviewedSubmissions.length > 0 && (
+              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                  <span>
+                    显示第 {((reviewedCurrentPage - 1) * reviewedPageSize) + 1} 到 {Math.min(reviewedCurrentPage * reviewedPageSize, filteredAllReviewedSubmissions.length)} 条，
+                    共 {filteredAllReviewedSubmissions.length} 条记录
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleReviewedPageChange(reviewedCurrentPage - 1)}
+                    disabled={reviewedCurrentPage === 1}
+                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    上一页
+                  </button>
+                  
+                  {/* 页码显示 */}
+                  <div className="flex space-x-1">
+                    {Array.from({ length: Math.min(5, Math.ceil(filteredAllReviewedSubmissions.length / reviewedPageSize)) }, (_, i) => {
+                      const pageNum = Math.max(1, reviewedCurrentPage - 2) + i;
+                      if (pageNum > Math.ceil(filteredAllReviewedSubmissions.length / reviewedPageSize)) return null;
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handleReviewedPageChange(pageNum)}
+                          className={`px-3 py-1 text-sm border rounded-md ${
+                            pageNum === reviewedCurrentPage
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={() => handleReviewedPageChange(reviewedCurrentPage + 1)}
+                    disabled={reviewedCurrentPage >= Math.ceil(filteredAllReviewedSubmissions.length / reviewedPageSize)}
+                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    下一页
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -1136,11 +1385,26 @@ export default function Admin() {
       {/* 审核弹窗 */}
       {showReviewModal && selectedSubmission && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl transform animate-scaleIn">
+          <div className={`bg-white dark:bg-gray-800 rounded-2xl p-8 w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl transform animate-scaleIn ${
+            selectedSubmission.type === 'task' && showContributionReference ? 'max-w-7xl' : 'max-w-4xl'
+          }`}>
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                审核 {selectedSubmission.title}
-              </h3>
+              <div className="flex items-center gap-4">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  审核 {selectedSubmission.title}
+                </h3>
+                {selectedSubmission.type === 'task' && (
+                  <button
+                    onClick={() => setShowContributionReference(!showContributionReference)}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg transition-colors"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    {showContributionReference ? '隐藏参考表' : '显示参考表'}
+                  </button>
+                )}
+              </div>
               <button
                 onClick={handleCloseReviewModal}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
@@ -1149,7 +1413,9 @@ export default function Admin() {
               </button>
             </div>
 
-            <div className="space-y-6">
+            <div className={`space-y-6 ${selectedSubmission.type === 'task' && showContributionReference ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : ''}`}>
+              {/* 左侧内容 */}
+              <div className={selectedSubmission.type === 'task' && showContributionReference ? 'space-y-6' : ''}>
               {/* 用户信息 */}
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">用户信息</h4>
@@ -1485,7 +1751,227 @@ export default function Admin() {
                   )}
                 </div>
               </div>
+              </div>
+
+              {/* 右侧贡献参考表 - 仅在成果提交表审核时显示 */}
+              {selectedSubmission.type === 'task' && showContributionReference && (
+                <div className="space-y-6">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+                    <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4 flex items-center">
+                      <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Footprint贡献参考
+                    </h4>
+                    
+                    <div className="space-y-4">
+                      {/* 传播类 */}
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">传播类</h5>
+                        <div className="text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-300">X官方内容一键三联</span>
+                            <span className="font-medium text-green-600">+0.5</span>
+                          </div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs">单纯转发/点赞不计分</div>
+                        </div>
+                      </div>
+
+                      {/* 短篇原创 */}
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">短篇原创</h5>
+                        <div className="text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-300">原创内容/Meme/平台图文教程</span>
+                            <span className="font-medium text-green-600">+2</span>
+                          </div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs">月积分上限: 10分</div>
+                        </div>
+                      </div>
+
+                      {/* 长篇原创 */}
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">长篇原创</h5>
+                        <div className="text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-300">长篇或深度文章(不少于500字)</span>
+                            <span className="font-medium text-green-600">+8-10</span>
+                          </div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs">强调原创</div>
+                        </div>
+                      </div>
+
+                      {/* 短视频 */}
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">短视频</h5>
+                        <div className="text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-300">短视频(不少于30秒)</span>
+                            <span className="font-medium text-green-600">+12-15</span>
+                          </div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs">强调原创,半原创积分减半</div>
+                        </div>
+                      </div>
+
+                      {/* AMA Recap */}
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">AMA Recap</h5>
+                        <div className="text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-300">AMA Recap(不少于500字)</span>
+                            <span className="font-medium text-green-600">+8-10</span>
+                          </div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs">Twitter发布并@官方账号</div>
+                        </div>
+                      </div>
+
+                      {/* 社区类 */}
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">社区类</h5>
+                        <div className="text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-300">参加AMA/线上活动</span>
+                            <span className="font-medium text-green-600">+2-3</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-300">Telegram参与话题讨论</span>
+                            <span className="font-medium text-green-600">+2-3</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-300">组织官方认证线下活动</span>
+                            <span className="font-medium text-green-600">+25-30</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 爆款内容 */}
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">爆款内容</h5>
+                        <div className="text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-300">任何原创内容获得广泛关注</span>
+                            <span className="font-medium text-green-600">×1.5-3倍</span>
+                          </div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs">针对爆款内容的额外奖励</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                      <div className="text-xs text-yellow-800 dark:text-yellow-200">
+                        <strong>注意：</strong>任务完成后，请务必截图留存，并通过成果提交表统一提交
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* 4种提交类别次数按钮 - 仅在成果提交表审核时显示 */}
+            {selectedSubmission.type === 'task' && (
+              <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+                <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4">
+                  提交类别次数统计
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* 传播类 */}
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">传播类</div>
+                      <div className="flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => handleCategoryCountChange('promotion', -1)}
+                          className="w-8 h-8 bg-red-100 hover:bg-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center text-lg font-bold"
+                        >
+                          -
+                        </button>
+                        <span className="text-2xl font-bold text-gray-900 dark:text-white min-w-[2rem] text-center">
+                          {categoryCounts.promotion}
+                        </span>
+                        <button
+                          onClick={() => handleCategoryCountChange('promotion', 1)}
+                          className="w-8 h-8 bg-green-100 hover:bg-green-200 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-lg font-bold"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 短篇原创 */}
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">短篇原创</div>
+                      <div className="flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => handleCategoryCountChange('short', -1)}
+                          className="w-8 h-8 bg-red-100 hover:bg-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center text-lg font-bold"
+                        >
+                          -
+                        </button>
+                        <span className="text-2xl font-bold text-gray-900 dark:text-white min-w-[2rem] text-center">
+                          {categoryCounts.short}
+                        </span>
+                        <button
+                          onClick={() => handleCategoryCountChange('short', 1)}
+                          className="w-8 h-8 bg-green-100 hover:bg-green-200 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-lg font-bold"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 长篇原创 */}
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">长篇原创</div>
+                      <div className="flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => handleCategoryCountChange('long', -1)}
+                          className="w-8 h-8 bg-red-100 hover:bg-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center text-lg font-bold"
+                        >
+                          -
+                        </button>
+                        <span className="text-2xl font-bold text-gray-900 dark:text-white min-w-[2rem] text-center">
+                          {categoryCounts.long}
+                        </span>
+                        <button
+                          onClick={() => handleCategoryCountChange('long', 1)}
+                          className="w-8 h-8 bg-green-100 hover:bg-green-200 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-lg font-bold"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 社区类 */}
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">社区类</div>
+                      <div className="flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => handleCategoryCountChange('community', -1)}
+                          className="w-8 h-8 bg-red-100 hover:bg-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center text-lg font-bold"
+                        >
+                          -
+                        </button>
+                        <span className="text-2xl font-bold text-gray-900 dark:text-white min-w-[2rem] text-center">
+                          {categoryCounts.community}
+                        </span>
+                        <button
+                          onClick={() => handleCategoryCountChange('community', 1)}
+                          className="w-8 h-8 bg-green-100 hover:bg-green-200 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-lg font-bold"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="mt-6 flex justify-end space-x-4">
               <button
@@ -1680,6 +2166,49 @@ export default function Admin() {
                             </div>
                           </div>
                         ))}
+                      </div>
+                    </div>
+                    
+                    {/* 类别次数统计 */}
+                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                      <h5 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-3">获得的类别次数</h5>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="text-center p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
+                          <div className="text-lg font-bold text-gray-900 dark:text-white">
+                            {(() => {
+                              const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
+                              return taskData.tasks?.filter(task => task.submissionCategory === 'promotion').length || 0;
+                            })()}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">传播类</div>
+                        </div>
+                        <div className="text-center p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
+                          <div className="text-lg font-bold text-gray-900 dark:text-white">
+                            {(() => {
+                              const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
+                              return taskData.tasks?.filter(task => task.submissionCategory === 'short').length || 0;
+                            })()}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">短篇原创</div>
+                        </div>
+                        <div className="text-center p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
+                          <div className="text-lg font-bold text-gray-900 dark:text-white">
+                            {(() => {
+                              const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
+                              return taskData.tasks?.filter(task => task.submissionCategory === 'long').length || 0;
+                            })()}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">长篇原创</div>
+                        </div>
+                        <div className="text-center p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
+                          <div className="text-lg font-bold text-gray-900 dark:text-white">
+                            {(() => {
+                              const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
+                              return taskData.tasks?.filter(task => task.submissionCategory === 'community').length || 0;
+                            })()}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">社区类</div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1940,11 +2469,12 @@ export default function Admin() {
                   </div>
                 )}
                 
-                {!isEditingReviewed && selectedReviewedSubmission.reviewMessage && (
+                {/* 审核意见显示 */}
+                {!isEditingReviewed && (
                   <div className="mt-4">
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('admin.reviewed.comment')}：</span>
                     <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
-                      {selectedReviewedSubmission.reviewMessage}
+                      {selectedReviewedSubmission.reviewMessage || '无审核意见'}
                     </div>
                   </div>
                 )}

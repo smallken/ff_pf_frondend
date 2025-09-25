@@ -1,7 +1,7 @@
 // 月度奖励相关类型定义
 
 export interface MonthlyRewardVO {
-  id: number;
+  id: number | null;
   userId: number;
   rewardYear: number;
   rewardMonth: number;
@@ -11,8 +11,8 @@ export interface MonthlyRewardVO {
   communityScore: number;
   rewardLevel: string;
   rewardAmount: number;
-  isCalculated: boolean;
-  isPaid: boolean;
+  isCalculated: number; // 0-未计算，1-已计算
+  isPaid: number; // 0-未发放，1-已发放
   paidTime?: string;
   createTime: string;
   updateTime: string;

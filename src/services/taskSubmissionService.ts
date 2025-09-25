@@ -60,6 +60,7 @@ export const taskSubmissionService = {
     pageSize?: number;
     submissionCategory?: string;
     name?: string;
+    reviewStatus?: number;
   } = {}): Promise<PageData<TaskSubmissionVO>> => {
     return request.post<PageData<TaskSubmissionVO>>(
       API_ENDPOINTS.TASK_SUBMISSION.LIST,
@@ -68,6 +69,7 @@ export const taskSubmissionService = {
         pageSize: params.pageSize || 10,
         submissionCategory: params.submissionCategory,
         name: params.name,
+        reviewStatus: params.reviewStatus,
       }
     );
   },

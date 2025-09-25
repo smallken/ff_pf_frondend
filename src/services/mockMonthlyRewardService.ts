@@ -30,8 +30,8 @@ export const mockMonthlyRewardHistory: MonthlyRewardVO[] = [
     communityScore: 1,
     rewardLevel: REWARD_LEVELS.BASIC,
     rewardAmount: 10,
-    isCalculated: true,
-    isPaid: true,
+    isCalculated: 1,
+    isPaid: 1,
     paidTime: '2024-12-01T10:00:00Z',
     createTime: '2024-11-30T23:59:59Z',
     updateTime: '2024-12-01T10:00:00Z'
@@ -47,8 +47,8 @@ export const mockMonthlyRewardHistory: MonthlyRewardVO[] = [
     communityScore: 2,
     rewardLevel: REWARD_LEVELS.ADVANCED1,
     rewardAmount: 50,
-    isCalculated: true,
-    isPaid: true,
+    isCalculated: 1,
+    isPaid: 1,
     paidTime: '2024-11-01T10:00:00Z',
     createTime: '2024-10-31T23:59:59Z',
     updateTime: '2024-11-01T10:00:00Z'
@@ -64,8 +64,8 @@ export const mockMonthlyRewardHistory: MonthlyRewardVO[] = [
     communityScore: 1,
     rewardLevel: REWARD_LEVELS.BASIC,
     rewardAmount: 10,
-    isCalculated: true,
-    isPaid: false,
+    isCalculated: 1,
+    isPaid: 0,
     createTime: '2024-09-30T23:59:59Z',
     updateTime: '2024-09-30T23:59:59Z'
   }

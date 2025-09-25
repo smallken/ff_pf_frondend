@@ -6,6 +6,19 @@ import { monthlyRewardService } from '../../services/monthlyRewardService';
 import type { MonthlyRewardProgress } from '../../types/monthlyReward';
 import { REWARD_LEVELS, REWARD_REQUIREMENTS, REWARD_LEVEL_NAMES } from '../../types/monthlyReward';
 
+const LEVEL_SEQUENCE = [
+  REWARD_LEVELS.BASIC,
+  REWARD_LEVELS.ADVANCED1,
+  REWARD_LEVELS.ADVANCED2,
+  REWARD_LEVELS.ADVANCED3
+] as const;
+
+type LevelType = typeof LEVEL_SEQUENCE[number];
+
+const isLevelType = (level: string): level is LevelType => {
+  return (LEVEL_SEQUENCE as readonly string[]).includes(level);
+};
+
 interface ProgressBarProps {
   label: string;
   current: number;
@@ -39,7 +52,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label, current, required, col
 };
 
 interface LevelCardProps {
-  level: string;
+  level: LevelType;
   progress: number;
   isCurrent: boolean;
   isAchieved: boolean;
@@ -75,22 +88,30 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, progress, isCurrent, isAch
       <div className="space-y-2">
         {requirements.promotion > 0 && (
           <div className="text-xs">
-            <span className={getTextColor()}>{language === 'zh' ? '传播类' : 'Promotion'}: {requirements.promotion}</span>
+            <span className={getTextColor()}>
+              {language === 'zh' ? '传播类' : 'Promotion'}: {language === 'zh' ? '需要' : 'Need'} {requirements.promotion}
+            </span>
           </div>
         )}
         {requirements.short > 0 && (
           <div className="text-xs">
-            <span className={getTextColor()}>{language === 'zh' ? '短篇原创' : 'Short Original'}: {requirements.short}</span>
+            <span className={getTextColor()}>
+              {language === 'zh' ? '短篇原创' : 'Short Original'}: {language === 'zh' ? '需要' : 'Need'} {requirements.short}
+            </span>
           </div>
         )}
         {requirements.long > 0 && (
           <div className="text-xs">
-            <span className={getTextColor()}>{language === 'zh' ? '长篇原创' : 'Long Original'}: {requirements.long}</span>
+            <span className={getTextColor()}>
+              {language === 'zh' ? '长篇原创' : 'Long Original'}: {language === 'zh' ? '需要' : 'Need'} {requirements.long}
+            </span>
           </div>
         )}
         {requirements.community > 0 && (
           <div className="text-xs">
-            <span className={getTextColor()}>{language === 'zh' ? '社区类' : 'Community'}: {requirements.community}</span>
+            <span className={getTextColor()}>
+              {language === 'zh' ? '社区类' : 'Community'}: {language === 'zh' ? '需要' : 'Need'} {requirements.community}
+            </span>
           </div>
         )}
       </div>
@@ -166,50 +187,83 @@ export default function MonthlyRewardProgress() {
     return null;
   }
 
-  const calculateLevelProgress = (level: string) => {
-    const requirements = REWARD_REQUIREMENTS[level as keyof typeof REWARD_REQUIREMENTS];
+  const clampPercentage = (value: number) => Math.min(Math.max(value, 0), 100);
+
+  const normalizeLevel = (level?: string | null): LevelType | null => {
+    if (!level) return null;
+    const lower = level.toLowerCase();
+    return isLevelType(lower) ? lower : null;
+  };
+
+  const calculateLevelProgressFromScores = (level: LevelType) => {
+    const requirements = REWARD_REQUIREMENTS[level];
     let totalRequired = 0;
     let totalCurrent = 0;
 
-    if (requirements.promotion > 0) {
-      totalRequired += requirements.promotion;
-      totalCurrent += Math.min(progress.promotionScore, requirements.promotion);
-    }
-    if (requirements.short > 0) {
-      totalRequired += requirements.short;
-      totalCurrent += Math.min(progress.shortScore, requirements.short);
-    }
-    if (requirements.long > 0) {
-      totalRequired += requirements.long;
-      totalCurrent += Math.min(progress.longScore, requirements.long);
-    }
-    if (requirements.community > 0) {
-      totalRequired += requirements.community;
-      totalCurrent += Math.min(progress.communityScore, requirements.community);
-    }
+    const accumulate = (required: number, currentValue: number | undefined | null) => {
+      if (required <= 0) return;
+      const safeCurrent = typeof currentValue === 'number' && !Number.isNaN(currentValue) ? currentValue : 0;
+      totalRequired += required;
+      totalCurrent += Math.min(safeCurrent, required);
+    };
+
+    accumulate(requirements.promotion, progress.promotionScore);
+    accumulate(requirements.short, progress.shortScore);
+    accumulate(requirements.long, progress.longScore);
+    accumulate(requirements.community, progress.communityScore);
 
     return totalRequired > 0 ? (totalCurrent / totalRequired) * 100 : 0;
   };
 
-  const isLevelAchieved = (level: string) => {
-    const requirements = REWARD_REQUIREMENTS[level as keyof typeof REWARD_REQUIREMENTS];
+  const calculateLevelProgress = (level: LevelType) => {
+    const backendProgressValue = progress.progress?.[level];
+    if (typeof backendProgressValue === 'number' && !Number.isNaN(backendProgressValue)) {
+      return clampPercentage(backendProgressValue);
+    }
+    return clampPercentage(calculateLevelProgressFromScores(level));
+  };
+
+  const isLevelAchievedByScores = (level: LevelType) => {
+    const requirements = REWARD_REQUIREMENTS[level];
+    const ensureNumber = (value: number | undefined | null) => (typeof value === 'number' && !Number.isNaN(value) ? value : 0);
     return (
-      progress.promotionScore >= requirements.promotion &&
-      progress.shortScore >= requirements.short &&
-      progress.longScore >= requirements.long &&
-      progress.communityScore >= requirements.community
+      ensureNumber(progress.promotionScore) >= requirements.promotion &&
+      ensureNumber(progress.shortScore) >= requirements.short &&
+      ensureNumber(progress.longScore) >= requirements.long &&
+      ensureNumber(progress.communityScore) >= requirements.community
     );
   };
 
-  const getCurrentLevel = () => {
-    if (isLevelAchieved(REWARD_LEVELS.ADVANCED3)) return REWARD_LEVELS.ADVANCED3;
-    if (isLevelAchieved(REWARD_LEVELS.ADVANCED2)) return REWARD_LEVELS.ADVANCED2;
-    if (isLevelAchieved(REWARD_LEVELS.ADVANCED1)) return REWARD_LEVELS.ADVANCED1;
-    if (isLevelAchieved(REWARD_LEVELS.BASIC)) return REWARD_LEVELS.BASIC;
+  const currentLevelFromBackend = normalizeLevel(progress.currentLevel);
+
+  const deriveCurrentLevel = (): LevelType | null => {
+    if (currentLevelFromBackend) {
+      return currentLevelFromBackend;
+    }
+    for (let i = LEVEL_SEQUENCE.length - 1; i >= 0; i -= 1) {
+      if (isLevelAchievedByScores(LEVEL_SEQUENCE[i])) {
+        return LEVEL_SEQUENCE[i];
+      }
+    }
     return null;
   };
 
-  const currentLevel = getCurrentLevel();
+  const currentLevel = deriveCurrentLevel();
+
+  const isLevelAchieved = (level: LevelType) => {
+    const percentage = calculateLevelProgress(level);
+    if (!Number.isNaN(percentage) && percentage >= 100) {
+      return true;
+    }
+    if (currentLevel) {
+      const currentIndex = LEVEL_SEQUENCE.indexOf(currentLevel);
+      const targetIndex = LEVEL_SEQUENCE.indexOf(level);
+      if (currentIndex >= 0 && targetIndex >= 0) {
+        return currentIndex >= targetIndex;
+      }
+    }
+    return isLevelAchievedByScores(level);
+  };
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">

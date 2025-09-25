@@ -73,22 +73,22 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, progress, isCurrent, isAch
       <div className="space-y-2">
         {requirements.promotion > 0 && (
           <div className="text-xs">
-            <span className={getTextColor()}>传播类: {requirements.promotion}</span>
+            <span className={getTextColor()}>传播类: 需要 {requirements.promotion}</span>
           </div>
         )}
         {requirements.short > 0 && (
           <div className="text-xs">
-            <span className={getTextColor()}>短篇原创: {requirements.short}</span>
+            <span className={getTextColor()}>短篇原创: 需要 {requirements.short}</span>
           </div>
         )}
         {requirements.long > 0 && (
           <div className="text-xs">
-            <span className={getTextColor()}>长篇原创: {requirements.long}</span>
+            <span className={getTextColor()}>长篇原创: 需要 {requirements.long}</span>
           </div>
         )}
         {requirements.community > 0 && (
           <div className="text-xs">
-            <span className={getTextColor()}>社区类: {requirements.community}</span>
+            <span className={getTextColor()}>社区类: 需要 {requirements.community}</span>
           </div>
         )}
       </div>

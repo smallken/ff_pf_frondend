@@ -16,7 +16,7 @@ export default function Header() {
 
   // 确定当前模块
   const getCurrentModule = () => {
-    if (pathname.startsWith('/pathfinders')) return 'pathfinders';
+    if (pathname.startsWith('/footprint')) return 'footprint';
     if (pathname.startsWith('/launch-contest')) return 'launch';
     if (pathname.startsWith('/mint-contest')) return 'mint';
     return 'pathport';
@@ -27,14 +27,14 @@ export default function Header() {
   // 获取模块特定的导航配置
   const getModuleConfig = () => {
     switch (currentModule) {
-      case 'pathfinders':
+      case 'footprint':
         return {
-          logo: { icon: '👣', text: 'Flipflop Footprint', href: '/pathfinders' },
+          logo: { icon: '👣', text: 'Flipflop Footprint', href: '/footprint' },
           navItems: [
-            { href: '/pathfinders/honor', key: 'honor.title', color: 'blue' },
-            { href: '/pathfinders/ranking', key: 'ranking.title', color: 'emerald' },
-            { href: '/pathfinders/process', key: 'process.title', color: 'indigo' },
-            { href: '/pathfinders/forms', key: 'forms.title', color: 'purple' },
+            { href: '/footprint/honor', key: 'honor.title', color: 'blue' },
+            { href: '/footprint/ranking', key: 'ranking.title', color: 'emerald' },
+            { href: '/footprint/process', key: 'process.title', color: 'indigo' },
+            { href: '/footprint/forms', key: 'forms.title', color: 'purple' },
           ]
         };
       case 'launch':
@@ -82,7 +82,7 @@ export default function Header() {
           <nav className={`hidden md:flex ${currentModule === 'mint' ? 'justify-center flex-1 mx-8' : currentModule === 'pathport' ? 'justify-center flex-1 mx-8' : 'space-x-0.5'}`}>
             {moduleConfig.navItems.map((item) => {
               const displayText = (() => {
-                if (currentModule === 'pathfinders') {
+                if (currentModule === 'footprint') {
                   return t(item.key as string);
                 } else if (currentModule === 'pathport' || currentModule === 'launch' || currentModule === 'mint') {
                   return typeof item.key === 'object' 
@@ -239,7 +239,7 @@ export default function Header() {
                   'Gallery': '🎨',
                 };
                 const displayKey = (() => {
-                  if (currentModule === 'pathfinders') {
+                  if (currentModule === 'footprint') {
                     return t(item.key as string);
                   } else if (currentModule === 'pathport' || currentModule === 'launch' || currentModule === 'mint') {
                     return typeof item.key === 'object' 

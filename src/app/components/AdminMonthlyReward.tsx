@@ -107,24 +107,10 @@ export default function AdminMonthlyReward() {
     }
   };
 
-  const handleRefreshScores = async () => {
-    try {
-      setRefreshing(true);
-      const response = await monthlyRewardService.refreshMonthlyRewardScores(currentYear, currentMonth);
-      if (response.success) {
-        alert(`刷新成功！处理了 ${response.processedUsers} 个用户的奖励分数。`);
-        fetchStats();
-        fetchPendingUsers();
-      } else {
-        alert('刷新失败：' + response.message);
-      }
-    } catch (err: any) {
-      console.error('刷新奖励分数失败:', err);
-      alert('刷新失败：' + (err.message || '未知错误'));
-    } finally {
-      setRefreshing(false);
-    }
-  };
+  // 已禁用刷新功能，避免与增量累加逻辑冲突
+  // const handleRefreshScores = async () => {
+  //   // 此功能已禁用
+  // };
 
   const handleExportPendingUsers = async () => {
     try {
@@ -215,23 +201,10 @@ export default function AdminMonthlyReward() {
     }
   };
 
-  const handleRefreshHistoricalScores = async () => {
-    try {
-      setRefreshing(true);
-      const response = await monthlyRewardService.refreshMonthlyRewardScores(selectedHistoricalYear, selectedHistoricalMonth);
-      if (response.success) {
-        alert(`刷新成功！处理了 ${response.processedUsers} 个用户`);
-        fetchHistoricalPendingUsers();
-      } else {
-        alert('刷新失败：' + response.message);
-      }
-    } catch (err: any) {
-      console.error('刷新历史奖励分数失败:', err);
-      alert('刷新失败：' + (err.message || '未知错误'));
-    } finally {
-      setRefreshing(false);
-    }
-  };
+  // 已禁用历史刷新功能，避免与增量累加逻辑冲突
+  // const handleRefreshHistoricalScores = async () => {
+  //   // 此功能已禁用
+  // };
 
   const formatCurrency = (amount: number) => {
     return `${amount.toFixed(2)} USDT`;
@@ -246,20 +219,9 @@ export default function AdminMonthlyReward() {
             月度奖励管理 ({currentYear}年{currentMonth}月)
           </h2>
           
-          <button
-            onClick={handleRefreshScores}
-            disabled={refreshing}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-          >
-            {refreshing ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                刷新中...
-              </>
-            ) : (
-              '刷新本月奖励分数'
-            )}
-          </button>
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            月度奖励分数通过成果提交表审核自动累加
+          </div>
         </div>
       </div>
 
@@ -657,20 +619,9 @@ export default function AdminMonthlyReward() {
                 ))}
               </select>
             </div>
-            <button
-              onClick={handleRefreshHistoricalScores}
-              disabled={refreshing}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-            >
-              {refreshing ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  刷新中...
-                </>
-              ) : (
-                '刷新奖励分数'
-              )}
-            </button>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              历史奖励分数通过成果提交表审核自动累加
+            </div>
           </div>
         </div>
         

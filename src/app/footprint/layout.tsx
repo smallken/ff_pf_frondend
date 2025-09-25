@@ -6,7 +6,7 @@ interface PathfindersLayoutProps {
 
 export default function PathfindersLayout({ children }: PathfindersLayoutProps) {
   return (
-    <div className="pathfinders-module" style={{
+    <div className="footprint-module" style={{
       '--module-primary': '#3B82F6',
       '--module-secondary': '#8B5CF6',
       '--module-accent': '#06B6D4'

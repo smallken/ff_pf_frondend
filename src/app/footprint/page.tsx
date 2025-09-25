@@ -127,7 +127,7 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
               </button>
               <a
-                href="/pathfinders/process"
+                href="/footprint/process"
                 className="group relative px-8 py-3 border-2 border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg font-semibold text-base min-w-[180px] backdrop-blur-sm"
               >
                 <span className="flex items-center justify-center">
@@ -506,7 +506,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <a
-              href="/pathfinders/honor"
+              href="/footprint/honor"
               className="group bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 text-center border border-amber-100 dark:border-gray-700 relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
@@ -518,7 +518,7 @@ export default function Home() {
               </div>
             </a>
             <a
-              href="/pathfinders/ranking"
+              href="/footprint/ranking"
               className="group bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 text-center border border-emerald-100 dark:border-gray-700 relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
@@ -530,7 +530,7 @@ export default function Home() {
               </div>
             </a>
             <a
-              href="/pathfinders/process"
+              href="/footprint/process"
               className="group bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 text-center border border-blue-100 dark:border-gray-700 relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
@@ -542,7 +542,7 @@ export default function Home() {
               </div>
             </a>
             <a
-              href="/pathfinders/forms"
+              href="/footprint/forms"
               className="group bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 text-center border border-purple-100 dark:border-gray-700 relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type ModuleType = 'pathport' | 'pathfinders' | 'launch' | 'mint';
+export type ModuleType = 'pathport' | 'footprint' | 'launch' | 'mint';
 
 interface ThemeConfig {
   primary: string;
@@ -30,7 +30,7 @@ const themes: Record<ModuleType, ThemeConfig> = {
     text: '#1a202c',
     border: '#e2e8f0'
   },
-  pathfinders: {
+  footprint: {
     primary: '#3B82F6',
     secondary: '#8B5CF6',
     accent: '#06B6D4',
@@ -86,8 +86,8 @@ export const ModuleProvider: React.FC<ModuleProviderProps> = ({ children }) => {
   // 根据路径自动设置模块
   useEffect(() => {
     const path = window.location.pathname;
-    if (path.startsWith('/pathfinders')) {
-      setModule('pathfinders');
+    if (path.startsWith('/footprint')) {
+      setModule('footprint');
     } else if (path.startsWith('/launch-contest')) {
       setModule('launch');
     } else if (path.startsWith('/mint-contest')) {

@@ -9,13 +9,13 @@ import LogoutConfirmModal from './components/LogoutConfirmModal';
 // 模块卡片数据
 const moduleCards = [
   {
-    id: 'pathfinders',
+    id: 'footprint',
     title: { zh: 'Footprint 脚印计划', en: 'Footprint Program' },
     subtitle: { zh: '每一枚脚印，都是共同的印记', en: 'Every footprint is a shared mark' },
     description: { zh: '这里是内容创作者的舞台，你的声音与作品，将与伙伴们一起留下足迹，共建属于大家的社区。', en: 'This is the stage for creators — where your voice and your work join others to co-build a community that belongs to all.' },
     icon: '👣',
     gradient: 'from-pink-300 via-pink-400 to-pink-500',
-    href: '/pathfinders'
+    href: '/footprint'
   },
   {
     id: 'launch',

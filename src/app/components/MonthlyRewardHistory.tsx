@@ -36,14 +36,14 @@ export default function MonthlyRewardHistory({ pageSize = 10 }: MonthlyRewardHis
     }
   };
 
-  const getStatusColor = (isPaid: boolean) => {
-    return isPaid 
+  const getStatusColor = (isPaid: number) => {
+    return isPaid === 1 
       ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
       : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
   };
 
-  const getStatusText = (isPaid: boolean) => {
-    return isPaid ? (language === 'zh' ? '已发放' : 'Paid') : (language === 'zh' ? '待发放' : 'Pending');
+  const getStatusText = (isPaid: number) => {
+    return isPaid === 1 ? (language === 'zh' ? '已发放' : 'Paid') : (language === 'zh' ? '待发放' : 'Pending');
   };
 
   const formatDate = (dateString: string) => {

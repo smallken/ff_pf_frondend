@@ -72,7 +72,7 @@ export const activityApplicationService = {
   reviewApplication: (data: {
     id: number;
     reviewStatus: number; // 1-通过，2-拒绝
-    reviewMessage?: string;
+    reviewComment?: string; // 注意：后端使用的是reviewComment字段
     reviewScore?: number;
   }): Promise<boolean> => {
     return request.post<boolean>(API_ENDPOINTS.ACTIVITY_APPLICATION.REVIEW, data);

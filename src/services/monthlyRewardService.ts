@@ -27,16 +27,13 @@ export const monthlyRewardService = {
     });
   },
 
-  // 管理员：刷新月度奖励分数
+  // 管理员：刷新月度奖励分数（已禁用，避免与增量累加逻辑冲突）
   async refreshMonthlyRewardScores(year?: number, month?: number): Promise<{
     success: boolean;
     message: string;
     processedUsers: number;
   }> {
-    return request.post('/monthly-reward/admin/refresh', {
-      year,
-      month
-    });
+    throw new Error('此接口已禁用，请使用增量累加逻辑');
   },
 
   // 管理员：获取待奖励用户列表（显式拼接查询参数，避免某些工具未正确序列化params）
@@ -112,5 +109,33 @@ export const monthlyRewardService = {
     }
     
     return response.blob();
+  },
+
+  // 管理员：更新月度奖励记录
+  async updateMonthlyReward(data: MonthlyRewardVO): Promise<boolean> {
+    return request.put('/monthly-reward/admin/update', data);
+  },
+
+  // 管理员：保存或更新月度奖励记录
+  async saveOrUpdateMonthlyReward(data: MonthlyRewardVO): Promise<boolean> {
+    return request.post('/monthly-reward/admin/save-or-update', data);
+  },
+
+  // 获取用户的月度奖励记录（用于查找现有记录）
+  async getMonthlyRewardsByUser(userId: number): Promise<MonthlyRewardVO[]> {
+    return request.get(`/monthly-reward/admin/user/${userId}`);
+  },
+
+  // 累加用户月度奖励次数
+  async incrementMonthlyRewardScores(data: {
+    userId: number;
+    year: number;
+    month: number;
+    promotionIncrement: number;
+    shortIncrement: number;
+    longIncrement: number;
+    communityIncrement: number;
+  }): Promise<boolean> {
+    return request.post('/monthly-reward/admin/increment-scores', data);
   }
 };

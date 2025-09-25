@@ -9,13 +9,27 @@ import CustomDateInput from '../../components/CustomDateInput';
 
 export default function AchievementForm() {
   const { t, language } = useLanguage();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   
   // Force re-render when language changes
   useEffect(() => {
     // This will trigger a re-render when language changes
   }, [language]);
+
+  // 自动填充用户信息
+  useEffect(() => {
+    if (user && isAuthenticated) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.userName || '',
+        email: user.userEmail || '',
+        twitterUsername: user.twitterUsername || '',
+        telegramUsername: user.telegramUsername || '',
+        walletAddress: user.walletAddress || ''
+      }));
+    }
+  }, [user, isAuthenticated]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,11 +53,75 @@ export default function AchievementForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // 表单验证函数
+  const validateForm = () => {
+    // 验证基本信息
+    if (!formData.name.trim()) {
+      setError('姓名是必填项');
+      return false;
+    }
+    if (!formData.email.trim()) {
+      setError('邮箱是必填项');
+      return false;
+    }
+    if (!formData.twitterUsername.trim()) {
+      setError('Twitter用户名是必填项');
+      return false;
+    }
+    if (!formData.telegramUsername.trim()) {
+      setError('Telegram用户名是必填项');
+      return false;
+    }
+    if (!formData.walletAddress.trim()) {
+      setError('钱包地址是必填项');
+      return false;
+    }
+
+    // 验证任务信息
+    for (let i = 0; i < formData.tasks.length; i++) {
+      const task = formData.tasks[i];
+      
+      if (!task.submissionCategory) {
+        setError(`任务${i + 1}的提交类别是必填项`);
+        return false;
+      }
+      if (!task.taskType) {
+        setError(`任务${i + 1}的具体任务类型是必填项`);
+        return false;
+      }
+      if (!task.completionDate) {
+        setError(`任务${i + 1}的完成日期是必填项`);
+        return false;
+      }
+      if (isDescriptionRequired(task.taskType) && !task.description.trim()) {
+        setError(`任务${i + 1}的简短说明是必填项`);
+        return false;
+      }
+      
+      // 根据任务类型验证特定字段
+      if (isContentLinkRequired(task.taskType) && !task.contentLink.trim()) {
+        setError(`任务${i + 1}的内容链接是必填项`);
+        return false;
+      }
+      if (isScreenshotRequired(task.taskType) && !task.screenshot) {
+        setError(`任务${i + 1}的截图证明是必填项`);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!isAuthenticated) {
       setError('请先登录后再提交成果表');
+      return;
+    }
+
+    // 验证表单
+    if (!validateForm()) {
       return;
     }
 
@@ -145,11 +223,20 @@ export default function AchievementForm() {
 
   const handleTaskChange = (index: number, field: string, value: any) => {
     const updatedTasks = [...formData.tasks];
-    // @ts-ignore
-    updatedTasks[index][field] = value;
     
-    // 如果改变了提交类别，处理任务类型
+    // 如果改变了提交类别，检查是否允许更改
     if (field === 'submissionCategory') {
+      // 检查是否已有其他任务使用了不同的提交类别
+      const hasOtherTasks = updatedTasks.some((task, i) => i !== index && task.submissionCategory && task.submissionCategory !== '');
+      if (hasOtherTasks) {
+        // 获取第一个任务的提交类别
+        const firstTaskCategory = updatedTasks.find(task => task.submissionCategory && task.submissionCategory !== '')?.submissionCategory;
+        if (firstTaskCategory && value !== firstTaskCategory) {
+          alert('同一次只能提交同一种提交类别任务');
+          return;
+        }
+      }
+      
       const taskTypeOptions = getTaskTypeOptions(value);
       if (taskTypeOptions.length === 1) {
         // 如果只有一个选项，自动设置
@@ -160,6 +247,8 @@ export default function AchievementForm() {
       }
     }
     
+    // @ts-ignore
+    updatedTasks[index][field] = value;
     setFormData({ ...formData, tasks: updatedTasks });
   };
 
@@ -169,18 +258,56 @@ export default function AchievementForm() {
     setFormData({ ...formData, tasks: updatedTasks });
   };
 
+  const removeTask = (index: number) => {
+    if (formData.tasks.length > 1) {
+      const updatedTasks = formData.tasks.filter((_, i) => i !== index);
+      setFormData({ ...formData, tasks: updatedTasks });
+    }
+  };
+
   const addTask = () => {
-    setFormData({
-      ...formData,
-      tasks: [
-        ...formData.tasks,
-        { submissionCategory: '', taskType: '', contentLink: '', screenshot: null, completionDate: '', description: '', collapsed: false }
-      ]
-    });
+    // 检查是否已有任务，如果有，获取第一个任务的提交类别
+    const firstTask = formData.tasks[0];
+    if (firstTask && firstTask.submissionCategory) {
+      // 如果第一个任务已有提交类别，新任务必须使用相同的类别
+      const taskTypeOptions = getTaskTypeOptions(firstTask.submissionCategory);
+      let newTaskType = '';
+      
+      // 如果只有一个选项，自动设置
+      if (taskTypeOptions.length === 1) {
+        newTaskType = taskTypeOptions[0].key;
+      }
+      
+      setFormData({
+        ...formData,
+        tasks: [
+          ...formData.tasks,
+          { 
+            submissionCategory: firstTask.submissionCategory, 
+            taskType: newTaskType, 
+            contentLink: '', 
+            screenshot: null, 
+            completionDate: '', 
+            description: '', 
+            collapsed: false 
+          }
+        ]
+      });
+    } else {
+      // 如果第一个任务没有提交类别，添加空任务
+      setFormData({
+        ...formData,
+        tasks: [
+          ...formData.tasks,
+          { submissionCategory: '', taskType: '', contentLink: '', screenshot: null, completionDate: '', description: '', collapsed: false }
+        ]
+      });
+    }
   };
 
   const isContentLinkRequired = (taskType: string) => ['short.content', 'long.article', 'long.video', 'long.recap', 'community.viral'].includes(taskType);
   const isScreenshotRequired = (taskType: string) => ['promotion.triple', 'community.ama', 'community.telegram', 'community.offline'].includes(taskType);
+  const isDescriptionRequired = (taskType: string) => false;
 
   // 根据选择的类别获取对应的任务类型选项
   const getTaskTypeOptions = (category: string) => {
@@ -268,10 +395,32 @@ export default function AchievementForm() {
               </div>
             )}
 
+            {/* 用户信息自动填充提示 */}
+            {isAuthenticated && user && (
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
+                <div className="flex items-center">
+                  <svg className="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-sm text-green-700 dark:text-green-300">
+                    {t('forms.auto.fill.tip')}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('forms.field.name')} <span className="text-red-500">{t('forms.required')}</span>
+                  <div className="flex items-center">
+                    {t('forms.field.name')} <span className="text-red-500">{t('forms.required')}</span>
+                    {user?.userName && (
+                      <svg className="h-4 w-4 text-green-500 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <title>自动填充</title>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -286,7 +435,15 @@ export default function AchievementForm() {
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('forms.field.email')} <span className="text-red-500">{t('forms.required')}</span>
+                  <div className="flex items-center">
+                    {t('forms.field.email')} <span className="text-red-500">{t('forms.required')}</span>
+                    {user?.userEmail && (
+                      <svg className="h-4 w-4 text-green-500 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <title>自动填充</title>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                  </div>
                 </label>
                 <input
                   type="email"
@@ -301,7 +458,15 @@ export default function AchievementForm() {
 
               <div>
                 <label htmlFor="twitterUsername" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('forms.field.twitter')} <span className="text-red-500">{t('forms.required')}</span>
+                  <div className="flex items-center">
+                    {t('forms.field.twitter')} <span className="text-red-500">{t('forms.required')}</span>
+                    {user?.twitterUsername && (
+                      <svg className="h-4 w-4 text-green-500 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <title>自动填充</title>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -317,7 +482,15 @@ export default function AchievementForm() {
 
               <div>
                 <label htmlFor="telegramUsername" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('forms.field.telegram')} <span className="text-red-500">{t('forms.required')}</span>
+                  <div className="flex items-center">
+                    {t('forms.field.telegram')} <span className="text-red-500">{t('forms.required')}</span>
+                    {user?.telegramUsername && (
+                      <svg className="h-4 w-4 text-green-500 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <title>自动填充</title>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -333,7 +506,15 @@ export default function AchievementForm() {
 
               <div className="md:col-span-2">
                 <label htmlFor="walletAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('forms.field.wallet.both')} <span className="text-red-500">{t('forms.required')}</span>
+                  <div className="flex items-center">
+                    {t('forms.field.wallet.both')} <span className="text-red-500">{t('forms.required')}</span>
+                    {user?.walletAddress && (
+                      <svg className="h-4 w-4 text-green-500 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <title>自动填充</title>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -367,18 +548,39 @@ export default function AchievementForm() {
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {t('forms.achievement.category')} <span className="text-red-500">{t('forms.required')}</span>
                           </label>
-                          <select
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                            value={task.submissionCategory}
-                            onChange={(e) => handleTaskChange(index, 'submissionCategory', e.target.value)}
-                            required
-                          >
-                            <option value="">{t('forms.placeholder.select')}</option>
-                            <option value="promotion">{t('forms.achievement.category.promotion')}</option>
-                            <option value="short">{t('forms.achievement.category.short')}</option>
-                            <option value="long">{t('forms.achievement.category.long')}</option>
-                            <option value="community">{t('forms.achievement.category.community')}</option>
-                          </select>
+                          {(() => {
+                            // 检查是否已有其他任务使用了不同的提交类别
+                            const hasOtherTasks = formData.tasks.some((t, i) => i !== index && t.submissionCategory && t.submissionCategory !== '');
+                            const firstTaskCategory = formData.tasks.find(t => t.submissionCategory && t.submissionCategory !== '')?.submissionCategory;
+                            const isDisabled = hasOtherTasks && index > 0;
+                            
+                            return (
+                              <>
+                                <select
+                                  className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                                    isDisabled 
+                                      ? 'bg-gray-100 dark:bg-gray-600 cursor-not-allowed opacity-60' 
+                                      : 'bg-white dark:bg-gray-700'
+                                  }`}
+                                  value={task.submissionCategory}
+                                  onChange={(e) => handleTaskChange(index, 'submissionCategory', e.target.value)}
+                                  required
+                                  disabled={isDisabled}
+                                >
+                                  <option value="">{t('forms.placeholder.select')}</option>
+                                  <option value="promotion">{t('forms.achievement.category.promotion')}</option>
+                                  <option value="short">{t('forms.achievement.category.short')}</option>
+                                  <option value="long">{t('forms.achievement.category.long')}</option>
+                                  <option value="community">{t('forms.achievement.category.community')}</option>
+                                </select>
+                                {isDisabled && (
+                                  <p className="mt-1 text-sm text-orange-600 dark:text-orange-400">
+                                    同一次只能提交同一种提交类别任务
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                         
                         {/* 任务类型选择 */}
@@ -414,9 +616,20 @@ export default function AchievementForm() {
                           )}
                         </div>
                       </div>
-                      <button type="button" onClick={() => toggleTaskCollapsed(index)} className="ml-3 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white">
-                        {task.collapsed ? t('forms.action.expand') : t('forms.action.collapse')}
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        {index > 0 && (
+                          <button 
+                            type="button" 
+                            onClick={() => removeTask(index)} 
+                            className="text-red-600 hover:text-red-800 text-sm font-medium"
+                          >
+                            删除
+                          </button>
+                        )}
+                        <button type="button" onClick={() => toggleTaskCollapsed(index)} className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white">
+                          {task.collapsed ? t('forms.action.expand') : t('forms.action.collapse')}
+                        </button>
+                      </div>
                     </div>
                     {!task.collapsed && (
                       <div className="p-4 space-y-4">
@@ -517,7 +730,7 @@ export default function AchievementForm() {
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              {t('forms.achievement.description')}
+                              {t('forms.achievement.description')} {isDescriptionRequired(task.taskType) && (<span className="text-red-500">{t('forms.required')}</span>)}
                             </label>
                             <input
                               type="text"

@@ -9,13 +9,27 @@ import CustomDateInput from '../../components/CustomDateInput';
 
 export default function ActivityForm() {
   const { t, language } = useLanguage();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   
   // Debug language state
   useEffect(() => {
     console.log('Activity form language changed to:', language);
   }, [language]);
+
+  // 自动填充用户信息
+  useEffect(() => {
+    if (user && isAuthenticated) {
+      setFormData(prev => ({
+        ...prev,
+        organizer: user.userName || '',
+        email: user.userEmail || '',
+        twitterUsername: user.twitterUsername || '',
+        telegramUsername: user.telegramUsername || '',
+        walletAddress: user.walletAddress || ''
+      }));
+    }
+  }, [user, isAuthenticated]);
   const [formData, setFormData] = useState({
     organizer: '',
     email: '',
@@ -173,10 +187,32 @@ export default function ActivityForm() {
                 </div>
               </div>
             )}
+            {/* 用户信息自动填充提示 */}
+            {isAuthenticated && user && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                <div className="flex items-center">
+                  <svg className="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-sm text-blue-700 dark:text-blue-300">
+                    {t('forms.auto.fill.tip')}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label htmlFor="organizer" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('forms.activity.organizer')} <span className="text-red-500">{t('forms.required')}</span>
+                  <div className="flex items-center">
+                    {t('forms.activity.organizer')} <span className="text-red-500">{t('forms.required')}</span>
+                    {user?.userName && (
+                      <svg className="h-4 w-4 text-blue-500 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <title>自动填充</title>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -191,7 +227,15 @@ export default function ActivityForm() {
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('forms.field.email')} <span className="text-red-500">{t('forms.required')}</span>
+                  <div className="flex items-center">
+                    {t('forms.field.email')} <span className="text-red-500">{t('forms.required')}</span>
+                    {user?.userEmail && (
+                      <svg className="h-4 w-4 text-blue-500 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <title>自动填充</title>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                  </div>
                 </label>
                 <input
                   type="email"
@@ -206,7 +250,15 @@ export default function ActivityForm() {
 
               <div>
                 <label htmlFor="twitterUsername" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('forms.field.twitter')} <span className="text-red-500">{t('forms.required')}</span>
+                  <div className="flex items-center">
+                    {t('forms.field.twitter')} <span className="text-red-500">{t('forms.required')}</span>
+                    {user?.twitterUsername && (
+                      <svg className="h-4 w-4 text-blue-500 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <title>自动填充</title>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -222,7 +274,15 @@ export default function ActivityForm() {
 
               <div>
                 <label htmlFor="telegramUsername" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('forms.field.telegram')} <span className="text-red-500">{t('forms.required')}</span>
+                  <div className="flex items-center">
+                    {t('forms.field.telegram')} <span className="text-red-500">{t('forms.required')}</span>
+                    {user?.telegramUsername && (
+                      <svg className="h-4 w-4 text-blue-500 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <title>自动填充</title>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -238,7 +298,15 @@ export default function ActivityForm() {
 
               <div className="md:col-span-2">
                 <label htmlFor="walletAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('forms.field.wallet.both')} <span className="text-red-500">{t('forms.required')}</span>
+                  <div className="flex items-center">
+                    {t('forms.field.wallet.both')} <span className="text-red-500">{t('forms.required')}</span>
+                    {user?.walletAddress && (
+                      <svg className="h-4 w-4 text-blue-500 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <title>自动填充</title>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -495,6 +563,17 @@ export default function ActivityForm() {
               <p className="text-sm text-yellow-700 dark:text-yellow-300">
                 {t('forms.optional.note')}
               </p>
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6 border border-blue-200 dark:border-blue-700">
+              <div className="flex items-center">
+                <svg className="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  {t('forms.activity.contact.note')}
+                </p>
+              </div>
             </div>
 
             <div className="flex justify-end space-x-4">
