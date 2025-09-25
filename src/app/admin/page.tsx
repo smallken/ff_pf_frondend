@@ -1298,53 +1298,153 @@ export default function Admin() {
                 )}
 
                 {selectedSubmission.type === 'activity' && (
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.theme')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ActivityApplication).activityTheme}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.organizer')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ActivityApplication).organizer}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.type')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ActivityApplication).activityType}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.time')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ActivityApplication).activityTime}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.location')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ActivityApplication).activityLocation}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.scale')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ActivityApplication).activityScale}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.introduction')}：</span>
-                      <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
-                        {(selectedSubmission.data as ActivityApplication).briefIntroduction}
+                  <div className="space-y-4">
+                    {/* 基本信息 */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.theme')}：</span>
+                        <span className="text-sm text-gray-900 dark:text-white ml-2">
+                          {(selectedSubmission.data as ActivityApplication).activityTheme}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.organizer')}：</span>
+                        <span className="text-sm text-gray-900 dark:text-white ml-2">
+                          {(selectedSubmission.data as ActivityApplication).organizer}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.type')}：</span>
+                        <span className="text-sm text-gray-900 dark:text-white ml-2">
+                          {(selectedSubmission.data as ActivityApplication).activityType}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.time')}：</span>
+                        <span className="text-sm text-gray-900 dark:text-white ml-2">
+                          {(selectedSubmission.data as ActivityApplication).activityTime}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.location')}：</span>
+                        <span className="text-sm text-gray-900 dark:text-white ml-2">
+                          {(selectedSubmission.data as ActivityApplication).activityLocation}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.scale')}：</span>
+                        <span className="text-sm text-gray-900 dark:text-white ml-2">
+                          {(selectedSubmission.data as ActivityApplication).activityScale}
+                        </span>
                       </div>
                     </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.goals')}：</span>
-                      <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
-                        {(selectedSubmission.data as ActivityApplication).activityGoals}
+
+                    {/* 联系信息 */}
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">联系信息</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">邮箱：</span>
+                          <span className="text-sm text-gray-900 dark:text-white ml-2">
+                            {(selectedSubmission.data as ActivityApplication).email}
+                          </span>
+                        </div>
+                        {(selectedSubmission.data as ActivityApplication).telegramUsername && (
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Telegram：</span>
+                            <span className="text-sm text-gray-900 dark:text-white ml-2">
+                              {(selectedSubmission.data as ActivityApplication).telegramUsername}
+                            </span>
+                          </div>
+                        )}
+                        {(selectedSubmission.data as ActivityApplication).twitterUsername && (
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Twitter：</span>
+                            <span className="text-sm text-gray-900 dark:text-white ml-2">
+                              {(selectedSubmission.data as ActivityApplication).twitterUsername}
+                            </span>
+                          </div>
+                        )}
+                        {(selectedSubmission.data as ActivityApplication).walletAddress && (
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">钱包地址：</span>
+                            <span className="text-sm text-gray-900 dark:text-white ml-2 font-mono">
+                              {(selectedSubmission.data as ActivityApplication).walletAddress}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 活动详情 */}
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">活动详情</h4>
+                      <div className="space-y-4">
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.introduction')}：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedSubmission.data as ActivityApplication).briefIntroduction || '未填写'}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">目标受众：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedSubmission.data as ActivityApplication).targetAudience || '未填写'}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.goals')}：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedSubmission.data as ActivityApplication).activityGoals}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">活动流程：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedSubmission.data as ActivityApplication).activityProcess || '未填写'}
+                          </div>
+                        </div>
+                        {(selectedSubmission.data as ActivityApplication).expectedResults && (
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">预期结果：</span>
+                            <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                              {(selectedSubmission.data as ActivityApplication).expectedResults}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 支持信息 */}
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">支持信息</h4>
+                      <div className="space-y-4">
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">邀请嘉宾：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedSubmission.data as ActivityApplication).invitedSpeakers || '未填写'}
+                          </div>
+                        </div>
+                        {(selectedSubmission.data as ActivityApplication).partners && (
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">合作伙伴：</span>
+                            <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                              {(selectedSubmission.data as ActivityApplication).partners}
+                            </div>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">资金支持需求：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedSubmission.data as ActivityApplication).financialSupport || '未填写'}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">其他支持需求：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedSubmission.data as ActivityApplication).otherSupport || '未填写'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1586,53 +1686,153 @@ export default function Admin() {
                 )}
 
                 {selectedReviewedSubmission.type === 'activity' && (
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.theme')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedReviewedSubmission.data as ActivityApplication).activityTheme}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.organizer')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedReviewedSubmission.data as ActivityApplication).organizer}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.type')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedReviewedSubmission.data as ActivityApplication).activityType}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.time')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedReviewedSubmission.data as ActivityApplication).activityTime}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.location')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedReviewedSubmission.data as ActivityApplication).activityLocation}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.scale')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedReviewedSubmission.data as ActivityApplication).activityScale}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.introduction')}：</span>
-                      <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
-                        {(selectedReviewedSubmission.data as ActivityApplication).briefIntroduction}
+                  <div className="space-y-4">
+                    {/* 基本信息 */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.theme')}：</span>
+                        <span className="text-sm text-gray-900 dark:text-white ml-2">
+                          {(selectedReviewedSubmission.data as ActivityApplication).activityTheme}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.organizer')}：</span>
+                        <span className="text-sm text-gray-900 dark:text-white ml-2">
+                          {(selectedReviewedSubmission.data as ActivityApplication).organizer}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.type')}：</span>
+                        <span className="text-sm text-gray-900 dark:text-white ml-2">
+                          {(selectedReviewedSubmission.data as ActivityApplication).activityType}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.time')}：</span>
+                        <span className="text-sm text-gray-900 dark:text-white ml-2">
+                          {(selectedReviewedSubmission.data as ActivityApplication).activityTime}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.location')}：</span>
+                        <span className="text-sm text-gray-900 dark:text-white ml-2">
+                          {(selectedReviewedSubmission.data as ActivityApplication).activityLocation}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.scale')}：</span>
+                        <span className="text-sm text-gray-900 dark:text-white ml-2">
+                          {(selectedReviewedSubmission.data as ActivityApplication).activityScale}
+                        </span>
                       </div>
                     </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.goals')}：</span>
-                      <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
-                        {(selectedReviewedSubmission.data as ActivityApplication).activityGoals}
+
+                    {/* 联系信息 */}
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">联系信息</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">邮箱：</span>
+                          <span className="text-sm text-gray-900 dark:text-white ml-2">
+                            {(selectedReviewedSubmission.data as ActivityApplication).email}
+                          </span>
+                        </div>
+                        {(selectedReviewedSubmission.data as ActivityApplication).telegramUsername && (
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Telegram：</span>
+                            <span className="text-sm text-gray-900 dark:text-white ml-2">
+                              {(selectedReviewedSubmission.data as ActivityApplication).telegramUsername}
+                            </span>
+                          </div>
+                        )}
+                        {(selectedReviewedSubmission.data as ActivityApplication).twitterUsername && (
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Twitter：</span>
+                            <span className="text-sm text-gray-900 dark:text-white ml-2">
+                              {(selectedReviewedSubmission.data as ActivityApplication).twitterUsername}
+                            </span>
+                          </div>
+                        )}
+                        {(selectedReviewedSubmission.data as ActivityApplication).walletAddress && (
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">钱包地址：</span>
+                            <span className="text-sm text-gray-900 dark:text-white ml-2 font-mono">
+                              {(selectedReviewedSubmission.data as ActivityApplication).walletAddress}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 活动详情 */}
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">活动详情</h4>
+                      <div className="space-y-4">
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.introduction')}：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedReviewedSubmission.data as ActivityApplication).briefIntroduction || '未填写'}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">目标受众：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedReviewedSubmission.data as ActivityApplication).targetAudience || '未填写'}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.goals')}：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedReviewedSubmission.data as ActivityApplication).activityGoals}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">活动流程：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedReviewedSubmission.data as ActivityApplication).activityProcess || '未填写'}
+                          </div>
+                        </div>
+                        {(selectedReviewedSubmission.data as ActivityApplication).expectedResults && (
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">预期结果：</span>
+                            <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                              {(selectedReviewedSubmission.data as ActivityApplication).expectedResults}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 支持信息 */}
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">支持信息</h4>
+                      <div className="space-y-4">
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">邀请嘉宾：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedReviewedSubmission.data as ActivityApplication).invitedSpeakers || '未填写'}
+                          </div>
+                        </div>
+                        {(selectedReviewedSubmission.data as ActivityApplication).partners && (
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">合作伙伴：</span>
+                            <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                              {(selectedReviewedSubmission.data as ActivityApplication).partners}
+                            </div>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">资金支持需求：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedReviewedSubmission.data as ActivityApplication).financialSupport || '未填写'}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">其他支持需求：</span>
+                          <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
+                            {(selectedReviewedSubmission.data as ActivityApplication).otherSupport || '未填写'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
