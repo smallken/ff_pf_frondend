@@ -64,9 +64,19 @@ export const userService = {
     });
   },
 
-  // 获取排行榜
-  getRanking: (): Promise<RankingUserVO[]> => {
-    return request.get<RankingUserVO[]>(API_ENDPOINTS.USER.RANKING);
+  // 获取排行榜（分页）
+  getRanking: (params: {
+    current?: number;
+    pageSize?: number;
+  } = {}): Promise<PageData<RankingUserVO>> => {
+    const queryParams = new URLSearchParams();
+    if (params.current) queryParams.append('current', params.current.toString());
+    if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+    
+    const queryString = queryParams.toString();
+    const url = queryString ? `${API_ENDPOINTS.USER.RANKING}?${queryString}` : API_ENDPOINTS.USER.RANKING;
+    
+    return request.get<PageData<RankingUserVO>>(url);
   },
 
   // 获取管理员统计数据

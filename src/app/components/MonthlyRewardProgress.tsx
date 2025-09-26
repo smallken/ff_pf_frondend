@@ -27,7 +27,7 @@ interface ProgressBarProps {
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ label, current, required, color }) => {
-  const { language } = useLanguage();
+  const { t } = useLanguage();
   const percentage = Math.min((current / required) * 100, 100);
   
   return (
@@ -45,7 +45,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label, current, required, col
         />
       </div>
       <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-        {percentage.toFixed(1)}% {language === 'zh' ? '完成' : 'Complete'}
+        {percentage.toFixed(1)}% {t('monthly.progress.complete')}
       </div>
     </div>
   );
@@ -59,7 +59,7 @@ interface LevelCardProps {
 }
 
 const LevelCard: React.FC<LevelCardProps> = ({ level, progress, isCurrent, isAchieved }) => {
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
   const getLevelColor = () => {
     if (isAchieved) return 'bg-green-100 dark:bg-green-900/20 border-green-300 dark:border-green-700';
     if (isCurrent) return 'bg-blue-100 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700';
@@ -89,28 +89,28 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, progress, isCurrent, isAch
         {requirements.promotion > 0 && (
           <div className="text-xs">
             <span className={getTextColor()}>
-              {language === 'zh' ? '传播类' : 'Promotion'}: {language === 'zh' ? '需要' : 'Need'} {requirements.promotion}
+              {t('monthly.progress.promotion')}: {t('monthly.progress.need')} {requirements.promotion}
             </span>
           </div>
         )}
         {requirements.short > 0 && (
           <div className="text-xs">
             <span className={getTextColor()}>
-              {language === 'zh' ? '短篇原创' : 'Short Original'}: {language === 'zh' ? '需要' : 'Need'} {requirements.short}
+              {t('monthly.progress.short')}: {t('monthly.progress.need')} {requirements.short}
             </span>
           </div>
         )}
         {requirements.long > 0 && (
           <div className="text-xs">
             <span className={getTextColor()}>
-              {language === 'zh' ? '长篇原创' : 'Long Original'}: {language === 'zh' ? '需要' : 'Need'} {requirements.long}
+              {t('monthly.progress.long')}: {t('monthly.progress.need')} {requirements.long}
             </span>
           </div>
         )}
         {requirements.community > 0 && (
           <div className="text-xs">
             <span className={getTextColor()}>
-              {language === 'zh' ? '社区类' : 'Community'}: {language === 'zh' ? '需要' : 'Need'} {requirements.community}
+              {t('monthly.progress.community')}: {t('monthly.progress.need')} {requirements.community}
             </span>
           </div>
         )}
@@ -126,7 +126,7 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, progress, isCurrent, isAch
           />
         </div>
         <div className={`text-xs mt-1 ${getTextColor()}`}>
-          {progress.toFixed(1)}% {language === 'zh' ? '完成' : 'Complete'}
+          {progress.toFixed(1)}% {t('monthly.progress.complete')}
         </div>
       </div>
     </div>
@@ -149,8 +149,8 @@ export default function MonthlyRewardProgress() {
       const data = await monthlyRewardService.getMonthlyRewardProgress();
       setProgress(data);
     } catch (err: any) {
-      console.error(`获取${language === 'zh' ? '月度奖励进度' : 'Monthly Reward Progress'}失败:`, err);
-      setError(err.message || `获取${language === 'zh' ? '月度奖励进度' : 'Monthly Reward Progress'}失败`);
+      console.error(`获取${t('monthly.progress.title')}失败:`, err);
+      setError(err.message || `获取${t('monthly.progress.title')}失败`);
     } finally {
       setLoading(false);
     }
@@ -160,11 +160,11 @@ export default function MonthlyRewardProgress() {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          {language === 'zh' ? '月度奖励进度' : 'Monthly Reward Progress'}
+          {t('monthly.progress.title')}
         </h2>
         <div className="flex justify-center items-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600 dark:text-gray-300">{language === 'zh' ? '加载中...' : 'Loading...'}</span>
+          <span className="ml-2 text-gray-600 dark:text-gray-300">{t('monthly.progress.loading')}</span>
         </div>
       </div>
     );
@@ -174,7 +174,7 @@ export default function MonthlyRewardProgress() {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          {language === 'zh' ? '月度奖励进度' : 'Monthly Reward Progress'}
+          {t('monthly.progress.title')}
         </h2>
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
           <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
@@ -269,7 +269,7 @@ export default function MonthlyRewardProgress() {
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          {language === 'zh' ? '月度奖励进度' : 'Monthly Reward Progress'}
+          {t('monthly.progress.title')}
         </h2>
         <div className="text-sm text-gray-500 dark:text-gray-400">
           {language === 'zh' ? `${new Date().getFullYear()}年${new Date().getMonth() + 1}月` : `${new Date().getMonth() + 1}/${new Date().getFullYear()}`}
@@ -282,25 +282,25 @@ export default function MonthlyRewardProgress() {
           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
             {progress.promotionScore}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">{language === 'zh' ? '传播类' : 'Promotion'}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">{t('monthly.progress.promotion')}</div>
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">
             {progress.shortScore}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">{language === 'zh' ? '短篇原创' : 'Short Original'}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">{t('monthly.progress.short')}</div>
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
             {progress.longScore}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">{language === 'zh' ? '长篇原创' : 'Long Original'}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">{t('monthly.progress.long')}</div>
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
             {progress.communityScore}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">{language === 'zh' ? '社区类' : 'Community'}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">{t('monthly.progress.community')}</div>
         </div>
       </div>
 
@@ -343,10 +343,10 @@ export default function MonthlyRewardProgress() {
             </div>
             <div className="ml-3">
               <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-                当前等级: {REWARD_LEVEL_NAMES[currentLevel as keyof typeof REWARD_LEVEL_NAMES]?.[language as 'zh' | 'en'] || currentLevel}
+                {t('monthly.progress.current.level')}: {REWARD_LEVEL_NAMES[currentLevel as keyof typeof REWARD_LEVEL_NAMES]?.[language as 'zh' | 'en'] || currentLevel}
               </h3>
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                奖励金额: {REWARD_REQUIREMENTS[currentLevel as keyof typeof REWARD_REQUIREMENTS].amount} USDT
+                {t('monthly.progress.reward.amount')}: {REWARD_REQUIREMENTS[currentLevel as keyof typeof REWARD_REQUIREMENTS].amount} USDT
               </p>
             </div>
           </div>

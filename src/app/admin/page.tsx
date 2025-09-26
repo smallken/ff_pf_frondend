@@ -577,12 +577,21 @@ export default function Admin() {
           reviewScore: editReviewedForm.reviewScore
         });
       } else if (selectedReviewedSubmission.type === 'activity') {
-        await activityApplicationService.reviewApplication({
+        console.log('🎪 活动申请表审核数据:', {
+          id: selectedReviewedSubmission.id,
+          reviewStatus: editReviewedForm.status,
+          reviewComment: editReviewedForm.reviewMessage,
+          reviewScore: editReviewedForm.reviewScore
+        });
+        
+        const result = await activityApplicationService.reviewApplication({
           id: selectedReviewedSubmission.id,
           reviewStatus: editReviewedForm.status,
           reviewComment: editReviewedForm.reviewMessage, // 后端使用reviewComment字段
           reviewScore: editReviewedForm.reviewScore
         });
+        
+        console.log('✅ 活动申请表审核结果:', result);
       }
 
       // 更新本地状态
@@ -610,8 +619,18 @@ export default function Admin() {
       setIsEditingReviewed(false);
       setSuccess('审核结果已更新，邮件通知已发送给用户');
       setTimeout(() => setSuccess(''), 3000);
+      
+      // 重新获取已审核数据以确保数据同步
+      console.log('🔄 重新获取已审核数据以确保数据同步...');
+      await fetchReviewedSubmissions(reviewedCurrentPage);
     } catch (error: any) {
-      console.error('更新审核结果失败:', error);
+      console.error('❌ 更新审核结果失败:', error);
+      console.error('❌ 错误详情:', {
+        message: error.message,
+        response: error.response,
+        status: error.status,
+        data: error.data
+      });
       setError(error.message || '更新失败，请重试');
     } finally {
       setEditReviewedLoading(false);

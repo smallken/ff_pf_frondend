@@ -75,6 +75,17 @@ export const activityApplicationService = {
     reviewComment?: string; // 注意：后端使用的是reviewComment字段
     reviewScore?: number;
   }): Promise<boolean> => {
-    return request.post<boolean>(API_ENDPOINTS.ACTIVITY_APPLICATION.REVIEW, data);
+    console.log('🎪 活动申请表审核API调用:', {
+      endpoint: API_ENDPOINTS.ACTIVITY_APPLICATION.REVIEW,
+      data: data
+    });
+    
+    return request.post<boolean>(API_ENDPOINTS.ACTIVITY_APPLICATION.REVIEW, data).then(response => {
+      console.log('✅ 活动申请表审核API响应:', response);
+      return response;
+    }).catch(error => {
+      console.error('❌ 活动申请表审核API失败:', error);
+      throw error;
+    });
   },
 };

@@ -51,12 +51,15 @@ export default function Ranking() {
     try {
       console.log('🔍 开始获取排行榜数据...');
       
-      // 调用后端API获取排行榜数据
-      const rankingData = await userService.getRanking();
-      console.log('✅ 排行榜数据获取成功:', rankingData);
+      // 调用后端API获取排行榜数据（分页）
+      const rankingResponse = await userService.getRanking({
+        current: 1,
+        pageSize: 20
+      });
+      console.log('✅ 排行榜数据获取成功:', rankingResponse);
       
       // 过滤条件：必须有通过的报名申请（后端需保证），且分数>0
-      const filtered = rankingData.filter(u => (u.userPoints || 0) > 0);
+      const filtered = rankingResponse.records.filter(u => (u.userPoints || 0) > 0);
       setRankings(filtered);
 
       // 如果有当前用户，设置当前用户信息

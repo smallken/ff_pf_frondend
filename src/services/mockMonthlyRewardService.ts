@@ -1,5 +1,6 @@
 import type { MonthlyRewardVO, MonthlyRewardStatsVO, MonthlyRewardProgress } from '../types/monthlyReward';
 import { REWARD_LEVELS } from '../types/monthlyReward';
+import mockUsersData from './mockUsersData';
 
 // 模拟月度奖励进度数据
 export const mockMonthlyRewardProgress: MonthlyRewardProgress = {
@@ -152,6 +153,18 @@ export const mockMonthlyRewardService = {
       current: page,
       size: pageSize
     };
+  },
+
+  // 获取所有用户数据（新增）
+  async getAllUsersData(): Promise<MonthlyRewardVO[]> {
+    await delay(300);
+    return mockUsersData;
+  },
+
+  // 根据用户ID获取用户数据（新增）
+  async getUserDataById(userId: number): Promise<MonthlyRewardVO | null> {
+    await delay(200);
+    return mockUsersData.find(user => user.userId === userId) || null;
   },
 
   // 管理员：获取月度奖励统计

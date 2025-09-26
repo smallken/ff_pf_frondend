@@ -74,6 +74,7 @@ export interface RankingUserVO {
   id: number;
   userName: string;
   userEmail: string;
+  twitterUsername?: string;
   userPoints: number;
   userLevel: number;
   walletAddress?: string;
