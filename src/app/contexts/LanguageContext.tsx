@@ -265,7 +265,7 @@ const translations = {
     // Footprint contribution table
     'honor.flipprints.promotion.category': '传播类',
     'honor.flipprints.promotion.task': 'X官方内容一键三联（转发+点赞+评论）',
-    'honor.flipprints.promotion.points': '+0.5',
+    'honor.flipprints.promotion.points': '+1',
     'honor.flipprints.promotion.notes': '单纯转发/点赞不计分',
     'honor.flipprints.creation.category': '短篇原创',
     'honor.flipprints.creation.task1': '原创内容/Meme/平台图文教程',
@@ -941,7 +941,7 @@ const translations = {
     // Footprint contribution table
     'honor.flipprints.promotion.category': 'Promotion',
     'honor.flipprints.promotion.task': 'X official content one-click triple (repost + like + comment)',
-    'honor.flipprints.promotion.points': '+0.5',
+    'honor.flipprints.promotion.points': '+1',
     'honor.flipprints.promotion.notes': 'Simple retweet/like not counted',
     'honor.flipprints.creation.category': 'Short Original',
     'honor.flipprints.creation.task1': 'Original content/Meme/Platform graphic tutorial',

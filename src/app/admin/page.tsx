@@ -1771,7 +1771,7 @@ export default function Admin() {
                         <div className="text-xs space-y-1">
                           <div className="flex justify-between">
                             <span className="text-gray-600 dark:text-gray-300">X官方内容一键三联</span>
-                            <span className="font-medium text-green-600">+0.5</span>
+                            <span className="font-medium text-green-600">+1</span>
                           </div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs">单纯转发/点赞不计分</div>
                         </div>
