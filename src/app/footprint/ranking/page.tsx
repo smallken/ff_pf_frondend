@@ -56,22 +56,41 @@ export default function Ranking() {
   const fetchRankings = async (page: number = currentPage) => {
     try {
       console.log('🔍 开始获取排行榜数据...', { page, pageSize });
-      
+
       // 调用后端API获取排行榜数据（分页）
       const rankingResponse = await userService.getRanking({
         current: page,
         pageSize: pageSize
       });
       console.log('✅ 排行榜数据获取成功:', rankingResponse);
-      
-      // 设置分页信息
-      setTotal(rankingResponse.total);
-      setTotalPages(rankingResponse.pages);
-      setCurrentPage(page);
-      
+
       // 过滤条件：必须有通过的报名申请（后端需保证），且分数>0
       const filtered = rankingResponse.records.filter(u => (u.userPoints || 0) > 0);
-      setRankings(filtered);
+
+      // 重新计算分页信息，基于过滤后的数据
+      const totalFiltered = filtered.length;
+      const totalPagesFiltered = Math.ceil(totalFiltered / pageSize);
+
+      // 如果当前页超出过滤后的总页数，调整到最后一页
+      const adjustedPage = Math.min(page, totalPagesFiltered > 0 ? totalPagesFiltered : 1);
+
+      // 如果页码发生变化，重新获取数据
+      if (adjustedPage !== page) {
+        console.log('📄 页码超出范围，重新获取数据...', { adjustedPage });
+        return fetchRankings(adjustedPage);
+      }
+
+      // 设置分页信息（基于过滤后的数据）
+      setTotal(totalFiltered);
+      setTotalPages(totalPagesFiltered);
+      setCurrentPage(adjustedPage);
+
+      // 分页显示数据
+      const startIndex = (adjustedPage - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedData = filtered.slice(startIndex, endIndex);
+
+      setRankings(paginatedData);
 
       // 如果有当前用户，设置当前用户信息
       if (user) {
