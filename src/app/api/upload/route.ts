@@ -26,15 +26,11 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const filename = `${biz}/${timestamp}-${file.name}`;
     
-    console.log('📤 开始上传文件到Vercel Blob:', filename);
-
     // 上传到Vercel Blob
     const blob = await put(filename, file, {
       access: 'public',
       token: token,
     });
-
-    console.log('📸 文件上传成功:', blob.url);
 
     return NextResponse.json({ 
       success: true, 

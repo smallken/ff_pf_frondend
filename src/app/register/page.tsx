@@ -74,14 +74,6 @@ const sendVerificationCode = async () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 打印注册表单数据
-    console.log('📝 注册表单数据:', {
-      twitterHandle: formData.twitterHandle,
-      userPassword: formData.userPassword,
-      checkPassword: formData.checkPassword,
-      timestamp: new Date().toISOString()
-    });
-    
     // Validation
     const newErrors: {[key: string]: string} = {};
     
@@ -97,7 +89,6 @@ const sendVerificationCode = async () => {
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length === 0) {
-      console.log('✅ 注册表单验证通过，检查重复性');
       await checkDuplicatesAndSendCode();
     } else {
       console.log('❌ 注册表单验证失败:', newErrors);
@@ -117,12 +108,10 @@ const sendVerificationCode = async () => {
       checkPassword: formData.checkPassword,
       userName: formData.userName
     };
-    console.log('🎯 完整注册数据:', registrationData);
     
     try {
       await userService.emailRegister(registrationData);
       
-      console.log('✅ 注册成功');
       // 注册成功，跳转到登录页
       router.push('/login?message=注册成功，请登录');
     } catch (error: any) {

@@ -43,25 +43,21 @@ export default function Admin() {
   const buildImageUrl = (screenshot: string) => {
     if (screenshot.startsWith('http')) {
       // Vercel Blob URL或完整URL直接使用
-      console.log('🔗 使用完整URL:', screenshot);
       return screenshot;
     }
     if (screenshot.startsWith('/api/')) {
       // 兼容旧的本地存储格式
       if (screenshot.includes('?filepath=')) {
         const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8101'}${screenshot}`;
-        console.log('🔗 构建图片URL (旧格式):', { original: screenshot, built: url });
         return url;
       } else {
         const pathPart = screenshot.replace('/api/file/download', '');
         const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8101'}/api/file/download?filepath=${pathPart}`;
-        console.log('🔗 构建图片URL (旧格式转换):', { original: screenshot, pathPart, built: url });
         return url;
       }
     }
     // 相对路径
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8101/api'}${screenshot}`;
-    console.log('🔗 构建图片URL (相对路径):', { original: screenshot, built: url });
     return url;
   };
   const [activeTab, setActiveTab] = useState('forms');
@@ -330,17 +326,7 @@ export default function Admin() {
       setReviewedLoading(true);
       setError(''); // 清除之前的错误
       
-      console.log('🔍 开始获取已审核表单数据...', { page, pageSize: reviewedPageSize });
       const { approvedForms, rejectedForms, approvedTaskSubmissions, rejectedTaskSubmissions, approvedActivities, rejectedActivities } = await fetchAllReviewedData();
-      
-      console.log('📊 已审核表单数据获取结果:', {
-        approvedForms: approvedForms?.records?.length || 0,
-        rejectedForms: rejectedForms?.records?.length || 0,
-        approvedTaskSubmissions: approvedTaskSubmissions?.records?.length || 0,
-        rejectedTaskSubmissions: rejectedTaskSubmissions?.records?.length || 0,
-        approvedActivities: approvedActivities?.records?.length || 0,
-        rejectedActivities: rejectedActivities?.records?.length || 0
-      });
 
       const reviewed: ReviewedSubmission[] = [];
 
@@ -363,21 +349,10 @@ export default function Admin() {
         }
       });
 
-      // 添加已审核的任务提交（通过和拒绝）
-      console.log('📝 处理已审核的任务提交:', {
-        approvedTasks: approvedTaskSubmissions?.records || [],
-        rejectedTasks: rejectedTaskSubmissions?.records || []
-      });
       
       [...approvedTaskSubmissions.records, ...rejectedTaskSubmissions.records].forEach(task => {
         if (task && task.id) {
-          console.log('✅ 添加已审核任务提交:', {
-            id: task.id,
-            name: task.name,
-            reviewStatus: task.reviewStatus,
-            createTime: task.createTime,
-            updateTime: task.updateTime
-          });
+          
           reviewed.push({
             id: task.id,
             type: 'task',
@@ -427,24 +402,7 @@ export default function Admin() {
       const startIndex = (page - 1) * reviewedPageSize;
       const endIndex = startIndex + reviewedPageSize;
       const currentPageData = reviewed.slice(startIndex, endIndex);
-      
-      console.log('📊 分页信息:', {
-        currentPage: page,
-        pageSize: reviewedPageSize,
-        totalCount,
-        startIndex,
-        endIndex,
-        currentPageDataLength: currentPageData.length,
-        breakdown: {
-          approvedForms: approvedForms?.records?.length || 0,
-          rejectedForms: rejectedForms?.records?.length || 0,
-          approvedTaskSubmissions: approvedTaskSubmissions?.records?.length || 0,
-          rejectedTaskSubmissions: rejectedTaskSubmissions?.records?.length || 0,
-          approvedActivities: approvedActivities?.records?.length || 0,
-          rejectedActivities: rejectedActivities?.records?.length || 0
-        }
-      });
-      
+
       setAllReviewedSubmissions(reviewed); // 存储所有数据
       setReviewedSubmissions(currentPageData);
       setReviewedTotal(totalCount);
@@ -468,11 +426,8 @@ export default function Admin() {
       setStatsLoading(true);
       setError(''); // 清除之前的错误
       
-      console.log('🔍 开始获取管理员统计数据...');
-      
       // 调用新的统计数据API
       const statsData = await userService.getAdminStats();
-      console.log('✅ 管理员统计数据获取成功:', statsData);
       
       setStats(statsData);
     } catch (error: any) {
@@ -577,12 +532,6 @@ export default function Admin() {
           reviewScore: editReviewedForm.reviewScore
         });
       } else if (selectedReviewedSubmission.type === 'activity') {
-        console.log('🎪 活动申请表审核数据:', {
-          id: selectedReviewedSubmission.id,
-          reviewStatus: editReviewedForm.status,
-          reviewComment: editReviewedForm.reviewMessage,
-          reviewScore: editReviewedForm.reviewScore
-        });
         
         const result = await activityApplicationService.reviewApplication({
           id: selectedReviewedSubmission.id,
@@ -591,7 +540,6 @@ export default function Admin() {
           reviewScore: editReviewedForm.reviewScore
         });
         
-        console.log('✅ 活动申请表审核结果:', result);
       }
 
       // 更新本地状态
@@ -621,7 +569,6 @@ export default function Admin() {
       setTimeout(() => setSuccess(''), 3000);
       
       // 重新获取已审核数据以确保数据同步
-      console.log('🔄 重新获取已审核数据以确保数据同步...');
       await fetchReviewedSubmissions(reviewedCurrentPage);
     } catch (error: any) {
       console.error('❌ 更新审核结果失败:', error);
@@ -703,14 +650,8 @@ export default function Admin() {
             };
 
             // 调用累加次数接口
-            console.log('🔍 准备累加月度奖励次数:', incrementData);
-            console.log('🔍 成果提交表任务详情:', tasks);
-            console.log('🔍 任务类别统计:', taskCounts);
-            console.log('🔍 用户ID:', selectedSubmission.data.userId);
             console.warn('⚠️ 重要提醒：如果分数被错误修改，可能是后端的refreshMonthlyRewardScores接口被调用了！');
             const result = await monthlyRewardService.incrementMonthlyRewardScores(incrementData);
-            console.log('🔍 月度奖励次数累加结果:', result);
-            console.log('✅ 累加完成时间:', new Date().toISOString());
           } catch (error) {
             console.error('更新月度奖励数据失败:', error);
             // 不阻止审核流程，只记录错误
@@ -1566,9 +1507,7 @@ export default function Admin() {
                                         });
                                         e.currentTarget.style.display = 'none';
                                       }}
-                                      onLoad={() => {
-                                        console.log('图片加载成功:', task.screenshot ? buildImageUrl(task.screenshot) : 'undefined');
-                                      }}
+                                      onLoad={() => {}}
                                     />
                                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">点击查看大图</div>
                                   </div>

@@ -55,12 +55,6 @@ export default function ActivityForm() {
     setSuccess('');
 
     try {
-      // 打印活动申请表数据
-      console.log('🎪 活动申请表提交数据:', {
-        ...formData,
-        timestamp: new Date().toISOString()
-      });
-
       // 准备提交数据，将前端字段名映射到后端需要的格式
       const submitData = {
         organizer: formData.organizer,
@@ -86,8 +80,6 @@ export default function ActivityForm() {
 
       // 调用后端活动申请表提交API
       const applicationId = await activityApplicationService.submitApplication(submitData);
-      
-      console.log('✅ 活动申请表提交成功，ID:', applicationId);
       
       // 显示成功提示
       setSuccess('🎉 活动申请表提交成功！我们将在1-3个工作日内审核您的申请。');

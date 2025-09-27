@@ -100,7 +100,6 @@ export default function LaunchRegistration() {
         
         const result = await response.json();
         tokenLogoUrl = result.url;
-        console.log('✅ 代币Logo上传到Vercel Blob成功:', tokenLogoUrl);
       }
 
       // 准备提交数据

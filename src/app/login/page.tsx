@@ -30,16 +30,8 @@ export default function Login() {
     setSubmitLoading(true);
     setError('');
 
-    // 打印登录数据
-    console.log('🔐 登录数据:', {
-      userAccount: formData.userAccount,
-      userPassword: formData.userPassword,
-      timestamp: new Date().toISOString()
-    });
-
     try {
       await login(formData.userAccount, formData.userPassword);
-      console.log('✅ 登录成功');
       router.push('/'); // 登录成功后跳转到首页
     } catch (error: any) {
       console.log('❌ 登录失败:', error);

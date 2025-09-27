@@ -14,7 +14,6 @@ const testLogin = async () => {
     });
     
     const result = await response.json();
-    console.log('Login test result:', result);
     
     if (result.code === 0) {
       console.log('✅ Login successful');
@@ -26,5 +25,4 @@ const testLogin = async () => {
   }
 };
 
-console.log('Testing API connection...');
 testLogin();

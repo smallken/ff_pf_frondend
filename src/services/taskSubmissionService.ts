@@ -24,15 +24,6 @@ export const taskSubmissionService = {
     pageSize?: number;
     submissionCategory?: string;
   } = {}): Promise<PageData<TaskSubmissionVO>> => {
-    console.log('🔍 请求获取我的任务提交列表:', {
-      endpoint: API_ENDPOINTS.TASK_SUBMISSION.MY_LIST,
-      params: {
-        current: params.current || 1,
-        pageSize: params.pageSize || 10,
-        submissionCategory: params.submissionCategory,
-      }
-    });
-    
     return request.post<PageData<TaskSubmissionVO>>(
       API_ENDPOINTS.TASK_SUBMISSION.MY_LIST, 
       {
@@ -41,7 +32,6 @@ export const taskSubmissionService = {
         submissionCategory: params.submissionCategory,
       }
     ).then(response => {
-      console.log('✅ 获取我的任务提交列表成功:', response);
       return response;
     }).catch(error => {
       console.error('❌ 获取我的任务提交列表失败:', error);

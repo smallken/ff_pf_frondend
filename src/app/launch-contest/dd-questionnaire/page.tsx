@@ -285,11 +285,6 @@ export default function DDQuestionnaireTest() {
         return;
       }
 
-      // 调试日志：查看提交的数据
-      console.log('🔍 提交DD问答清单数据:', formData);
-      console.log('🔍 字段总数:', Object.keys(formData).length);
-      console.log('🔍 所有字段详情:', formData);
-
       // 提交数据
       const result = await ddQuestionnaireService.submitDDQuestionnaire(formData);
       

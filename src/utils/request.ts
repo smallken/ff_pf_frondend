@@ -93,11 +93,9 @@ const createRequest = async <T>(config: RequestConfig): Promise<T> => {
   requestOptions.signal = controller.signal;
 
   try {
-    console.log(`[API Request] ${method} ${fullUrl}`, { data, timeout });
     const response = await fetch(fullUrl, requestOptions);
     clearTimeout(timeoutId);
     
-    console.log(`[API Response] ${response.status} ${response.statusText}`);
     const result = await responseInterceptor<T>(response);
     return result.data;
   } catch (error) {
@@ -150,7 +148,6 @@ export const uploadFile = async (url: string, file: File, biz: string): Promise<
     }
 
     const result = await response.json();
-    console.log('Upload response:', result);
     
     if (result.code !== ERROR_CODES.SUCCESS) {
       throw new Error(result.message || '上传失败');

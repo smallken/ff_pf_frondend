@@ -124,15 +124,11 @@ export default function Ranking() {
   // 获取排行榜数据
   const fetchRankings = async (page: number = currentPage) => {
     try {
-      console.log('🔍 开始获取排行榜数据...', { page, pageSize });
-
       // 调用后端API获取排行榜数据（分页）
       const rankingResponse = await userService.getRanking({
         current: page,
         pageSize: pageSize
       });
-      console.log('✅ 排行榜数据获取成功:', rankingResponse);
-
       // 过滤条件：必须有通过的报名申请（后端需保证），且分数>0
       const filtered = rankingResponse.records.filter(u => (u.userPoints || 0) > 0);
 

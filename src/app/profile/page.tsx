@@ -31,25 +31,21 @@ export default function Profile() {
   const buildImageUrl = (screenshot: string) => {
     if (screenshot.startsWith('http')) {
       // Vercel Blob URL或完整URL直接使用
-      console.log('🔗 使用完整URL:', screenshot);
       return screenshot;
     }
     if (screenshot.startsWith('/api/')) {
       // 兼容旧的本地存储格式
       if (screenshot.includes('?filepath=')) {
         const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8101'}${screenshot}`;
-        console.log('🔗 构建图片URL (旧格式):', { original: screenshot, built: url });
         return url;
       } else {
         const pathPart = screenshot.replace('/api/file/download', '');
         const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8101'}/api/file/download?filepath=${pathPart}`;
-        console.log('🔗 构建图片URL (旧格式转换):', { original: screenshot, pathPart, built: url });
         return url;
       }
     }
     // 相对路径
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8101/api'}${screenshot}`;
-    console.log('🔗 构建图片URL (相对路径):', { original: screenshot, built: url });
     return url;
   };
   const [submissions, setSubmissions] = useState<ApplicationForm[]>([]);
@@ -137,14 +133,10 @@ export default function Profile() {
     if (!selectedForm || selectedForm.type !== 'mint') return;
     
     try {
-      console.log(`🔄 开始更新${language === 'zh' ? '钱包地址' : 'Wallet Address'}:`, { id: selectedForm.id, walletAddress });
-      
       // 调用API更新{language === 'zh' ? '钱包地址' : 'Wallet Address'}
       await mintContestService.updateRegistration(selectedForm.id, {
         mainWalletAddresses: [walletAddress]
       });
-      
-      console.log(`✅ ${language === 'zh' ? '钱包地址' : 'Wallet Address'}更新成功`);
       
       // 立即更新selectedForm状态，避免显示旧数据
       setSelectedForm((prev: any) => ({
@@ -169,14 +161,10 @@ export default function Profile() {
     if (!selectedForm || selectedForm.type !== 'mint') return;
     
     try {
-      console.log(`🔄 开始更新${language === 'zh' ? '钱包地址' : 'Wallet Address'}数组:`, { id: selectedForm.id, walletAddresses });
-      
       // 调用API更新{language === 'zh' ? '钱包地址' : 'Wallet Address'}数组
       await mintContestService.updateRegistration(selectedForm.id, {
         mainWalletAddresses: walletAddresses.filter(addr => addr.trim() !== '')
       });
-      
-      console.log(`✅ ${language === 'zh' ? '钱包地址' : 'Wallet Address'}数组更新成功`);
       
       // 立即更新selectedForm状态，避免显示旧数据
       setSelectedForm((prev: any) => ({
@@ -201,14 +189,10 @@ export default function Profile() {
     if (!selectedForm || selectedForm.type !== 'mint') return;
     
     try {
-      console.log(`🔄 开始更新${language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'}:`, { id: selectedForm.id, rewardAddress });
-      
       // 调用API更新{language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'}
       await mintContestService.updateRegistration(selectedForm.id, {
         rewardWalletAddress: rewardAddress
       });
-      
-      console.log(`✅ ${language === 'zh' ? '奖励发放地址' : 'Reward Distribution Address'}更新成功`);
       
       // 立即更新selectedForm状态，避免显示旧数据
       setSelectedForm((prev: any) => ({
@@ -287,11 +271,8 @@ export default function Profile() {
       // 检查推特用户名重复
       if (editForm.twitterUsername && editForm.twitterUsername.trim()) {
         try {
-          console.log('🔍 检查推特用户名:', editForm.twitterUsername.trim());
           const twitterResult = await userService.checkFieldUniqueWithError('twitterUsername', editForm.twitterUsername.trim());
-          console.log('🔍 推特用户名检查结果:', twitterResult);
           if (!twitterResult.isUnique && twitterResult.errorMessage) {
-            console.log('🔍 推特用户名重复错误:', twitterResult.errorMessage);
             duplicateErrors.push(twitterResult.errorMessage);
           }
         } catch (error: any) {
@@ -303,11 +284,8 @@ export default function Profile() {
       // 检查Telegram用户名重复
       if (editForm.telegramUsername && editForm.telegramUsername.trim()) {
         try {
-          console.log('🔍 检查Telegram用户名:', editForm.telegramUsername.trim());
           const telegramResult = await userService.checkFieldUniqueWithError('telegramUsername', editForm.telegramUsername.trim());
-          console.log('🔍 Telegram用户名检查结果:', telegramResult);
           if (!telegramResult.isUnique && telegramResult.errorMessage) {
-            console.log('🔍 Telegram用户名重复错误:', telegramResult.errorMessage);
             duplicateErrors.push(telegramResult.errorMessage);
           }
         } catch (error: any) {
@@ -319,11 +297,8 @@ export default function Profile() {
       // 检查{language === 'zh' ? '钱包地址' : 'Wallet Address'}重复
       if (editForm.walletAddress && editForm.walletAddress.trim()) {
         try {
-          console.log(`🔍 检查${language === 'zh' ? '钱包地址' : 'Wallet Address'}:`, editForm.walletAddress.trim());
           const walletResult = await userService.checkFieldUniqueWithError('walletAddress', editForm.walletAddress.trim());
-          console.log(`🔍 ${language === 'zh' ? '钱包地址' : 'Wallet Address'}检查结果:`, walletResult);
           if (!walletResult.isUnique && walletResult.errorMessage) {
-            console.log(`🔍 ${language === 'zh' ? '钱包地址' : 'Wallet Address'}重复错误:`, walletResult.errorMessage);
             duplicateErrors.push(walletResult.errorMessage);
           }
         } catch (error: any) {
@@ -335,11 +310,8 @@ export default function Profile() {
       // 检查邮箱重复
       if (editForm.userEmail && editForm.userEmail.trim()) {
         try {
-          console.log('🔍 检查邮箱:', editForm.userEmail.trim());
           const emailResult = await userService.checkFieldUniqueWithError('userEmail', editForm.userEmail.trim());
-          console.log('🔍 邮箱检查结果:', emailResult);
           if (!emailResult.isUnique && emailResult.errorMessage) {
-            console.log('🔍 邮箱重复错误:', emailResult.errorMessage);
             duplicateErrors.push(emailResult.errorMessage);
           }
         } catch (error: any) {
@@ -462,8 +434,6 @@ export default function Profile() {
     
     setContestFormsLoading(true);
     try {
-      console.log('🔄 开始获取Launch和Mint大赛表单数据...');
-      
       const [launchRegs, mintRegs, ddQuestionnaires] = await Promise.all([
         launchContestService.getMyRegistrations(10, 1).catch(err => {
           console.warn('获取Launch大赛登记失败:', err);
@@ -485,27 +455,6 @@ export default function Profile() {
         ddQuestionnaires: ddQuestionnaires.data.records.length
       });
 
-      // 详细日志DD问答清单数据
-      console.log('🔍 DD问答清单详细数据:', ddQuestionnaires.data.records);
-      ddQuestionnaires.data.records.forEach((dd, index) => {
-        console.log(`DD问答清单 ${index + 1}:`, {
-          id: dd.id,
-          projectName: dd.projectName,
-          tokenContractAddress: dd.tokenContractAddress,
-          trackCategory: dd.trackCategory,
-          holderAddressCount: dd.holderAddressCount ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
-          mintCompletion: dd.mintCompletion ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
-          communityScale: dd.communityScale ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
-          twitterFollowers: dd.twitterFollowers ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
-          externalMarketData: dd.externalMarketData ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
-          trafficContribution: dd.trafficContribution ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
-          projectQuality: dd.projectQuality ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
-          narrativeConsensus: dd.narrativeConsensus ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
-          teamEfficiency: dd.teamEfficiency ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled'),
-          nextSteps: dd.nextSteps ? (language === 'zh' ? '已填写' : 'Filled') : (language === 'zh' ? '未填写' : 'Not filled')
-        });
-      });
-
       setLaunchRegistrations(launchRegs.data.records);
       setMintRegistrations(mintRegs.data.records);
       setLaunchDDQuestionnaires(ddQuestionnaires.data.records);
@@ -521,32 +470,12 @@ export default function Profile() {
     if (!isAuthenticated) return;
     
     try {
-      console.log('🔄 开始获取个人中心提交历史数据...');
       
       const [applicationForms, taskSubmissions, activityApplications] = await Promise.all([
         formService.getMyForms({ current: 1, pageSize: 20 }),
         taskSubmissionService.getMyTaskSubmissions({ current: 1, pageSize: 20 }),
         activityApplicationService.getMyApplications({ current: 1, pageSize: 20 })
       ]);
-
-      // 详细的调试信息
-      console.log('📊 个人中心数据获取结果:', {
-        applicationForms: {
-          total: applicationForms.total,
-          records: applicationForms.records.length,
-          data: applicationForms.records
-        },
-        taskSubmissions: {
-          total: taskSubmissions.total,
-          records: taskSubmissions.records.length,
-          data: taskSubmissions.records
-        },
-        activityApplications: {
-          total: activityApplications.total,
-          records: activityApplications.records.length,
-          data: activityApplications.records
-        }
-      });
 
       const history: SubmissionHistoryItem[] = [];
 
@@ -562,16 +491,9 @@ export default function Profile() {
           data: form
         });
       });
-
       // 添加任务提交
-      console.log('📝 处理任务提交数据:', taskSubmissions.records);
       taskSubmissions.records.forEach(task => {
-        console.log('📝 添加任务提交到历史:', {
-          id: task.id,
-          name: task.name,
-          createTime: task.createTime,
-          reviewStatus: task.reviewStatus
-        });
+        
         history.push({
           id: task.id,
           type: 'task',
@@ -598,17 +520,6 @@ export default function Profile() {
 
       // 按创建时间排序（最新的在前）
       history.sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime());
-      
-      console.log('📋 最终提交历史记录:', {
-        totalCount: history.length,
-        records: history.map(item => ({
-          id: item.id,
-          type: item.type,
-          title: item.title,
-          createTime: item.createTime,
-          status: item.status
-        }))
-      });
       
       // 存储所有历史记录
       setAllSubmissionHistory(history);

@@ -36,7 +36,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // 添加当前主题类
     document.documentElement.classList.add(theme);
     
-    console.log('Theme changed to:', theme, 'HTML classes:', document.documentElement.className);
   }, [theme, mounted]);
 
   const toggleTheme = () => {

@@ -73,20 +73,15 @@ export default function ApplicationForm() {
     setLoading(true);
     setError('');
     setSuccess('');
-
     // 检查字段重复性
-    console.log('🔍 开始检查字段重复性...');
     const duplicateErrors = [];
     let hasApiError = false;
     
     // 检查推特用户名重复
     if (formData.twitterUsername && formData.twitterUsername.trim()) {
       try {
-        console.log('🔍 检查推特用户名:', formData.twitterUsername.trim());
         const twitterResult = await userService.checkFieldUniqueWithError('twitterUsername', formData.twitterUsername.trim());
-        console.log('🔍 推特用户名检查结果:', twitterResult);
         if (!twitterResult.isUnique && twitterResult.errorMessage) {
-          console.log('🔍 推特用户名重复错误:', twitterResult.errorMessage);
           duplicateErrors.push(twitterResult.errorMessage);
         }
       } catch (error: any) {
@@ -98,11 +93,8 @@ export default function ApplicationForm() {
     // 检查Telegram用户名重复
     if (formData.telegramUsername && formData.telegramUsername.trim()) {
       try {
-        console.log('🔍 检查Telegram用户名:', formData.telegramUsername.trim());
         const telegramResult = await userService.checkFieldUniqueWithError('telegramUsername', formData.telegramUsername.trim());
-        console.log('🔍 Telegram用户名检查结果:', telegramResult);
         if (!telegramResult.isUnique && telegramResult.errorMessage) {
-          console.log('🔍 Telegram用户名重复错误:', telegramResult.errorMessage);
           duplicateErrors.push(telegramResult.errorMessage);
         }
       } catch (error: any) {
@@ -114,9 +106,7 @@ export default function ApplicationForm() {
     // 检查钱包地址重复
     if (formData.walletAddress && formData.walletAddress.trim()) {
       try {
-        console.log('🔍 检查钱包地址:', formData.walletAddress.trim());
         const walletResult = await userService.checkFieldUniqueWithError('walletAddress', formData.walletAddress.trim());
-        console.log('🔍 钱包地址检查结果:', walletResult);
         if (!walletResult.isUnique && walletResult.errorMessage) {
           console.log('🔍 钱包地址重复错误:', walletResult.errorMessage);
           duplicateErrors.push(walletResult.errorMessage);
@@ -126,9 +116,6 @@ export default function ApplicationForm() {
         hasApiError = true;
       }
     }
-    
-    console.log('🔍 重复错误列表:', duplicateErrors);
-    console.log('🔍 是否有API错误:', hasApiError);
     
     // 如果有重复字段，显示具体的重复错误信息
     if (duplicateErrors.length > 0) {
@@ -147,20 +134,11 @@ export default function ApplicationForm() {
       return;
     }
     
-    console.log('✅ 所有字段检查通过，无重复');
-
     try {
-      // 打印申请表数据
-      console.log('📋 申请表提交数据:', {
-        ...formData,
-        timestamp: new Date().toISOString()
-      });
 
       // 直接提交表单数据，不再使用JSON格式
       await formService.submitApplicationForm(formData);
 
-      console.log('✅ 申请表提交成功');
-      
       // 显示成功提示
       setSuccess('🎉 申请表提交成功！我们将在1-3个工作日内审核您的申请。');
       

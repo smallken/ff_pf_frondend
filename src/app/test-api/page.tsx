@@ -12,9 +12,7 @@ export default function TestApi() {
     setLoading(true);
     setError('');
     try {
-      console.log('🔍 测试排行榜API...');
       const data = await userService.getRanking();
-      console.log('✅ 排行榜API测试成功:', data);
       setResult(data);
     } catch (err: any) {
       console.error('❌ 排行榜API测试失败:', err);

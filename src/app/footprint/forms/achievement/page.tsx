@@ -52,12 +52,6 @@ export default function AchievementForm() {
     setSuccess('');
 
     try {
-      // 打印成果提交表数据
-      console.log('🏆 成果提交表数据:', {
-        ...formData,
-        timestamp: new Date().toISOString()
-      });
-
       // 准备提交数据，转换任务格式
       const submitData = {
         name: formData.name,
@@ -71,7 +65,6 @@ export default function AchievementForm() {
           // 如果有截图文件，先上传到Vercel Blob
           if (task.screenshot) {
             try {
-              console.log('📤 开始上传文件到Vercel Blob:', task.screenshot.name);
               
               // 使用API路由上传文件
               const formData = new FormData();
@@ -90,7 +83,6 @@ export default function AchievementForm() {
               
               const result = await response.json();
               screenshotPath = result.url;
-              console.log('📸 截图上传到Vercel Blob成功:', screenshotPath);
             } catch (error) {
               console.error('❌ 截图上传到Vercel Blob失败:', error);
               const errorMessage = error instanceof Error ? error.message : '未知错误';
@@ -111,8 +103,6 @@ export default function AchievementForm() {
 
       // 调用后端成果提交表API
       const submissionId = await taskSubmissionService.addTaskSubmission(submitData);
-      
-      console.log('✅ 成果提交表提交成功，ID:', submissionId);
       
       // 显示成功提示
       setSuccess('🎉 成果提交表提交成功！我们将在1-3个工作日内审核您的提交。');
