@@ -1,16 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { userService } from '../../../services';
-import type { LoginUserVO, RankingUserVO } from '../../../types/api';
+import type { RankingUserVO } from '../../../types/api';
 
 export default function Ranking() {
   const { t } = useLanguage();
   const { user, isAuthenticated } = useAuth();
   const [rankings, setRankings] = useState<RankingUserVO[]>([]);
-  const [currentUser, setCurrentUser] = useState<RankingUserVO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -19,6 +18,17 @@ export default function Ranking() {
   const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [allUsersTotalPoints, setAllUsersTotalPoints] = useState(0);
+  const [currentUserRank, setCurrentUserRank] = useState<RankingUserVO | null>(null);
+  const [fullRankingData, setFullRankingData] = useState<RankingUserVO[]>([]);
+  const [hasLoadedFullRanking, setHasLoadedFullRanking] = useState(false);
+
+  const highestPoints = useMemo(() => {
+    if (fullRankingData.length > 0) {
+      return fullRankingData.reduce((max, item) => Math.max(max, item.userPoints || 0), 0);
+    }
+    return currentUserRank?.userPoints ?? 0;
+  }, [fullRankingData, currentUserRank]);
 
   // 根据脚印数量计算等级
   const calculateLevel = (userPoints: number) => {
@@ -52,6 +62,65 @@ export default function Ranking() {
     }
   };
 
+  // 构建未上榜用户的默认展示数据
+  const buildFallbackRanking = (totalCount: number): RankingUserVO | null => {
+    if (!user) return null;
+
+    const userPoints = user.userPoints ?? 0;
+    return {
+      id: user.id,
+      userName: user.userName || 'Unknown',
+      userEmail: user.userEmail || '',
+      twitterUsername: user.twitterUsername,
+      userPoints,
+      userLevel: calculateLevel(userPoints),
+      walletAddress: user.walletAddress,
+      rank: Math.max(totalCount, fullRankingData.length) + 1
+    };
+  };
+
+  // 加载完整排行榜数据用于统计和固定用户信息
+  const loadFullRankingData = async (totalCount: number, initialRecords: RankingUserVO[] = []) => {
+    if (hasLoadedFullRanking && fullRankingData.length >= totalCount) {
+      return;
+    }
+
+    try {
+      let records = initialRecords;
+
+      if (totalCount > 0 && records.length < totalCount) {
+        const completeResponse = await userService.getRanking({
+          current: 1,
+          pageSize: totalCount
+        });
+        records = completeResponse.records;
+      }
+
+      setFullRankingData(records);
+
+      const totalPoints = records.reduce((sum, item) => sum + (item.userPoints || 0), 0);
+      setAllUsersTotalPoints(totalPoints);
+
+      if (user) {
+        const userRanking = records.find((item) => item.id === user.id);
+        if (userRanking) {
+          setCurrentUserRank(userRanking);
+        } else {
+          const fallback = buildFallbackRanking(totalCount);
+          if (fallback) {
+            setCurrentUserRank(fallback);
+          }
+        }
+      } else {
+        setCurrentUserRank(null);
+      }
+    } catch (err) {
+      console.error('❌ 获取完整排行榜失败:', err);
+    } finally {
+      setHasLoadedFullRanking(true);
+    }
+  };
+
   // 获取排行榜数据
   const fetchRankings = async (page: number = currentPage) => {
     try {
@@ -67,41 +136,32 @@ export default function Ranking() {
       // 过滤条件：必须有通过的报名申请（后端需保证），且分数>0
       const filtered = rankingResponse.records.filter(u => (u.userPoints || 0) > 0);
 
-      // 重新计算分页信息，基于过滤后的数据
-      const totalFiltered = filtered.length;
-      const totalPagesFiltered = Math.ceil(totalFiltered / pageSize);
+      // 使用后端返回的原始分页信息，不重新计算
+      const totalCount = Number(rankingResponse.total ?? 0);
+      setTotal(totalCount);
+      setTotalPages(parseInt(rankingResponse.pages.toString()));
+      setCurrentPage(parseInt(rankingResponse.current.toString()));
 
-      // 如果当前页超出过滤后的总页数，调整到最后一页
-      const adjustedPage = Math.min(page, totalPagesFiltered > 0 ? totalPagesFiltered : 1);
+      // 直接使用过滤后的数据进行显示
+      setRankings(filtered);
 
-      // 如果页码发生变化，重新获取数据
-      if (adjustedPage !== page) {
-        console.log('📄 页码超出范围，重新获取数据...', { adjustedPage });
-        return fetchRankings(adjustedPage);
-      }
-
-      // 设置分页信息（基于过滤后的数据）
-      setTotal(totalFiltered);
-      setTotalPages(totalPagesFiltered);
-      setCurrentPage(adjustedPage);
-
-      // 分页显示数据
-      const startIndex = (adjustedPage - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      const paginatedData = filtered.slice(startIndex, endIndex);
-
-      setRankings(paginatedData);
-
-      // 如果有当前用户，设置当前用户信息
+      // 如果当前页包含用户，则直接使用当前页结果；否则等待全量数据
       if (user) {
-        const currentUserRanking = filtered.find(u => u.id === user.id);
-        if (currentUserRanking) {
-          setCurrentUser(currentUserRanking);
-        } else {
-          // 不在榜单中且分数为0或未申请通过，则不显示个人临时记录
-          setCurrentUser(null);
+        const userRanking = rankingResponse.records.find((item) => item.id === user.id);
+        if (userRanking) {
+          setCurrentUserRank(userRanking);
+        } else if (!hasLoadedFullRanking) {
+          const fallback = buildFallbackRanking(totalCount);
+          if (fallback) {
+            setCurrentUserRank((prev) => prev ?? fallback);
+          }
         }
+      } else {
+        setCurrentUserRank(null);
       }
+
+      // 加载完整数据以便统计和固定“我的排名”
+      await loadFullRankingData(totalCount, rankingResponse.records);
     } catch (error: any) {
       console.error('❌ 获取排行榜数据失败:', error);
       setError(error.message || '获取排行榜数据失败');
@@ -113,6 +173,30 @@ export default function Ranking() {
   useEffect(() => {
     fetchRankings();
   }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      setCurrentUserRank(null);
+      return;
+    }
+
+    if (fullRankingData.length) {
+      const userRanking = fullRankingData.find((item) => item.id === user.id);
+      if (userRanking) {
+        setCurrentUserRank(userRanking);
+      } else if (hasLoadedFullRanking) {
+        const fallback = buildFallbackRanking(total || fullRankingData.length);
+        if (fallback) {
+          setCurrentUserRank(fallback);
+        }
+      }
+    } else if (hasLoadedFullRanking) {
+      const fallback = buildFallbackRanking(total);
+      if (fallback) {
+        setCurrentUserRank(fallback);
+      }
+    }
+  }, [user, fullRankingData, hasLoadedFullRanking, total]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-emerald-900/20 dark:to-gray-800 relative overflow-hidden">
@@ -151,7 +235,7 @@ export default function Ranking() {
               <div className="flex justify-between items-center">
                 <div className="text-lg font-semibold text-gray-900 dark:text-white">
                   {t('ranking.total.points')}: <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                    {rankings.reduce((total, user) => total + user.userPoints, 0)}{t('ranking.points.unit')}
+                    {allUsersTotalPoints}{t('ranking.points.unit')}
                   </span>
                 </div>
                 <div className="text-sm font-normal text-gray-600 dark:text-gray-300">
@@ -309,27 +393,27 @@ export default function Ranking() {
               </div>
               <h2 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">{t('ranking.myrank.title')}</h2>
             </div>
-            {currentUser ? (
+            {currentUserRank ? (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="group text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border border-blue-200 dark:border-blue-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                   <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
                     <span className="text-xl text-white font-bold">#</span>
                   </div>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">{currentUser.rank}</div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">{currentUserRank.rank}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.rank')}</div>
                 </div>
                 <div className="group text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border border-green-200 dark:border-green-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                   <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
                     <span className="text-xl text-white">⭐</span>
                   </div>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">{currentUser.userPoints}</div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">{currentUserRank.userPoints}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.points')}</div>
                 </div>
                 <div className="group text-center p-6 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-2xl border border-yellow-200 dark:border-yellow-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                   <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
                     <span className="text-xl text-white">🏆</span>
                   </div>
-                  <div className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 dark:from-yellow-400 dark:to-amber-400 bg-clip-text text-transparent">{getLevelText(currentUser.userPoints)}</div>
+                  <div className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 dark:from-yellow-400 dark:to-amber-400 bg-clip-text text-transparent">{getLevelText(currentUserRank.userPoints)}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.level')}</div>
                 </div>
                 <div className="group text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border border-purple-200 dark:border-purple-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
@@ -337,7 +421,7 @@ export default function Ranking() {
                     <span className="text-xl text-white">📊</span>
                   </div>
                   <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                    {rankings.length > 0 ? Math.ceil((currentUser.userPoints / rankings[0].userPoints) * 100) : 0}%
+                    {highestPoints > 0 ? Math.ceil((currentUserRank.userPoints / highestPoints) * 100) : 0}%
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.completion')}</div>
                 </div>
@@ -356,7 +440,7 @@ export default function Ranking() {
               </div>
             )}
             
-            {currentUser && (
+            {currentUserRank && (
               <div className="mt-8 text-center">
                 <a href="/forms" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-2xl font-semibold hover:from-teal-600 hover:to-cyan-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
                   <span className="mr-2">🚀</span>
