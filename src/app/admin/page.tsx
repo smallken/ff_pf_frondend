@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { formService, taskSubmissionService, activityApplicationService, userService, monthlyRewardService, monthlyPointService } from '../../services';
@@ -62,6 +62,8 @@ export default function Admin() {
   };
   const [activeTab, setActiveTab] = useState('forms');
   const [pendingSubmissions, setPendingSubmissions] = useState<PendingSubmission[]>([]);
+  const [pendingPageSize, setPendingPageSize] = useState(20);
+  const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
   const [reviewedSubmissions, setReviewedSubmissions] = useState<ReviewedSubmission[]>([]);
   const [allReviewedSubmissions, setAllReviewedSubmissions] = useState<ReviewedSubmission[]>([]); // 存储所有数据
   const [selectedSubmission, setSelectedSubmission] = useState<PendingSubmission | null>(null);
@@ -77,6 +79,20 @@ export default function Admin() {
     reviewMessage: '',
     points: 0
   });
+
+  const handlePendingPageChange = (page: number) => {
+    setPendingCurrentPage(prev => {
+      const target = Math.max(1, Math.min(page, pendingPageCount));
+      return target === prev ? prev : target;
+    });
+  };
+
+  const handlePendingPageSizeChange = (size: number) => {
+    if (size !== pendingPageSize) {
+      setPendingPageSize(size);
+      setPendingCurrentPage(1);
+    }
+  };
   const [reviewLoading, setReviewLoading] = useState(false);
   const [monthlyPoint, setMonthlyPoint] = useState<MonthlyPointVO | null>(null);
   const [monthlyPointLoading, setMonthlyPointLoading] = useState(false);
@@ -120,6 +136,36 @@ export default function Admin() {
     dateRange: ''
   });
 
+  // 排序状态
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
+
+  // 已审核表单排序状态
+  const [reviewedSortConfig, setReviewedSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
+
+  // 排序函数
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // 已审核表单排序函数
+  const handleReviewedSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (reviewedSortConfig && reviewedSortConfig.key === key && reviewedSortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setReviewedSortConfig({ key, direction });
+  };
+
   // 筛选后的数据
   const filteredPendingSubmissions = pendingSubmissions.filter(submission => {
     if (filters.user && !submission.userName.toLowerCase().includes(filters.user.toLowerCase()) && 
@@ -138,6 +184,58 @@ export default function Admin() {
     }
     return true;
   });
+
+  const sortedFilteredPendingSubmissions = useMemo(() => {
+    let sorted = [...filteredPendingSubmissions];
+    
+    if (sortConfig) {
+      sorted.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+        
+        switch (sortConfig.key) {
+          case 'createTime':
+            aValue = new Date(a.createTime).getTime();
+            bValue = new Date(b.createTime).getTime();
+            break;
+          case 'userName':
+            aValue = a.userName.toLowerCase();
+            bValue = b.userName.toLowerCase();
+            break;
+          case 'formType':
+            aValue = a.type;
+            bValue = b.type;
+            break;
+          default:
+            return 0;
+        }
+        
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    } else {
+      // 默认按创建时间倒序排列
+      sorted.sort((a, b) => {
+        const timeA = new Date(a.createTime).getTime();
+        const timeB = new Date(b.createTime).getTime();
+        return timeB - timeA;
+      });
+    }
+    
+    return sorted;
+  }, [filteredPendingSubmissions, sortConfig]);
+
+  const pendingDisplayTotal = sortedFilteredPendingSubmissions.length;
+  const pendingPageCount = Math.max(1, Math.ceil(pendingDisplayTotal / pendingPageSize));
+  const pendingStartIndex = (pendingCurrentPage - 1) * pendingPageSize;
+  const paginatedPendingSubmissions = sortedFilteredPendingSubmissions.slice(pendingStartIndex, pendingStartIndex + pendingPageSize);
+  const pendingRangeStart = pendingDisplayTotal === 0 ? 0 : pendingStartIndex + 1;
+  const pendingRangeEnd = pendingDisplayTotal === 0 ? 0 : Math.min(pendingStartIndex + pendingPageSize, pendingDisplayTotal);
 
   // 基于所有数据进行筛选
   const filteredAllReviewedSubmissions = allReviewedSubmissions.filter(submission => {
@@ -161,11 +259,61 @@ export default function Admin() {
     return true;
   });
 
+  // 已审核表单排序
+  const sortedFilteredAllReviewedSubmissions = useMemo(() => {
+    let sorted = [...filteredAllReviewedSubmissions];
+    
+    if (reviewedSortConfig) {
+      sorted.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+        
+        switch (reviewedSortConfig.key) {
+          case 'createTime':
+            aValue = new Date(a.createTime).getTime();
+            bValue = new Date(b.createTime).getTime();
+            break;
+          case 'reviewTime':
+            aValue = new Date(a.reviewTime).getTime();
+            bValue = new Date(b.reviewTime).getTime();
+            break;
+          case 'userName':
+            aValue = a.userName.toLowerCase();
+            bValue = b.userName.toLowerCase();
+            break;
+          case 'formType':
+            aValue = a.type;
+            bValue = b.type;
+            break;
+          default:
+            return 0;
+        }
+        
+        if (aValue < bValue) {
+          return reviewedSortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return reviewedSortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    } else {
+      // 默认按创建时间倒序排列
+      sorted.sort((a, b) => {
+        const timeA = new Date(a.createTime).getTime();
+        const timeB = new Date(b.createTime).getTime();
+        return timeB - timeA;
+      });
+    }
+    
+    return sorted;
+  }, [filteredAllReviewedSubmissions, reviewedSortConfig]);
+
   // 计算筛选后的分页数据
   const filteredReviewedSubmissions = (() => {
     const startIndex = (reviewedCurrentPage - 1) * reviewedPageSize;
     const endIndex = startIndex + reviewedPageSize;
-    return filteredAllReviewedSubmissions.slice(startIndex, endIndex);
+    return sortedFilteredAllReviewedSubmissions.slice(startIndex, endIndex);
   })();
 
   // 重置筛选
@@ -241,16 +389,37 @@ export default function Admin() {
       setLoading(true);
       setError(''); // 清除之前的错误
       
+      const pageSize = 20; // 后端限制最大20
+
+      const fetchAllPages = async (service: any, params: any) => {
+        let current = 1;
+        let hasMore = true;
+        const allRecords: any[] = [];
+        let total = 0;
+
+        while (hasMore) {
+          const response = await service({ ...params, current: Math.floor(current), pageSize: Math.floor(pageSize) });
+          const records = response?.records || [];
+          total = response?.total ?? total;
+          allRecords.push(...records);
+          const reachedTotal = total ? allRecords.length >= total : false;
+          hasMore = records.length === pageSize && !reachedTotal;
+          current++;
+        }
+
+        return allRecords;
+      };
+
       const [applicationForms, taskSubmissions, activityApplications] = await Promise.all([
-        formService.getFormList({ status: 0, current: 1, pageSize: 20 }), // 0-待审核
-        taskSubmissionService.getAllTaskSubmissions({ reviewStatus: 0, current: 1, pageSize: 20 }), // 0-待审核
-        activityApplicationService.getAllApplications({ reviewStatus: 0, current: 1, pageSize: 20 }) // 0-待审核
+        fetchAllPages(formService.getFormList, { status: 0 }),
+        fetchAllPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 0 }),
+        fetchAllPages(activityApplicationService.getAllApplications, { reviewStatus: 0 })
       ]);
 
       const pending: PendingSubmission[] = [];
 
       // 添加待审核的申请表
-      applicationForms.records.forEach(form => {
+      applicationForms.forEach((form: ApplicationForm) => {
         if (form && form.id) {
           pending.push({
             id: form.id,
@@ -266,7 +435,7 @@ export default function Admin() {
       });
 
       // 添加待审核的任务提交
-      taskSubmissions.records.forEach(task => {
+      taskSubmissions.forEach((task: any) => {
         if (task && task.id) {
           pending.push({
             id: task.id,
@@ -282,7 +451,7 @@ export default function Admin() {
       });
 
       // 添加待审核的活动申请
-      activityApplications.records.forEach(activity => {
+      activityApplications.forEach((activity: ActivityApplication) => {
         if (activity && activity.id) {
           pending.push({
             id: activity.id,
@@ -305,6 +474,10 @@ export default function Admin() {
       });
       
       setPendingSubmissions(pending);
+      setPendingCurrentPage(prev => {
+        const maxPage = Math.max(1, Math.ceil(pending.length / pendingPageSize));
+        return Math.min(prev, maxPage);
+      });
     } catch (error: any) {
       console.error('获取待审核表单失败:', error);
       setError(error.message || t('admin.error.fetch.pending'));
@@ -332,7 +505,7 @@ export default function Admin() {
       const allRecords = [];
 
       while (hasMore) {
-        const response = await service({ ...params, current: currentPage, pageSize: maxPageSize });
+        const response = await service({ ...params, current: Math.floor(currentPage), pageSize: Math.floor(maxPageSize) });
         if (response.records && response.records.length > 0) {
           allRecords.push(...response.records);
           hasMore = response.records.length === maxPageSize;
@@ -576,23 +749,23 @@ export default function Admin() {
         await formService.reviewForm({
           formId: selectedReviewedSubmission.id,
           status: editReviewedForm.status,
-          reviewComment: editReviewedForm.reviewMessage,
-          score: editReviewedForm.reviewScore
+          reviewComment: editReviewedForm.reviewMessage || '', // 确保不为undefined
+          score: Math.floor(editReviewedForm.reviewScore) || 0 // 确保是整数
         });
       } else if (selectedReviewedSubmission.type === 'task') {
         await taskSubmissionService.updateTaskSubmission({
           id: selectedReviewedSubmission.id,
           reviewStatus: editReviewedForm.status,
-          reviewMessage: editReviewedForm.reviewMessage,
-          reviewScore: editReviewedForm.reviewScore
+          reviewMessage: editReviewedForm.reviewMessage || '', // 确保不为undefined
+          reviewScore: Math.floor(editReviewedForm.reviewScore) || 0 // 确保是整数
         });
       } else if (selectedReviewedSubmission.type === 'activity') {
         
         const result = await activityApplicationService.reviewApplication({
           id: selectedReviewedSubmission.id,
           reviewStatus: editReviewedForm.status,
-          reviewComment: editReviewedForm.reviewMessage, // 后端使用reviewComment字段
-          reviewScore: editReviewedForm.reviewScore
+          reviewComment: editReviewedForm.reviewMessage || '', // 后端使用reviewComment字段，确保不为undefined
+          reviewScore: Math.floor(editReviewedForm.reviewScore) || 0 // 确保是整数
         });
         
       }
@@ -650,12 +823,27 @@ export default function Admin() {
 
     setReviewLoading(true);
     try {
+      console.log('🔍 开始审核流程:', {
+        submissionId: selectedSubmission.id,
+        submissionType: selectedSubmission.type,
+        status: status,
+        reviewMessage: reviewForm.reviewMessage,
+        points: reviewForm.points
+      });
+
       // 申请表和活动申请表不给予积分奖励
       const basePoints = (selectedSubmission.type === 'application' || selectedSubmission.type === 'activity')
         ? 0
         : (status === 1 ? Math.max(0, reviewForm.points) : 0);
 
-      let pointsToAward = basePoints;
+      let pointsToAward = Math.floor(basePoints) || 0; // 确保是整数
+      
+      console.log('📊 积分计算:', {
+        basePoints,
+        pointsToAward,
+        submissionType: selectedSubmission.type,
+        status
+      });
 
       let monthlyPointUpdatePayload: {
         userId: number;
@@ -667,19 +855,25 @@ export default function Admin() {
       let monthlyPointCapApplied = false;
 
       if (selectedSubmission.type === 'application') {
-        await formService.reviewForm({
+        const reviewData = {
           formId: selectedSubmission.id,
           status: status,
-          reviewComment: reviewForm.reviewMessage,
+          reviewComment: reviewForm.reviewMessage || '', // 确保不为undefined
           score: pointsToAward
-        });
+        };
+        console.log('📝 申请表审核请求:', reviewData);
+        await formService.reviewForm(reviewData);
+        console.log('✅ 申请表审核成功');
       } else if (selectedSubmission.type === 'task') {
-        await taskSubmissionService.updateTaskSubmission({
+        const reviewData = {
           id: selectedSubmission.id,
           reviewStatus: status,
-          reviewMessage: reviewForm.reviewMessage,
+          reviewMessage: reviewForm.reviewMessage || '', // 确保不为undefined
           reviewScore: pointsToAward
-        });
+        };
+        console.log('📋 任务提交审核请求:', reviewData);
+        await taskSubmissionService.updateTaskSubmission(reviewData);
+        console.log('✅ 任务提交审核成功');
 
         // 如果审核通过，累加月度奖励次数
         if (status === 1) {
@@ -693,7 +887,7 @@ export default function Admin() {
             const availableForMonth = Math.max(0, maxMonthlyPoint - baseMonthlyPoint);
             const requestedPoints = Math.max(0, basePoints);
             const effectiveDelta = Math.min(requestedPoints, availableForMonth);
-            pointsToAward = effectiveDelta;
+            pointsToAward = Math.floor(effectiveDelta) || 0; // 确保是整数
             monthlyPointCapApplied = requestedPoints > availableForMonth || baseMonthlyPoint >= maxMonthlyPoint;
             const expectedTotal = baseMonthlyPoint + effectiveDelta;
             const cappedTotal = Math.min(maxMonthlyPoint, expectedTotal);
@@ -773,20 +967,48 @@ export default function Admin() {
           }
         }
       } else if (selectedSubmission.type === 'activity') {
-        await activityApplicationService.reviewApplication({
+        const reviewData = {
           id: selectedSubmission.id,
           reviewStatus: status,
-          reviewComment: reviewForm.reviewMessage, // 后端使用reviewComment字段
+          reviewComment: reviewForm.reviewMessage || '', // 后端使用reviewComment字段，确保不为undefined
           reviewScore: pointsToAward
-        });
+        };
+        console.log('🎪 活动申请审核请求:', reviewData);
+        await activityApplicationService.reviewApplication(reviewData);
+        console.log('✅ 活动申请审核成功');
       }
 
       // 重新获取待审核表单
       await fetchPendingSubmissions();
       handleCloseReviewModal();
     } catch (error: any) {
-      console.error('审核失败:', error);
-      setError(error.message || t('admin.error.review'));
+      console.error('❌ 审核失败:', error);
+      console.error('❌ 错误详情:', {
+        message: error.message,
+        response: error.response,
+        httpStatus: error.status,
+        data: error.data,
+        submissionId: selectedSubmission?.id,
+        submissionType: selectedSubmission?.type,
+        reviewStatus: status,
+        reviewMessage: reviewForm.reviewMessage
+      });
+      
+      // 提供更友好的错误信息
+      let errorMessage = t('admin.error.review');
+      if (error.message) {
+        if (error.message.includes('参数错误') || error.message.includes('PARAMS_ERROR')) {
+          errorMessage = '请求参数错误，请检查输入的数据格式';
+        } else if (error.message.includes('权限') || error.message.includes('AUTH')) {
+          errorMessage = '权限不足，请确认您有管理员权限';
+        } else if (error.message.includes('网络') || error.message.includes('Network')) {
+          errorMessage = '网络连接失败，请检查网络连接';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setReviewLoading(false);
     }
@@ -806,6 +1028,12 @@ export default function Admin() {
       // 月度奖励模块的数据获取在组件内部处理
     }
   }, [isAuthenticated, user, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'forms') {
+      fetchPendingSubmissions();
+    }
+  }, [pendingPageSize, activeTab]);
 
   // 监听筛选条件变化，重置到第一页
   useEffect(() => {
@@ -1004,6 +1232,7 @@ export default function Admin() {
                 <span className="ml-2 text-gray-600 dark:text-gray-300">{t('admin.loading')}</span>
               </div>
             ) : (
+            <>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-700">
@@ -1014,8 +1243,29 @@ export default function Admin() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         {t('admin.table.formtype')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        {t('admin.table.submitdate')}
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 select-none"
+                      onClick={() => handleSort('createTime')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>{t('admin.table.submitdate')}</span>
+                        <div className="flex flex-col">
+                          <svg 
+                            className={`w-3 h-3 ${sortConfig?.key === 'createTime' && sortConfig?.direction === 'asc' ? 'text-blue-600' : 'text-gray-400'}`}
+                            fill="currentColor" 
+                            viewBox="0 0 20 20"
+                          >
+                            <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                          </svg>
+                          <svg 
+                            className={`w-3 h-3 -mt-1 ${sortConfig?.key === 'createTime' && sortConfig?.direction === 'desc' ? 'text-blue-600' : 'text-gray-400'}`}
+                            fill="currentColor" 
+                            viewBox="0 0 20 20"
+                          >
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      </div>
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         {t('admin.table.status')}
@@ -1026,14 +1276,14 @@ export default function Admin() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {filteredPendingSubmissions.length === 0 ? (
+                    {paginatedPendingSubmissions.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                          {pendingSubmissions.length === 0 ? t('admin.no.pending') : '没有找到符合条件的表单'}
+                          {sortedFilteredPendingSubmissions.length === 0 ? t('admin.no.pending') : '没有找到符合条件的表单'}
                         </td>
                       </tr>
                     ) : (
-                      filteredPendingSubmissions.map((submission) => (
+                      paginatedPendingSubmissions.map((submission) => (
                         <tr key={`${submission.type}-${submission.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                             <div>
@@ -1066,6 +1316,58 @@ export default function Admin() {
                 </tbody>
               </table>
             </div>
+            {pendingDisplayTotal > 0 && (
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  显示第 {pendingRangeStart} 到 {pendingRangeEnd} 条，共 {pendingDisplayTotal} 条记录
+                </div>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={pendingPageSize}
+                    onChange={(e) => handlePendingPageSizeChange(Number(e.target.value))}
+                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                  >
+                    <option value={10}>每页 10 条</option>
+                    <option value={20}>每页 20 条</option>
+                    <option value={50}>每页 50 条</option>
+                  </select>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handlePendingPageChange(1)}
+                      disabled={pendingCurrentPage === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      首页
+                    </button>
+                    <button
+                      onClick={() => handlePendingPageChange(pendingCurrentPage - 1)}
+                      disabled={pendingCurrentPage === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      上一页
+                    </button>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      第 {pendingCurrentPage} / {pendingPageCount} 页
+                    </span>
+                    <button
+                      onClick={() => handlePendingPageChange(pendingCurrentPage + 1)}
+                      disabled={pendingCurrentPage >= pendingPageCount}
+                      className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      下一页
+                    </button>
+                    <button
+                      onClick={() => handlePendingPageChange(pendingPageCount)}
+                      disabled={pendingCurrentPage >= pendingPageCount}
+                      className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      末页
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            </>
             )}
           </div>
         )}
@@ -1163,11 +1465,53 @@ export default function Admin() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         {t('admin.table.formtype')}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        {t('admin.table.submitdate')}
+                      <th 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 select-none"
+                        onClick={() => handleReviewedSort('createTime')}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>{t('admin.table.submitdate')}</span>
+                          <div className="flex flex-col">
+                            <svg 
+                              className={`w-3 h-3 ${reviewedSortConfig?.key === 'createTime' && reviewedSortConfig?.direction === 'asc' ? 'text-blue-600' : 'text-gray-400'}`}
+                              fill="currentColor" 
+                              viewBox="0 0 20 20"
+                            >
+                              <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                            </svg>
+                            <svg 
+                              className={`w-3 h-3 -mt-1 ${reviewedSortConfig?.key === 'createTime' && reviewedSortConfig?.direction === 'desc' ? 'text-blue-600' : 'text-gray-400'}`}
+                              fill="currentColor" 
+                              viewBox="0 0 20 20"
+                            >
+                              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        {t('admin.table.reviewdate')}
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 select-none"
+                      onClick={() => handleReviewedSort('reviewTime')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>{t('admin.table.reviewdate')}</span>
+                        <div className="flex flex-col">
+                          <svg 
+                            className={`w-3 h-3 ${reviewedSortConfig?.key === 'reviewTime' && reviewedSortConfig?.direction === 'asc' ? 'text-blue-600' : 'text-gray-400'}`}
+                            fill="currentColor" 
+                            viewBox="0 0 20 20"
+                          >
+                            <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                          </svg>
+                          <svg 
+                            className={`w-3 h-3 -mt-1 ${reviewedSortConfig?.key === 'reviewTime' && reviewedSortConfig?.direction === 'desc' ? 'text-blue-600' : 'text-gray-400'}`}
+                            fill="currentColor" 
+                            viewBox="0 0 20 20"
+                          >
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      </div>
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         {t('admin.table.status')}
@@ -1259,9 +1603,9 @@ export default function Admin() {
                   
                   {/* 页码显示 */}
                   <div className="flex space-x-1">
-                    {Array.from({ length: Math.min(5, Math.ceil(filteredAllReviewedSubmissions.length / reviewedPageSize)) }, (_, i) => {
+                    {Array.from({ length: Math.min(5, Math.ceil(sortedFilteredAllReviewedSubmissions.length / reviewedPageSize)) }, (_, i) => {
                       const pageNum = Math.max(1, reviewedCurrentPage - 2) + i;
-                      if (pageNum > Math.ceil(filteredAllReviewedSubmissions.length / reviewedPageSize)) return null;
+                      if (pageNum > Math.ceil(sortedFilteredAllReviewedSubmissions.length / reviewedPageSize)) return null;
                       
                       return (
                         <button
@@ -1281,7 +1625,7 @@ export default function Admin() {
                   
                   <button
                     onClick={() => handleReviewedPageChange(reviewedCurrentPage + 1)}
-                    disabled={reviewedCurrentPage >= Math.ceil(filteredAllReviewedSubmissions.length / reviewedPageSize)}
+                    disabled={reviewedCurrentPage >= Math.ceil(sortedFilteredAllReviewedSubmissions.length / reviewedPageSize)}
                     className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     下一页

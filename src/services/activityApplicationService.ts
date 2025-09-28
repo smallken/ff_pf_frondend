@@ -24,8 +24,8 @@ export const activityApplicationService = {
     return request.post<PageData<ActivityApplication>>(
       API_ENDPOINTS.ACTIVITY_APPLICATION.MY_LIST, 
       {
-        current: params.current || 1,
-        pageSize: params.pageSize || 10,
+        current: Math.floor(params.current || 1),
+        pageSize: Math.floor(params.pageSize || 10),
         reviewStatus: params.reviewStatus,
       }
     );
@@ -44,8 +44,8 @@ export const activityApplicationService = {
     return request.post<PageData<ActivityApplication>>(
       API_ENDPOINTS.ACTIVITY_APPLICATION.PUBLIC_LIST,
       {
-        current: params.current || 1,
-        pageSize: params.pageSize || 10,
+        current: Math.floor(params.current || 1),
+        pageSize: Math.floor(params.pageSize || 10),
       }
     );
   },
@@ -60,8 +60,8 @@ export const activityApplicationService = {
     return request.post<PageData<ActivityApplication>>(
       API_ENDPOINTS.ACTIVITY_APPLICATION.LIST,
       {
-        current: params.current || 1,
-        pageSize: params.pageSize || 10,
+        current: Math.floor(params.current || 1),
+        pageSize: Math.floor(params.pageSize || 10),
         reviewStatus: params.reviewStatus,
         organizer: params.organizer,
       }

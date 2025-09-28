@@ -52,15 +52,20 @@ export const taskSubmissionService = {
     name?: string;
     reviewStatus?: number;
   } = {}): Promise<PageData<TaskSubmissionVO>> => {
+    const requestData = {
+      current: Math.floor(params.current || 1),
+      pageSize: Math.floor(params.pageSize || 10),
+      submissionCategory: params.submissionCategory,
+      name: params.name,
+      reviewStatus: params.reviewStatus,
+    };
+    
+    console.log('🔍 TaskSubmission getAllTaskSubmissions 请求参数:', requestData);
+    console.log('🔍 原始参数:', params);
+    
     return request.post<PageData<TaskSubmissionVO>>(
       API_ENDPOINTS.TASK_SUBMISSION.LIST,
-      {
-        current: params.current || 1,
-        pageSize: params.pageSize || 10,
-        submissionCategory: params.submissionCategory,
-        name: params.name,
-        reviewStatus: params.reviewStatus,
-      }
+      requestData
     );
   },
 
