@@ -8,3 +8,4 @@ export { fileService } from './fileService';
 export { activityApplicationService } from './activityApplicationService';
 export { taskSubmissionService } from './taskSubmissionService';
 export { monthlyRewardService } from './monthlyRewardService';
+export { monthlyPointService } from './monthlyPointService';

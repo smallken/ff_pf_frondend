@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { formService, taskSubmissionService, activityApplicationService, userService, monthlyRewardService } from '../../services';
-import type { ApplicationForm, TaskSubmissionVO, ActivityApplication, AdminStatsVO } from '../../types/api';
+import { formService, taskSubmissionService, activityApplicationService, userService, monthlyRewardService, monthlyPointService } from '../../services';
+import type { ApplicationForm, TaskSubmissionVO, ActivityApplication, AdminStatsVO, MonthlyPointVO } from '../../types/api';
 import AdminMonthlyReward from '../components/AdminMonthlyReward';
 import { API_CONFIG } from '../../config/api';
 
@@ -78,7 +78,15 @@ export default function Admin() {
     points: 0
   });
   const [reviewLoading, setReviewLoading] = useState(false);
-  
+  const [monthlyPoint, setMonthlyPoint] = useState<MonthlyPointVO | null>(null);
+  const [monthlyPointLoading, setMonthlyPointLoading] = useState(false);
+  const [monthlyPointError, setMonthlyPointError] = useState('');
+
+  const MONTHLY_POINT_LIMIT = 50;
+
+  const getMonthlyPointValue = () => monthlyPoint?.point ?? 0;
+  const getMonthlyPointAvailable = () => Math.max(0, MONTHLY_POINT_LIMIT - getMonthlyPointValue());
+
   // 贡献参考表显示状态
   const [showContributionReference, setShowContributionReference] = useState(false);
   
@@ -188,8 +196,44 @@ export default function Admin() {
     approvedActivityApplications: 0,
     rejectedApplications: 0,
     rejectedTaskSubmissions: 0,
-    rejectedActivityApplications: 0
+    rejectedActivityApplications: 0,
   });
+
+  const fetchMonthlyPointInfo = async (userId: number) => {
+    setMonthlyPoint(null);
+    setMonthlyPointError('');
+    if (!userId) return;
+    setMonthlyPointLoading(true);
+    try {
+      const data = await monthlyPointService.getUserMonthlyPoints(userId);
+      setMonthlyPoint(data);
+      if (selectedSubmission?.type === 'task') {
+        const available = Math.max(0, MONTHLY_POINT_LIMIT - (data?.point ?? 0));
+        setReviewForm(prev => ({
+          ...prev,
+          points: Math.min(prev.points, available)
+        }));
+      }
+    } catch (error: any) {
+      console.error('获取本月积分失败:', error);
+      setMonthlyPointError(error?.message || '获取本月积分失败');
+    } finally {
+      setMonthlyPointLoading(false);
+    }
+  };
+
+  const handleReviewPointsChange = (value: number) => {
+    const sanitized = Math.max(0, Math.floor(value));
+    if (selectedSubmission?.type === 'task' && monthlyPoint) {
+      const available = getMonthlyPointAvailable();
+      setReviewForm(prev => ({
+        ...prev,
+        points: Math.min(sanitized, available)
+      }));
+    } else {
+      setReviewForm(prev => ({ ...prev, points: sanitized }));
+    }
+  };
 
   // 获取所有待审核表单
   const fetchPendingSubmissions = async () => {
@@ -446,6 +490,14 @@ export default function Admin() {
       points: 0
     });
     setShowReviewModal(true);
+    setMonthlyPoint(null);
+    setMonthlyPointError('');
+    if (submission.type === 'task') {
+      const taskData = submission.data as TaskSubmissionVO;
+      if (taskData?.userId) {
+        fetchMonthlyPointInfo(taskData.userId);
+      }
+    }
   };
 
   // 关闭审核弹窗
@@ -458,6 +510,9 @@ export default function Admin() {
       reviewMessage: '',
       points: 0
     });
+    setMonthlyPoint(null);
+    setMonthlyPointError('');
+    setMonthlyPointLoading(false);
   };
 
   // 显示已审核表单详情弹窗
@@ -588,30 +643,80 @@ export default function Admin() {
   const handleSubmitReview = async (status: number) => {
     if (!selectedSubmission) return;
 
+    if (status === 1 && selectedSubmission.type === 'task' && monthlyPointLoading) {
+      alert('本月积分数据加载中，请稍后再试');
+      return;
+    }
+
     setReviewLoading(true);
     try {
       // 申请表和活动申请表不给予积分奖励
-      const points = (selectedSubmission.type === 'application' || selectedSubmission.type === 'activity') 
-        ? 0 
-        : (status === 1 ? reviewForm.points : 0);
+      const basePoints = (selectedSubmission.type === 'application' || selectedSubmission.type === 'activity')
+        ? 0
+        : (status === 1 ? Math.max(0, reviewForm.points) : 0);
+
+      let pointsToAward = basePoints;
+
+      let monthlyPointUpdatePayload: {
+        userId: number;
+        pointYear: number;
+        pointMonth: number;
+        pointDelta?: number;
+        finalPoint?: number;
+      } | null = null;
+      let monthlyPointCapApplied = false;
 
       if (selectedSubmission.type === 'application') {
         await formService.reviewForm({
           formId: selectedSubmission.id,
           status: status,
           reviewComment: reviewForm.reviewMessage,
-          score: points
+          score: pointsToAward
         });
       } else if (selectedSubmission.type === 'task') {
         await taskSubmissionService.updateTaskSubmission({
           id: selectedSubmission.id,
           reviewStatus: status,
           reviewMessage: reviewForm.reviewMessage,
-          reviewScore: points
+          reviewScore: pointsToAward
         });
 
         // 如果审核通过，累加月度奖励次数
         if (status === 1) {
+          const taskData = selectedSubmission.data as TaskSubmissionVO;
+          if (taskData?.userId) {
+            const now = new Date();
+            const baseMonthlyPoint = monthlyPoint?.point ?? 0;
+            const maxMonthlyPoint = MONTHLY_POINT_LIMIT;
+            const year = monthlyPoint?.pointYear ?? now.getFullYear();
+            const month = monthlyPoint?.pointMonth ?? now.getMonth() + 1;
+            const availableForMonth = Math.max(0, maxMonthlyPoint - baseMonthlyPoint);
+            const requestedPoints = Math.max(0, basePoints);
+            const effectiveDelta = Math.min(requestedPoints, availableForMonth);
+            pointsToAward = effectiveDelta;
+            monthlyPointCapApplied = requestedPoints > availableForMonth || baseMonthlyPoint >= maxMonthlyPoint;
+            const expectedTotal = baseMonthlyPoint + effectiveDelta;
+            const cappedTotal = Math.min(maxMonthlyPoint, expectedTotal);
+
+            if (effectiveDelta > 0 || monthlyPointCapApplied) {
+              monthlyPointUpdatePayload = {
+                userId: taskData.userId,
+                pointYear: year,
+                pointMonth: month,
+              };
+
+              if (monthlyPointCapApplied || effectiveDelta !== requestedPoints) {
+                monthlyPointUpdatePayload.finalPoint = cappedTotal;
+              } else if (effectiveDelta > 0) {
+                monthlyPointUpdatePayload.pointDelta = effectiveDelta;
+              }
+            }
+
+            if (monthlyPointCapApplied) {
+              setReviewForm(prev => ({ ...prev, points: effectiveDelta }));
+            }
+          }
+
           try {
             // 获取当前年月
             const currentDate = new Date();
@@ -656,13 +761,23 @@ export default function Admin() {
             console.error('更新月度奖励数据失败:', error);
             // 不阻止审核流程，只记录错误
           }
+
+          if (monthlyPointUpdatePayload) {
+            try {
+              const updatedMonthlyPoint = await monthlyPointService.updateUserMonthlyPoints(monthlyPointUpdatePayload);
+              setMonthlyPoint(updatedMonthlyPoint);
+            } catch (error) {
+              console.error('更新月度积分失败:', error);
+              // 不阻止审核流程
+            }
+          }
         }
       } else if (selectedSubmission.type === 'activity') {
         await activityApplicationService.reviewApplication({
           id: selectedSubmission.id,
           reviewStatus: status,
           reviewComment: reviewForm.reviewMessage, // 后端使用reviewComment字段
-          reviewScore: points
+          reviewScore: pointsToAward
         });
       }
 
@@ -1388,6 +1503,20 @@ export default function Admin() {
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400">邮箱：</span>
                     <span className="text-sm text-gray-900 dark:text-white ml-2">{selectedSubmission.userEmail}</span>
                   </div>
+                  {selectedSubmission.type === 'task' && (
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">本月积分：</span>
+                      {monthlyPointLoading ? (
+                        <span className="text-sm text-gray-500 dark:text-gray-400">加载中...</span>
+                      ) : monthlyPointError ? (
+                        <span className="text-sm text-red-500">{monthlyPointError}</span>
+                      ) : (
+                        <span className={`text-sm font-semibold ${monthlyPoint && monthlyPoint.point > 50 ? 'text-red-500' : 'text-blue-600 dark:text-blue-300'}`}>
+                          {monthlyPoint ? monthlyPoint.point : '--'}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <div>
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400">提交时间：</span>
                     <span className="text-sm text-gray-900 dark:text-white ml-2">
@@ -1395,6 +1524,11 @@ export default function Admin() {
                     </span>
                   </div>
                 </div>
+                {selectedSubmission.type === 'task' && monthlyPoint && monthlyPoint.point > 50 && (
+                  <div className="mt-3 text-sm text-red-500">
+                    本月积分已达到封顶值 50 分，本次审核的积分奖励将自动按上限计算。
+                  </div>
+                )}
               </div>
 
               {/* 表单详情 */}
@@ -1700,7 +1834,7 @@ export default function Admin() {
                       <input
                         type="number"
                         value={reviewForm.points}
-                        onChange={(e) => setReviewForm(prev => ({ ...prev, points: parseInt(e.target.value) || 0 }))}
+                        onChange={(e) => handleReviewPointsChange(Number(e.target.value))}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder={t('admin.review.placeholder.points')}
                         min="0"

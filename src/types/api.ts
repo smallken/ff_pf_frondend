@@ -99,6 +99,15 @@ export interface AdminStatsVO {
   rejectedActivityApplications: number;
 }
 
+export interface MonthlyPointVO {
+  id?: number;
+  userId: number;
+  pointYear: number;
+  pointMonth: number;
+  point: number;
+  isExcess?: number;
+}
+
 // 用户请求类型
 export interface UserLoginRequest {
   userAccount: string;
