@@ -1,3 +1,6 @@
+// 确保在生产环境下页面正确显示
+import '../globals.css'
+
 export default function MaintenancePage() {
   return (
     <>
@@ -117,7 +120,11 @@ export default function MaintenancePage() {
         }}>
           {/* Logo区域 */}
           <div style={{ marginBottom: '32px' }}>
-            <div style={{ fontSize: '80px', marginBottom: '24px' }}>🔧</div>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+            </div>
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -134,7 +141,9 @@ export default function MaintenancePage() {
                 justifyContent: 'center',
                 marginRight: '12px'
               }}>
-                <span style={{ fontSize: '24px' }}>👣</span>
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+                  <path d="M12 4C13.6569 4 15 5.34315 15 7C15 8.65685 13.6569 10 12 10C10.3431 10 9 8.65685 9 7C9 5.34315 10.3431 4 12 4ZM6 12C7.65685 12 9 13.3431 9 15C9 16.6569 7.65685 18 6 18C4.34315 18 3 16.6569 3 15C3 13.3431 4.34315 12 6 12ZM18 12C19.6569 12 21 13.3431 21 15C21 16.6569 19.6569 18 18 18C16.3431 18 15 16.6569 15 15C15 13.3431 16.3431 12 18 12Z" />
+                </svg>
               </div>
               <h1 style={{
                 fontSize: '36px',
