@@ -7,7 +7,14 @@ export const metadata = {
   description: 'Flipflop Footprint system is currently undergoing maintenance',
 };
 
-export default function MaintenanceLayout({
+// 强制此布局不继承RootLayout
+export const dynamic = 'force-static';
+export const revalidate = false;
+export const preferredRegion = 'global';
+export const runtime = 'nodejs';
+
+// 显式指定这是根布局，而不是嵌套布局
+export default function MaintenanceRootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -19,6 +26,10 @@ export default function MaintenanceLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#6366f1" />
         <link rel="icon" href="/favicon.ico" />
+        {/* 防止缓存 */}
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
       </head>
       <body className={inter.className}>
         {children}

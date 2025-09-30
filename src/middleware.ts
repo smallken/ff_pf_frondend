@@ -10,13 +10,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
   
-  // 如果访问的是维护页面，允许访问
-  if (request.nextUrl.pathname.startsWith('/maintenance')) {
+  // 如果当前就是访问维护页面，允许访问
+  if (request.nextUrl.pathname === '/maintenance') {
+    return NextResponse.next()
+  }
+  
+  // 如果是静态资源请求，允许通过
+  if (request.nextUrl.pathname.match(/\.(js|css|png|jpg|jpeg|svg|ico)$/)) {
     return NextResponse.next()
   }
   
   // 其他所有页面都重定向到维护页面
-  return NextResponse.redirect(new URL('/maintenance', request.url))
+  return NextResponse.rewrite(new URL('/maintenance', request.url))
 }
 
 export const config = {
