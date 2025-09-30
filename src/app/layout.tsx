@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "../contexts/AuthContext";
 import { ModuleProvider } from "../contexts/ModuleContext";
+import ConditionalLayout from "./components/ConditionalLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,19 +61,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`}
       >
-        <ThemeProvider>
-          <LanguageProvider>
-            <AuthProvider>
-              <ModuleProvider>
-                <DynamicLangHtml />
-                <Header />
-                <main className="min-h-screen">
-                  {children}
-                </main>
-              </ModuleProvider>
-            </AuthProvider>
-          </LanguageProvider>
-        </ThemeProvider>
+        <ConditionalLayout>
+          {children}
+        </ConditionalLayout>
       </body>
     </html>
   );
