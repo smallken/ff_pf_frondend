@@ -33,6 +33,30 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // 全局错误处理，避免Talisman扩展错误影响用户体验
+              window.addEventListener('error', function(event) {
+                if (event.message && event.message.includes('Talisman extension')) {
+                  event.preventDefault();
+                  console.warn('Talisman extension error suppressed:', event.message);
+                  return false;
+                }
+              });
+              
+              window.addEventListener('unhandledrejection', function(event) {
+                if (event.reason && event.reason.message && event.reason.message.includes('Talisman extension')) {
+                  event.preventDefault();
+                  console.warn('Talisman extension promise rejection suppressed:', event.reason.message);
+                  return false;
+                }
+              });
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`}
       >
