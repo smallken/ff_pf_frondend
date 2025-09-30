@@ -1,20 +1,20 @@
-'use client';
-
 export default function MaintenancePage() {
   return (
     <>
-      <style jsx>{`
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 0.2;
-            transform: scale(1);
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes pulse {
+            0%, 100% {
+              opacity: 0.2;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.4;
+              transform: scale(1.05);
+            }
           }
-          50% {
-            opacity: 0.4;
-            transform: scale(1.05);
-          }
-        }
-      `}</style>
+        `
+      }} />
       <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       {/* 背景装饰 */}
       <div style={{
