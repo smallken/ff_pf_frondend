@@ -887,9 +887,26 @@ export default function Admin() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth() + 1;
 
+        // 获取用户ID，尝试多种方式
+        const taskData = selectedReviewedSubmission.data as any;
+        let userId = taskData.userId || taskData.user?.id || taskData.submitterId;
+        
+        console.log('🔍 调试信息:', {
+          submissionId: selectedReviewedSubmission.id,
+          taskData: taskData,
+          userId: userId,
+          userName: selectedReviewedSubmission.userName,
+          userEmail: selectedReviewedSubmission.userEmail
+        });
+
+        if (!userId) {
+          console.error('❌ 无法获取userId，taskData:', taskData);
+          throw new Error('无法获取用户ID，请联系管理员');
+        }
+
         // 构建月度积分调整请求
         const monthlyPointPayload = {
-          userId: (selectedReviewedSubmission.data as any).userId,
+          userId: userId,
           pointYear: year,
           pointMonth: month,
           promotionDelta: adjustments.promotion,
