@@ -707,6 +707,22 @@ export default function Admin() {
   const handleShowReviewedModal = (submission: ReviewedSubmission) => {
     setSelectedReviewedSubmission(submission);
     setShowReviewedModal(true);
+    
+    // 初始化类别次数状态
+    if (submission.type === 'task') {
+      const taskData = submission.data as TaskSubmissionVO;
+      const currentCounts = {
+        promotion: taskData.tasks?.filter(task => task.submissionCategory === 'promotion').length || 0,
+        short: taskData.tasks?.filter(task => task.submissionCategory === 'short').length || 0,
+        long: taskData.tasks?.filter(task => task.submissionCategory === 'long').length || 0,
+        community: taskData.tasks?.filter(task => task.submissionCategory === 'community').length || 0,
+      };
+      
+      setOriginalCategoryCounts(currentCounts);
+      setEditCategoryCounts(currentCounts);
+      
+      console.log('🎬 弹窗打开时初始化类别次数:', currentCounts);
+    }
   };
 
   // 关闭已审核表单详情弹窗
@@ -2802,10 +2818,7 @@ export default function Admin() {
                             />
                           ) : (
                             <div className="text-lg font-bold text-gray-900 dark:text-white">
-                              {(() => {
-                                const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
-                                return taskData.tasks?.filter(task => task.submissionCategory === 'promotion').length || 0;
-                              })()}
+                              {originalCategoryCounts.promotion}
                             </div>
                           )}
                           <div className="text-xs text-gray-500 dark:text-gray-400">传播类</div>
@@ -2822,10 +2835,7 @@ export default function Admin() {
                             />
                           ) : (
                             <div className="text-lg font-bold text-gray-900 dark:text-white">
-                              {(() => {
-                                const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
-                                return taskData.tasks?.filter(task => task.submissionCategory === 'short').length || 0;
-                              })()}
+                              {originalCategoryCounts.short}
                             </div>
                           )}
                           <div className="text-xs text-gray-500 dark:text-gray-400">短篇原创</div>
@@ -2842,10 +2852,7 @@ export default function Admin() {
                             />
                           ) : (
                             <div className="text-lg font-bold text-gray-900 dark:text-white">
-                              {(() => {
-                                const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
-                                return taskData.tasks?.filter(task => task.submissionCategory === 'long').length || 0;
-                              })()}
+                              {originalCategoryCounts.long}
                             </div>
                           )}
                           <div className="text-xs text-gray-500 dark:text-gray-400">长篇原创</div>
@@ -2862,10 +2869,7 @@ export default function Admin() {
                             />
                           ) : (
                             <div className="text-lg font-bold text-gray-900 dark:text-white">
-                              {(() => {
-                                const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
-                                return taskData.tasks?.filter(task => task.submissionCategory === 'community').length || 0;
-                              })()}
+                              {originalCategoryCounts.community}
                             </div>
                           )}
                           <div className="text-xs text-gray-500 dark:text-gray-400">社区类</div>
