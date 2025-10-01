@@ -37,8 +37,8 @@ export default function MintRules() {
           </h1>
           <p className="text-xl text-gray-300">
             {language === 'zh' 
-              ? '9月20日 – 10月05日'
-              : 'September 20 - October 05'
+              ? '9月20日 – 12月31日'
+              : 'September 20 - December 31'
             }
           </p>
         </motion.div>
@@ -56,9 +56,9 @@ export default function MintRules() {
             <div className="space-y-4 text-gray-300 leading-relaxed">
               <p>
                 {language === 'zh' ? (
-                  'Flipflop Mint大赛 · 铸造狂欢季正式开启！从 9月20日到10月05日，Flipflop将迎来一场属于所有 工作室与个人玩家 的链上挑战赛。 这不仅是一场关于 现金奖励 的角逐，更是一场检验 社区凝聚力与创造力 的竞赛。'
+                  'Flipflop Mint大赛 · 铸造狂欢季正式开启！从 9月20日到12月31日，Flipflop将迎来一场属于所有 工作室与个人玩家 的链上挑战赛。 这不仅是一场关于 现金奖励 的角逐，更是一场检验 社区凝聚力与创造力 的竞赛。'
                 ) : (
-                  'Flipflop Mint Competition · Minting Carnival Season officially launched! From September 20th to October 5th, Flipflop will host an on-chain challenge for all studios and individual players. This is not just a competition about cash rewards, but also a test of community cohesion and creativity.'
+                  'Flipflop Mint Competition · Minting Carnival Season officially launched! From September 20th to December 31st, Flipflop will host an on-chain challenge for all studios and individual players. This is not just a competition about cash rewards, but also a test of community cohesion and creativity.'
                 )}
               </p>
               <p>
@@ -362,7 +362,7 @@ export default function MintRules() {
                   <h3 className="text-xl font-bold text-yellow-400">3. {language === 'zh' ? '参赛期' : 'Competition Period'}</h3>
                 </div>
                 <ul className="space-y-2 text-gray-300 text-sm">
-                  <li>• {language === 'zh' ? '时间：9月20日 – 10月05日' : 'Time: September 20 - October 05'}</li>
+                  <li>• {language === 'zh' ? '时间：9月20日 – 12月31日' : 'Time: September 20 - December 31'}</li>
                   <li>• {language === 'zh' ? '所有参赛者可自由选择项目进行Mint操作' : 'All participants can freely choose projects for Mint operations'}</li>
                   <li>• {language === 'zh' ? '链上数据将自动记录' : 'On-chain data will be automatically recorded'}</li>
                   <li>• {language === 'zh' ? 'Refund部分金额不计入统计' : 'Refund amounts are not included in statistics'}</li>

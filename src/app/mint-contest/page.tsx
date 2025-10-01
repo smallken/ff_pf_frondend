@@ -317,10 +317,10 @@ export default function MintContest() {
               },
               {
                 step: '3',
-                title: language === 'zh' ? '参赛期（9月20日 – 10月05日）' : 'Competition Period (Sep 20 – Oct 05)',
+                title: language === 'zh' ? '参赛期（9月20日 – 12月31日）' : 'Competition Period (Sep 20 – Dec 31)',
                 content: language === 'zh'
-                  ? '所有参赛者可在大赛期间自由选择项目进行Mint操作。链上数据将自动记录，Refund部分金额不计入统计。参赛表可在此期间自由添加项目选择与Mint操作，链上数据自动记录，Refund部分金额不计入人数。'
-                  : 'All participants can freely choose projects for Mint operations during the competition period. On-chain data will be automatically recorded, with refund amounts not included in statistics. Registration forms can freely add project selections and Mint operations during this period. On-chain data is automatically recorded, with refund amounts not counted in participant numbers.'
+  ? '所有参赛者可在大赛期间（9月20日至12月31日）自由选择项目进行Mint操作。链上数据将自动记录，Refund部分金额不计入统计。参赛表可在此期间自由添加项目选择与Mint操作，链上数据自动记录，Refund部分金额不计入人数。'
+                  : 'All participants can freely choose projects for Mint operations during the competition period (Sep 20 - Dec 31). On-chain data will be automatically recorded, with refund amounts not included in statistics. Registration forms can freely add project selections and Mint operations during this period. On-chain data is automatically recorded, with refund amounts not counted in participant numbers.'
               },
               {
                 step: '4',
