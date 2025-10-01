@@ -704,24 +704,67 @@ export default function Admin() {
   };
 
   // 显示已审核表单详情弹窗
-  const handleShowReviewedModal = (submission: ReviewedSubmission) => {
+  const handleShowReviewedModal = async (submission: ReviewedSubmission) => {
     setSelectedReviewedSubmission(submission);
     setShowReviewedModal(true);
     
     // 初始化类别次数状态
     if (submission.type === 'task') {
       const taskData = submission.data as TaskSubmissionVO;
-      const currentCounts = {
+      
+      // 先从tasks数组计算初始值
+      const tasksBasedCounts = {
         promotion: taskData.tasks?.filter(task => task.submissionCategory === 'promotion').length || 0,
         short: taskData.tasks?.filter(task => task.submissionCategory === 'short').length || 0,
         long: taskData.tasks?.filter(task => task.submissionCategory === 'long').length || 0,
         community: taskData.tasks?.filter(task => task.submissionCategory === 'community').length || 0,
       };
       
-      setOriginalCategoryCounts(currentCounts);
-      setEditCategoryCounts(currentCounts);
+      // 尝试从后端获取实际的monthlyReward数据
+      try {
+        const taskSubmissionData = taskData as any;
+        const userId = taskSubmissionData.userId || taskSubmissionData.user?.id || taskSubmissionData.submitterId;
+        
+        if (userId) {
+          const createTime = new Date(submission.createTime);
+          const taskDataAny = taskData as any;
+          const completionDate = taskDataAny.completionDate ? new Date(taskDataAny.completionDate) : createTime;
+          const year = completionDate.getFullYear();
+          const month = completionDate.getMonth() + 1;
+          
+          // 调用后端API获取monthlyReward数据
+          const response = await fetch(`http://localhost:8100/api/monthly-reward/user/${userId}/${year}/${month}`, {
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.code === 0 && result.data) {
+              // 使用后端返回的实际类别次数
+              const backendCounts = {
+                promotion: result.data.promotionScore || 0,
+                short: result.data.shortScore || 0,
+                long: result.data.longScore || 0,
+                community: result.data.communityScore || 0,
+              };
+              
+              setOriginalCategoryCounts(backendCounts);
+              setEditCategoryCounts(backendCounts);
+              
+              console.log('🎬 弹窗打开时从后端获取类别次数:', backendCounts);
+              return;
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ 从后端获取类别次数失败，使用tasks数组计算:', error);
+      }
       
-      console.log('🎬 弹窗打开时初始化类别次数:', currentCounts);
+      // 如果后端获取失败，使用tasks数组计算的值
+      setOriginalCategoryCounts(tasksBasedCounts);
+      setEditCategoryCounts(tasksBasedCounts);
+      
+      console.log('🎬 弹窗打开时使用tasks数组计算类别次数:', tasksBasedCounts);
     }
   };
 
