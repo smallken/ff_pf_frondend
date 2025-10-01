@@ -65,7 +65,7 @@ export default function MintContest() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            {language === 'zh' ? '铸造狂欢季正式开启！' : 'Minting Carnival Season Officially Launched!'}
+            {language === 'zh' ? '铸造狂欢季正式开启！更新时间：9月20日-12月31日' : 'Minting Carnival Season Officially Launched! Updated: Sep 20 - Dec 31'}
           </motion.h2>
 
           <motion.div 
@@ -230,46 +230,34 @@ export default function MintContest() {
               )}
             </p>
             
-            {/* 奖励表格占位符 */}
-            <div className="bg-gradient-to-r from-yellow-900/20 to-orange-900/20 rounded-xl p-6 mb-6 border border-yellow-500/30">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="text-center">
-                  <h4 className="text-xl font-bold text-yellow-400 mb-3">🐕 {language === 'zh' ? '工作室赛道' : 'Studio Track'}</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>{language === 'zh' ? '第一名' : '1st Place'}</span>
-                      <span className="text-yellow-400 font-bold">1500 USDT</span>
+            {/* 奖金扩大说明 */}
+            <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-4 mb-6 border border-purple-500/30">
+              <h4 className="text-xl font-bold text-purple-300 mb-3">💥 {language === 'zh' ? '奖金扩大至' : 'Prize Pool Expanded To'}</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h5 className="font-semibold text-yellow-300 mb-2">{language === 'zh' ? '工作室/个人' : 'Studio/Individual'}</h5>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex items-center justify-between px-3 py-1 bg-black/30 rounded">
+                      <span>{language === 'zh' ? '第一名' : '1st'}:</span>
+                      <span className="text-yellow-400 font-bold">$5000 / $2500</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>{language === 'zh' ? '第二名' : '2nd Place'}</span>
-                      <span className="text-yellow-400 font-bold">800 USDT</span>
+                    <div className="flex items-center justify-between px-3 py-1 bg-black/30 rounded">
+                      <span>{language === 'zh' ? '第二名' : '2nd'}:</span>
+                      <span className="text-yellow-400 font-bold">$2000 / $1000</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>{language === 'zh' ? '第三名' : '3rd Place'}</span>
-                      <span className="text-yellow-400 font-bold">400 USDT</span>
+                    <div className="flex items-center justify-between px-3 py-1 bg-black/30 rounded">
+                      <span>{language === 'zh' ? '第三名' : '3rd'}:</span>
+                      <span className="text-yellow-400 font-bold">$1000 / $500</span>
                     </div>
                   </div>
                 </div>
-                <div className="text-center">
-                  <h4 className="text-xl font-bold text-cyan-400 mb-3">🐾 {language === 'zh' ? '个人赛道' : 'Individual Track'}</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>{language === 'zh' ? '第一名' : '1st Place'}</span>
-                      <span className="text-cyan-400 font-bold">800 USDT</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>{language === 'zh' ? '第二名' : '2nd Place'}</span>
-                      <span className="text-cyan-400 font-bold">400 USDT</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>{language === 'zh' ? '第三名' : '3rd Place'}</span>
-                      <span className="text-cyan-400 font-bold">200 USDT</span>
-                    </div>
-                  </div>
+                <div className="flex items-center">
+                  <p className="text-sm text-gray-300">
+                    {language === 'zh' ? '左侧为工作室赛道奖金，右侧为个人赛道奖金。总奖金池大幅增加，奖励更丰厚！' : 'Left side: Studio track prizes, Right side: Individual track prizes. Total prize pool significantly increased, rewards are more generous!'}
+                  </p>
                 </div>
               </div>
             </div>
-            
             <div className="bg-gradient-to-r from-red-900/30 to-pink-900/30 rounded-xl p-4 mb-6">
               <p className="text-center font-semibold text-red-400">
                 📌 {language === 'zh' ? '说明：奖金数额会根据参赛热度适度追加，但绝不会减少！' : 'Note: Prize amounts will be moderately increased based on participation enthusiasm, but will never be reduced!'}
@@ -322,8 +310,8 @@ export default function MintContest() {
                 step: '3',
                 title: language === 'zh' ? '参赛期（9月20日 – 10月05日）' : 'Competition Period (Sep 20 – Oct 05)',
                 content: language === 'zh'
-                  ? '所有参赛者可在大赛期间自由选择项目进行Mint操作。链上数据将自动记录，Refund部分金额不计入统计。'
-                  : 'All participants can freely choose projects for Mint operations during the competition period. On-chain data will be automatically recorded, with refund amounts not included in statistics.'
+                  ? '所有参赛者可在大赛期间自由选择项目进行Mint操作。链上数据将自动记录，Refund部分金额不计入统计。参赛表可在此期间自由添加项目选择与Mint操作，链上数据自动记录，Refund部分金额不计入人数。'
+                  : 'All participants can freely choose projects for Mint operations during the competition period. On-chain data will be automatically recorded, with refund amounts not included in statistics. Registration forms can freely add project selections and Mint operations during this period. On-chain data is automatically recorded, with refund amounts not counted in participant numbers.'
               },
               {
                 step: '4',
