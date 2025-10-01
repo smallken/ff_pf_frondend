@@ -6,6 +6,10 @@ export interface MonthlyPointVO {
   pointYear: number;
   pointMonth: number;
   point: number;
+  promotion?: number;
+  shortCount?: number;
+  longCount?: number;
+  community?: number;
   isExcess?: number;
 }
 
