@@ -172,7 +172,7 @@ export default function MaintenancePage() {
               marginBottom: '16px',
               lineHeight: '1.6'
             }}>
-              我们正在进行系统升级，预计10月1日北京时间晚上7点前完成
+              我们正在进行系统升级
             </p>
             <p style={{
               fontSize: '18px',
@@ -206,7 +206,7 @@ export default function MaintenancePage() {
               marginBottom: '12px',
               lineHeight: '1.6'
             }}>
-              We are currently performing system upgrades, expected to complete before 7:00 PM Beijing Time on October 1st
+              We are currently performing system upgrades
             </p>
             <p style={{
               fontSize: '16px',
