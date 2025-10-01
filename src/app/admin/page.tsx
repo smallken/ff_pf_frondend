@@ -708,53 +708,35 @@ export default function Admin() {
     setSelectedReviewedSubmission(submission);
     setShowReviewedModal(true);
     
-    // 初始化类别次数状态 - 从monthlyReward表获取总次数
+    // 初始化类别次数状态
     if (submission.type === 'task') {
-      const taskData = submission.data as any;
+      const taskData = submission.data as any; // 使用any类型以访问新添加的字段
       
-      try {
-        // 获取用户ID和年月
-        const userId = taskData.userId || taskData.user?.id;
-        if (userId) {
-          const createTime = new Date(submission.createTime);
-          const completionDate = taskData.completionDate ? new Date(taskData.completionDate) : createTime;
-          const year = completionDate.getFullYear();
-          const month = completionDate.getMonth() + 1;
-          
-          console.log('🔍 从monthlyReward获取总类别次数:', { userId, year, month });
-          
-          // 从后端获取monthlyReward数据
-          const response = await fetch(`http://localhost:8100/api/monthly-reward/user/${userId}/${year}/${month}`, {
-            credentials: 'include'
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            if (result.code === 0 && result.data) {
-              const currentCounts = {
-                promotion: result.data.promotionScore || 0,
-                short: result.data.shortScore || 0,
-                long: result.data.longScore || 0,
-                community: result.data.communityScore || 0,
-              };
-              
-              setOriginalCategoryCounts(currentCounts);
-              setEditCategoryCounts(currentCounts);
-              
-              console.log('✅ 从monthlyReward获取到的类别次数:', currentCounts);
-              return;
-            }
-          }
-        }
-      } catch (error) {
-        console.error('❌ 获取monthlyReward数据失败:', error);
-      }
+      // 优先使用存储的类别次数，如果没有则从tasks数组计算
+      const currentCounts = {
+        promotion: taskData.promotionCount !== undefined && taskData.promotionCount !== null 
+          ? taskData.promotionCount 
+          : (taskData.tasks?.filter((task: any) => task.submissionCategory === 'promotion').length || 0),
+        short: taskData.shortCount !== undefined && taskData.shortCount !== null
+          ? taskData.shortCount
+          : (taskData.tasks?.filter((task: any) => task.submissionCategory === 'short').length || 0),
+        long: taskData.longCount !== undefined && taskData.longCount !== null
+          ? taskData.longCount
+          : (taskData.tasks?.filter((task: any) => task.submissionCategory === 'long').length || 0),
+        community: taskData.communityCount !== undefined && taskData.communityCount !== null
+          ? taskData.communityCount
+          : (taskData.tasks?.filter((task: any) => task.submissionCategory === 'community').length || 0),
+      };
       
-      // 如果获取失败，使用默认值0
-      const defaultCounts = { promotion: 0, short: 0, long: 0, community: 0 };
-      setOriginalCategoryCounts(defaultCounts);
-      setEditCategoryCounts(defaultCounts);
-      console.log('⚠️ 使用默认类别次数:', defaultCounts);
+      setOriginalCategoryCounts(currentCounts);
+      setEditCategoryCounts(currentCounts);
+      
+      console.log('🎬 弹窗打开时初始化类别次数:', currentCounts, 'taskData中的值:', {
+        promotionCount: taskData.promotionCount,
+        shortCount: taskData.shortCount,
+        longCount: taskData.longCount,
+        communityCount: taskData.communityCount
+      });
     }
   };
 
@@ -881,8 +863,8 @@ export default function Admin() {
   const handleStartEditCategoryCounts = () => {
     if (!selectedReviewedSubmission || selectedReviewedSubmission.type !== 'task') return;
     
-    // 直接使用当前的originalCategoryCounts，不要重新计算
-    // 因为originalCategoryCounts已经从monthlyReward获取了正确的值
+    // 【关键】直接使用当前显示的originalCategoryCounts，不要重新计算
+    // originalCategoryCounts已经在弹窗打开时从TaskSubmission字段正确初始化了
     setEditCategoryCounts(originalCategoryCounts);
     setIsEditingCategoryCounts(true);
     
@@ -927,39 +909,82 @@ export default function Admin() {
 
       // 如果有变化才进行更新
       if (Object.values(adjustments).some(adj => adj !== 0)) {
-        // 获取用户ID和年月信息
+        console.log('📊 类别次数有变化，开始更新...');
+        console.log('  - 原始值:', originalCategoryCounts);
+        console.log('  - 新值:', editCategoryCounts);
+        console.log('  - 调整量:', adjustments);
+        
+        // 步骤1: 更新TaskSubmission表（单次提交的类别次数）
+        const updatePayload = {
+          promotionCount: editCategoryCounts.promotion,
+          shortCount: editCategoryCounts.short,
+          longCount: editCategoryCounts.long,
+          communityCount: editCategoryCounts.community,
+        };
+
+        console.log('📤 步骤1: 更新TaskSubmission的类别次数:', updatePayload);
+
+        const response = await fetch(`http://localhost:8100/api/taskSubmission/update-category-counts/${selectedReviewedSubmission.id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(updatePayload)
+        });
+
+        if (!response.ok) {
+          throw new Error('更新TaskSubmission失败');
+        }
+
+        const result = await response.json();
+        if (result.code !== 0) {
+          throw new Error(result.message || '更新TaskSubmission失败');
+        }
+
+        console.log('✅ TaskSubmission更新成功');
+        
+        // 步骤2: 同时更新monthlyReward表（月度总次数）
         const taskData = selectedReviewedSubmission.data as any;
         const userId = taskData.userId || taskData.user?.id;
         
-        if (!userId) {
-          throw new Error('无法获取用户ID');
+        if (userId) {
+          const createTime = new Date(selectedReviewedSubmission.createTime);
+          const completionDate = taskData.completionDate ? new Date(taskData.completionDate) : createTime;
+          const year = completionDate.getFullYear();
+          const month = completionDate.getMonth() + 1;
+          
+          const monthlyPointPayload = {
+            userId: userId,
+            pointYear: year,
+            pointMonth: month,
+            promotionDelta: adjustments.promotion,
+            shortDelta: adjustments.short,
+            longDelta: adjustments.long,
+            communityDelta: adjustments.community
+          };
+          
+          console.log('📤 步骤2: 更新monthlyReward的总次数:', monthlyPointPayload);
+          
+          try {
+            await monthlyPointService.adjustCategoryCounts(monthlyPointPayload);
+            console.log('✅ monthlyReward更新成功');
+          } catch (error) {
+            console.error('⚠️ monthlyReward更新失败（不影响TaskSubmission）:', error);
+          }
+        } else {
+          console.warn('⚠️ 无法获取userId，跳过monthlyReward更新');
         }
         
-        const createTime = new Date(selectedReviewedSubmission.createTime);
-        const completionDate = taskData.completionDate ? new Date(taskData.completionDate) : createTime;
-        const year = completionDate.getFullYear();
-        const month = completionDate.getMonth() + 1;
-        
-        // 构建monthlyReward更新请求
-        const monthlyPointPayload = {
-          userId: userId,
-          pointYear: year,
-          pointMonth: month,
-          promotionDelta: adjustments.promotion,
-          shortDelta: adjustments.short,
-          longDelta: adjustments.long,
-          communityDelta: adjustments.community
-        };
-
-        console.log('📤 更新monthlyReward的类别次数:', monthlyPointPayload);
-
-        // 调用API更新monthlyReward表（总次数）
-        await monthlyPointService.adjustCategoryCounts(monthlyPointPayload);
-
-        console.log('✅ monthlyReward类别次数更新成功');
-        
-        // 更新本地状态为新值
+        // 更新本地状态
         setOriginalCategoryCounts(editCategoryCounts);
+        
+        // 更新selectedReviewedSubmission的数据
+        const updatedTaskData = { ...selectedReviewedSubmission.data, ...updatePayload };
+        setSelectedReviewedSubmission({
+          ...selectedReviewedSubmission,
+          data: updatedTaskData
+        });
         
         console.log('🔄 本地状态已更新:', editCategoryCounts);
         
