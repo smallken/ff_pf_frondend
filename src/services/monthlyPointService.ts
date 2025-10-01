@@ -34,17 +34,5 @@ export const monthlyPointService = {
     communityDelta?: number;
   }): Promise<void> {
     return request.post('/monthly-point/adjust-category-counts', data);
-  },
-
-  async testAdjust(data: {
-    userId: number;
-    pointYear: number;
-    pointMonth: number;
-    promotionDelta?: number;
-    shortDelta?: number;
-    longDelta?: number;
-    communityDelta?: number;
-  }): Promise<void> {
-    return request.post('/monthly-point/test-adjust', data);
   }
 };
