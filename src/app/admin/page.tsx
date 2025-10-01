@@ -935,6 +935,20 @@ export default function Admin() {
 
         console.log('✅ 类别次数调整成功');
         
+        // 更新界面显示的类别次数（应用调整后的值）
+        const newCategoryCounts = {
+          promotion: originalCategoryCounts.promotion + adjustments.promotion,
+          short: originalCategoryCounts.short + adjustments.short,
+          long: originalCategoryCounts.long + adjustments.long,
+          community: originalCategoryCounts.community + adjustments.community,
+        };
+        
+        // 更新原始值和编辑值
+        setOriginalCategoryCounts(newCategoryCounts);
+        setEditCategoryCounts(newCategoryCounts);
+        
+        console.log('🔄 更新界面显示的类别次数:', newCategoryCounts);
+        
         setSuccess('类别次数已更新');
         setTimeout(() => setSuccess(''), 3000);
       }
