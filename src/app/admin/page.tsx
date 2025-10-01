@@ -121,6 +121,21 @@ export default function Admin() {
     reviewMessage: '',
     reviewScore: 0
   });
+  
+  // 编辑类别次数的状态
+  const [isEditingCategoryCounts, setIsEditingCategoryCounts] = useState(false);
+  const [editCategoryCounts, setEditCategoryCounts] = useState({
+    promotion: 0,
+    short: 0,
+    long: 0,
+    community: 0
+  });
+  const [originalCategoryCounts, setOriginalCategoryCounts] = useState({
+    promotion: 0,
+    short: 0,
+    long: 0,
+    community: 0
+  });
   const [editReviewedLoading, setEditReviewedLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reviewedLoading, setReviewedLoading] = useState(false);
@@ -699,6 +714,7 @@ export default function Admin() {
     setShowReviewedModal(false);
     setSelectedReviewedSubmission(null);
     setIsEditingReviewed(false);
+    setIsEditingCategoryCounts(false); // 重置类别次数编辑状态
     setEditReviewedForm({
       status: 1,
       reviewMessage: '',
@@ -807,6 +823,99 @@ export default function Admin() {
         data: error.data
       });
       setError(error.message || '更新失败，请重试');
+    } finally {
+      setEditReviewedLoading(false);
+    }
+  };
+
+  // 开始编辑类别次数
+  const handleStartEditCategoryCounts = () => {
+    if (!selectedReviewedSubmission || selectedReviewedSubmission.type !== 'task') return;
+    
+    const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
+    const currentCounts = {
+      promotion: taskData.tasks?.filter(task => task.submissionCategory === 'promotion').length || 0,
+      short: taskData.tasks?.filter(task => task.submissionCategory === 'short').length || 0,
+      long: taskData.tasks?.filter(task => task.submissionCategory === 'long').length || 0,
+      community: taskData.tasks?.filter(task => task.submissionCategory === 'community').length || 0,
+    };
+    
+    setOriginalCategoryCounts(currentCounts);
+    setEditCategoryCounts(currentCounts);
+    setIsEditingCategoryCounts(true);
+  };
+
+  // 取消编辑类别次数
+  const handleCancelEditCategoryCounts = () => {
+    setIsEditingCategoryCounts(false);
+    setEditCategoryCounts(originalCategoryCounts);
+  };
+
+  // 更新编辑中的类别次数
+  const handleEditCategoryCountChange = (category: string, value: number) => {
+    setEditCategoryCounts(prev => ({
+      ...prev,
+      [category]: Math.max(0, value)
+    }));
+  };
+
+  // 保存类别次数修改
+  const handleSaveCategoryCountsEdit = async () => {
+    if (!selectedReviewedSubmission || selectedReviewedSubmission.type !== 'task') return;
+
+    setEditReviewedLoading(true);
+    try {
+      console.log('🔍 开始更新类别次数:', {
+        submissionId: selectedReviewedSubmission.id,
+        originalCounts: originalCategoryCounts,
+        newCounts: editCategoryCounts
+      });
+
+      // 计算需要调整的差值
+      const adjustments = {
+        promotion: editCategoryCounts.promotion - originalCategoryCounts.promotion,
+        short: editCategoryCounts.short - originalCategoryCounts.short,
+        long: editCategoryCounts.long - originalCategoryCounts.long,
+        community: editCategoryCounts.community - originalCategoryCounts.community,
+      };
+
+      console.log('📊 类别次数调整量:', adjustments);
+
+      // 如果有变化才进行调整
+      if (Object.values(adjustments).some(adj => adj !== 0)) {
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
+
+        // 构建月度积分调整请求
+        const monthlyPointPayload = {
+          userId: (selectedReviewedSubmission.data as any).userId,
+          pointYear: year,
+          pointMonth: month,
+          promotionDelta: adjustments.promotion,
+          shortDelta: adjustments.short,
+          longDelta: adjustments.long,
+          communityDelta: adjustments.community
+        };
+
+        console.log('📤 发送月度积分调整请求:', monthlyPointPayload);
+
+        // 调用API更新monthlyPoint表
+        await monthlyPointService.adjustCategoryCounts(monthlyPointPayload);
+
+        console.log('✅ 类别次数调整成功');
+        
+        setSuccess('类别次数已更新');
+        setTimeout(() => setSuccess(''), 3000);
+      }
+
+      setIsEditingCategoryCounts(false);
+      
+      // 重新获取已审核数据以确保数据同步
+      await fetchReviewedSubmissions(reviewedCurrentPage);
+    } catch (error: any) {
+      console.error('❌ 更新类别次数失败:', error);
+      setError(error.message || '更新类别次数失败，请重试');
     } finally {
       setEditReviewedLoading(false);
     }
@@ -2607,42 +2716,114 @@ export default function Admin() {
                     
                     {/* 类别次数统计 */}
                     <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                      <h5 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-3">获得的类别次数</h5>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div className="text-center p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
-                          <div className="text-lg font-bold text-gray-900 dark:text-white">
-                            {(() => {
-                              const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
-                              return taskData.tasks?.filter(task => task.submissionCategory === 'promotion').length || 0;
-                            })()}
+                      <div className="flex justify-between items-center mb-3">
+                        <h5 className="text-sm font-semibold text-blue-900 dark:text-blue-200">获得的类别次数</h5>
+                        {!isEditingCategoryCounts && (
+                          <button
+                            onClick={handleStartEditCategoryCounts}
+                            className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200"
+                          >
+                            编辑
+                          </button>
+                        )}
+                        {isEditingCategoryCounts && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleSaveCategoryCountsEdit}
+                              disabled={editReviewedLoading}
+                              className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 transition-colors duration-200"
+                            >
+                              {editReviewedLoading ? '保存中...' : '保存'}
+                            </button>
+                            <button
+                              onClick={handleCancelEditCategoryCounts}
+                              disabled={editReviewedLoading}
+                              className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 transition-colors duration-200"
+                            >
+                              取消
+                            </button>
                           </div>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {/* 传播类 */}
+                        <div className="text-center p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
+                          {isEditingCategoryCounts ? (
+                            <input
+                              type="number"
+                              min="0"
+                              value={editCategoryCounts.promotion}
+                              onChange={(e) => handleEditCategoryCountChange('promotion', parseInt(e.target.value) || 0)}
+                              className="w-full text-lg font-bold text-center bg-transparent border-b border-blue-500 focus:outline-none focus:border-blue-700"
+                            />
+                          ) : (
+                            <div className="text-lg font-bold text-gray-900 dark:text-white">
+                              {(() => {
+                                const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
+                                return taskData.tasks?.filter(task => task.submissionCategory === 'promotion').length || 0;
+                              })()}
+                            </div>
+                          )}
                           <div className="text-xs text-gray-500 dark:text-gray-400">传播类</div>
                         </div>
+                        {/* 短篇原创 */}
                         <div className="text-center p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
-                          <div className="text-lg font-bold text-gray-900 dark:text-white">
-                            {(() => {
-                              const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
-                              return taskData.tasks?.filter(task => task.submissionCategory === 'short').length || 0;
-                            })()}
-                          </div>
+                          {isEditingCategoryCounts ? (
+                            <input
+                              type="number"
+                              min="0"
+                              value={editCategoryCounts.short}
+                              onChange={(e) => handleEditCategoryCountChange('short', parseInt(e.target.value) || 0)}
+                              className="w-full text-lg font-bold text-center bg-transparent border-b border-blue-500 focus:outline-none focus:border-blue-700"
+                            />
+                          ) : (
+                            <div className="text-lg font-bold text-gray-900 dark:text-white">
+                              {(() => {
+                                const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
+                                return taskData.tasks?.filter(task => task.submissionCategory === 'short').length || 0;
+                              })()}
+                            </div>
+                          )}
                           <div className="text-xs text-gray-500 dark:text-gray-400">短篇原创</div>
                         </div>
+                        {/* 长篇原创 */}
                         <div className="text-center p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
-                          <div className="text-lg font-bold text-gray-900 dark:text-white">
-                            {(() => {
-                              const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
-                              return taskData.tasks?.filter(task => task.submissionCategory === 'long').length || 0;
-                            })()}
-                          </div>
+                          {isEditingCategoryCounts ? (
+                            <input
+                              type="number"
+                              min="0"
+                              value={editCategoryCounts.long}
+                              onChange={(e) => handleEditCategoryCountChange('long', parseInt(e.target.value) || 0)}
+                              className="w-full text-lg font-bold text-center bg-transparent border-b border-blue-500 focus:outline-none focus:border-blue-700"
+                            />
+                          ) : (
+                            <div className="text-lg font-bold text-gray-900 dark:text-white">
+                              {(() => {
+                                const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
+                                return taskData.tasks?.filter(task => task.submissionCategory === 'long').length || 0;
+                              })()}
+                            </div>
+                          )}
                           <div className="text-xs text-gray-500 dark:text-gray-400">长篇原创</div>
                         </div>
+                        {/* 社区类 */}
                         <div className="text-center p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
-                          <div className="text-lg font-bold text-gray-900 dark:text-white">
-                            {(() => {
-                              const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
-                              return taskData.tasks?.filter(task => task.submissionCategory === 'community').length || 0;
-                            })()}
-                          </div>
+                          {isEditingCategoryCounts ? (
+                            <input
+                              type="number"
+                              min="0"
+                              value={editCategoryCounts.community}
+                              onChange={(e) => handleEditCategoryCountChange('community', parseInt(e.target.value) || 0)}
+                              className="w-full text-lg font-bold text-center bg-transparent border-b border-blue-500 focus:outline-none focus:border-blue-700"
+                            />
+                          ) : (
+                            <div className="text-lg font-bold text-gray-900 dark:text-white">
+                              {(() => {
+                                const taskData = selectedReviewedSubmission.data as TaskSubmissionVO;
+                                return taskData.tasks?.filter(task => task.submissionCategory === 'community').length || 0;
+                              })()}
+                            </div>
+                          )}
                           <div className="text-xs text-gray-500 dark:text-gray-400">社区类</div>
                         </div>
                       </div>
