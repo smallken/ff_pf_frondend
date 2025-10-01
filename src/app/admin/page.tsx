@@ -951,46 +951,22 @@ export default function Admin() {
 
         console.log('✅ 类别次数调整成功');
         
-        // 重新获取已审核数据以确保数据同步，并直接处理返回的数据
+        // 计算调整后的新值（不要重新从tasks数组计算，因为那个数组不会变化）
+        const newCategoryCounts = {
+          promotion: Math.max(0, originalCategoryCounts.promotion + adjustments.promotion),
+          short: Math.max(0, originalCategoryCounts.short + adjustments.short),
+          long: Math.max(0, originalCategoryCounts.long + adjustments.long),
+          community: Math.max(0, originalCategoryCounts.community + adjustments.community),
+        };
+        
+        // 更新状态为新值
+        setOriginalCategoryCounts(newCategoryCounts);
+        setEditCategoryCounts(newCategoryCounts);
+        
+        console.log('🔄 更新后的类别次数:', newCategoryCounts);
+        
+        // 重新获取已审核数据列表以确保数据同步
         await fetchReviewedSubmissions(reviewedCurrentPage);
-        
-        // 重新获取最新数据并更新当前选中项
-        const { approvedTaskSubmissions, rejectedTaskSubmissions } = await fetchAllReviewedData();
-        const allTasks = [...approvedTaskSubmissions.records, ...rejectedTaskSubmissions.records];
-        const updatedTask = allTasks.find(task => task && task.id && task.id.toString() === selectedReviewedSubmission.id.toString());
-        
-        if (updatedTask) {
-          // 重新构建 ReviewedSubmission 对象
-          const updatedSubmission: ReviewedSubmission = {
-            id: updatedTask.id,
-            type: 'task',
-            title: t('admin.forms.achievement'),
-            userName: updatedTask.name || t('admin.unknown.user'),
-            userEmail: updatedTask.email || '',
-            status: updatedTask.reviewStatus || 0,
-            createTime: updatedTask.createTime || new Date().toISOString(),
-            reviewTime: updatedTask.updateTime || updatedTask.createTime || new Date().toISOString(),
-            reviewMessage: updatedTask.reviewMessage || '',
-            reviewScore: updatedTask.reviewScore || 0,
-            data: updatedTask
-          };
-          
-          setSelectedReviewedSubmission(updatedSubmission);
-          
-          // 重新初始化类别次数状态（使用最新数据）
-          const taskData = updatedTask as TaskSubmissionVO;
-          const newCategoryCounts = {
-            promotion: taskData.tasks?.filter(task => task.submissionCategory === 'promotion').length || 0,
-            short: taskData.tasks?.filter(task => task.submissionCategory === 'short').length || 0,
-            long: taskData.tasks?.filter(task => task.submissionCategory === 'long').length || 0,
-            community: taskData.tasks?.filter(task => task.submissionCategory === 'community').length || 0,
-          };
-          
-          setOriginalCategoryCounts(newCategoryCounts);
-          setEditCategoryCounts(newCategoryCounts);
-          
-          console.log('🔄 重新获取数据后的类别次数:', newCategoryCounts);
-        }
         
         setSuccess('类别次数已更新');
         setTimeout(() => setSuccess(''), 3000);
