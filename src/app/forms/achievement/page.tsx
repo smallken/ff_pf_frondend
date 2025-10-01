@@ -53,6 +53,42 @@ export default function AchievementForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // 错误信息翻译函数
+  const translateError = (errorMsg: string): string => {
+    if (language === 'zh') return errorMsg;
+    
+    // 传播类频率限制
+    const promotionMatch = errorMsg.match(/传播类任务一周内不能超过3次提交（当前已提交(\d+)次，本次提交(\d+)次）/);
+    if (promotionMatch) {
+      return `Promotion tasks cannot exceed 3 submissions per week (currently submitted ${promotionMatch[1]} times, this submission ${promotionMatch[2]} time(s))`;
+    }
+    
+    // 短篇原创频率限制
+    const shortMatch = errorMsg.match(/短篇原创任务一周内不能超过3次提交（当前已提交(\d+)次，本次提交(\d+)次）/);
+    if (shortMatch) {
+      return `Short original tasks cannot exceed 3 submissions per week (currently submitted ${shortMatch[1]} times, this submission ${shortMatch[2]} time(s))`;
+    }
+    
+    // 社区TG频率限制
+    const communityMatch = errorMsg.match(/社区类TG任务一周内不能超过1次提交（当前已提交(\d+)次，本次提交(\d+)次）/);
+    if (communityMatch) {
+      return `Community TG tasks cannot exceed 1 submission per week (currently submitted ${communityMatch[1]} time(s), this submission ${communityMatch[2]} time(s))`;
+    }
+    
+    // 其他通用错误翻译
+    const errorTranslations: { [key: string]: string } = {
+      '提交失败，请重试': 'Submission failed, please try again',
+      '请先登录后再提交成果表': 'Please login before submitting the achievement form',
+      '姓名是必填项': 'Name is required',
+      '邮箱是必填项': 'Email is required',
+      'Twitter用户名是必填项': 'Twitter username is required',
+      'Telegram用户名是必填项': 'Telegram username is required',
+      '钱包地址是必填项': 'Wallet address is required',
+    };
+    
+    return errorTranslations[errorMsg] || errorMsg;
+  };
+
   // 表单验证函数
   const validateForm = () => {
     // 验证基本信息
@@ -368,17 +404,28 @@ export default function AchievementForm() {
               </div>
             )}
 
+            {/* 错误弹窗 */}
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-xl p-6 mb-6 shadow-lg animate-pulse">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-slideDown">
+                  <div className="bg-gradient-to-r from-red-500 to-pink-600 p-4">
+                    <div className="flex items-center text-white">
+                      <svg className="h-8 w-8 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <h3 className="text-xl font-bold">{t('forms.error.submit.failed')}</h3>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-1">{t('forms.error.submit.failed')}</h3>
-                    <div className="text-red-700 dark:text-red-300">{error}</div>
+                  <div className="p-6">
+                    <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed mb-6">
+                      {translateError(error)}
+                    </p>
+                    <button
+                      onClick={() => setError('')}
+                      className="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
+                    >
+                      {language === 'zh' ? '我知道了' : 'Got it'}
+                    </button>
                   </div>
                 </div>
               </div>

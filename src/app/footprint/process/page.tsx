@@ -57,9 +57,7 @@ export default function Process() {
       icon: '📋',
       details: [
         t('process.step3.detail1'),
-        t('process.step3.detail2'),
-        t('process.step3.detail3'),
-        t('process.step3.detail4')
+        t('process.step3.detail2')
       ]
     },
     {

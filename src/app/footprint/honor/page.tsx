@@ -223,6 +223,10 @@ export default function Honor() {
                       <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                       <span>{t('honor.monthly.definitions.creation.2')}</span>
                     </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.monthly.definitions.creation.3')}</span>
+                    </div>
                   </div>
                 </div>
                 
@@ -237,6 +241,10 @@ export default function Honor() {
                     <div className="flex items-start">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                       <span>{t('honor.monthly.definitions.community.2')}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.monthly.definitions.community.3')}</span>
                     </div>
                   </div>
                 </div>
@@ -295,12 +303,6 @@ export default function Honor() {
                     <td className="py-4">{t('honor.flipprints.creation.task3')}</td>
                     <td className="py-4">{t('honor.flipprints.creation.points3')}</td>
                     <td className="py-4">{t('honor.flipprints.creation.notes3')}</td>
-                  </tr>
-                  <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4"></td>
-                    <td className="py-4">{t('honor.flipprints.creation.task4')}</td>
-                    <td className="py-4">{t('honor.flipprints.creation.points4')}</td>
-                    <td className="py-4">{t('honor.flipprints.creation.notes4')}</td>
                   </tr>
                   
                   {/* 社区类 */}
@@ -363,7 +365,10 @@ export default function Honor() {
               <p className="text-yellow-800 dark:text-yellow-200 font-medium mb-4 text-sm">
                 {t('honor.notice.subtitle')}
               </p>
-              <ul className="text-yellow-700 dark:text-yellow-300 space-y-2 text-sm">
+              <p className="text-yellow-800 dark:text-yellow-200 font-semibold mb-2 text-sm">
+                {t('honor.notice.subtitle2')}
+              </p>
+              <ul className="text-yellow-700 dark:text-yellow-300 space-y-2 text-sm mb-4">
                 <li className="flex items-start">
                   <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   <span>{t('honor.notice.1')}</span>
@@ -372,6 +377,11 @@ export default function Honor() {
                   <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   <span>{t('honor.notice.2')}</span>
                 </li>
+              </ul>
+              <p className="text-yellow-800 dark:text-yellow-200 font-semibold mb-2 text-sm">
+                {t('honor.notice.subtitle3')}
+              </p>
+              <ul className="text-yellow-700 dark:text-yellow-300 space-y-2 text-sm mb-4">
                 <li className="flex items-start">
                   <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   <span>{t('honor.notice.3')}</span>
@@ -384,11 +394,10 @@ export default function Honor() {
                   <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   <span>{t('honor.notice.5')}</span>
                 </li>
-                <li className="flex items-start">
-                  <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>{t('honor.notice.6')}</span>
-                </li>
               </ul>
+              <p className="text-yellow-700 dark:text-yellow-300 text-sm mt-4">
+                {t('honor.notice.6')}
+              </p>
             </div>
           </div>
         </div>

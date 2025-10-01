@@ -6,8 +6,10 @@
 
 ### 限制规则
 - **传播类（promotion.*）**：一周内不超过 **3次** 提交
-- **原创类（short.* + long.*）**：一周内合计不超过 **3次** 提交
+- **短篇原创（short.*）**：一周内不超过 **3次** 提交
 - **社区类TG（community.telegram）**：一周内不超过 **1次** 提交
+
+**注意：长篇原创（long.*）不受一周内提交次数限制**
 
 ### 时间窗口计算
 - 采用滚动窗口：从当前时间往前推算7天（168小时）
@@ -215,41 +217,41 @@ public class TaskSubmissionFrequencyServiceImpl
         
         // 统计已提交的各类型任务数量
         int promotionCount = 0;
-        int originalCount = 0; // short + long
+        int shortCount = 0; // 只统计short，long不受限制
         int communityTgCount = 0;
         
         for (TaskSubmissionFrequency record : existingRecords) {
             String taskType = record.getTaskType();
             if (taskType.startsWith("promotion.")) {
                 promotionCount++;
-            } else if (taskType.startsWith("short.") || taskType.startsWith("long.")) {
-                originalCount++;
+            } else if (taskType.startsWith("short.")) {
+                shortCount++;
             } else if ("community.telegram".equals(taskType)) {
                 communityTgCount++;
             }
         }
         
-        log.info("用户{}过去7天提交统计: promotion={}, original={}, community.telegram={}", 
-                userId, promotionCount, originalCount, communityTgCount);
+        log.info("用户{}过去7天提交统计: promotion={}, short={}, community.telegram={}", 
+                userId, promotionCount, shortCount, communityTgCount);
         
         // 统计本次要提交的任务
         int newPromotionCount = 0;
-        int newOriginalCount = 0;
+        int newShortCount = 0;
         int newCommunityTgCount = 0;
         
         for (TaskDTO task : tasks) {
             String taskType = task.getTaskType();
             if (taskType.startsWith("promotion.")) {
                 newPromotionCount++;
-            } else if (taskType.startsWith("short.") || taskType.startsWith("long.")) {
-                newOriginalCount++;
+            } else if (taskType.startsWith("short.")) {
+                newShortCount++;
             } else if ("community.telegram".equals(taskType)) {
                 newCommunityTgCount++;
             }
         }
         
-        log.info("本次提交统计: promotion={}, original={}, community.telegram={}", 
-                newPromotionCount, newOriginalCount, newCommunityTgCount);
+        log.info("本次提交统计: promotion={}, short={}, community.telegram={}", 
+                newPromotionCount, newShortCount, newCommunityTgCount);
         
         // 检查是否超限
         if (promotionCount + newPromotionCount > 3) {
@@ -260,11 +262,11 @@ public class TaskSubmissionFrequencyServiceImpl
             return result;
         }
         
-        if (originalCount + newOriginalCount > 3) {
+        if (shortCount + newShortCount > 3) {
             result.put("success", false);
-            result.put("message", "原创类任务（短篇+长篇）一周内不能超过3次提交（当前已提交" + originalCount 
-                    + "次，本次提交" + newOriginalCount + "次）");
-            log.warn("用户{}原创类任务提交超限", userId);
+            result.put("message", "短篇原创任务一周内不能超过3次提交（当前已提交" + shortCount 
+                    + "次，本次提交" + newShortCount + "次）");
+            log.warn("用户{}短篇原创任务提交超限", userId);
             return result;
         }
         
@@ -509,7 +511,8 @@ try {
 ## ✅ 验收标准
 
 1. ✅ 传播类任务一周内最多3次，超过后提示错误
-2. ✅ 原创类任务（短篇+长篇）一周内合计最多3次
+2. ✅ 短篇原创任务一周内最多3次，超过后提示错误
+3. ✅ 长篇原创任务不受一周内提交次数限制
 3. ✅ 社区TG任务一周内最多1次
 4. ✅ 时间窗口为滚动7天（168小时）
 5. ✅ 删除任务时清理频率记录

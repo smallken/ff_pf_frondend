@@ -949,10 +949,10 @@ export default function Admin() {
         const userId = taskData.userId || taskData.user?.id;
         
         if (userId) {
+          // 使用任务提交的创建时间，而不是完成时间或当前时间
           const createTime = new Date(selectedReviewedSubmission.createTime);
-          const completionDate = taskData.completionDate ? new Date(taskData.completionDate) : createTime;
-          const year = completionDate.getFullYear();
-          const month = completionDate.getMonth() + 1;
+          const year = createTime.getFullYear();
+          const month = createTime.getMonth() + 1;
           
           const monthlyPointPayload = {
             userId: userId,
@@ -1104,13 +1104,13 @@ export default function Admin() {
           }
 
           try {
-            // 获取当前年月
-            const currentDate = new Date();
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth() + 1;
+            // 使用任务提交的创建时间，而不是当前审核时间
+            const taskData = selectedSubmission.data as any;
+            const createTime = new Date(selectedSubmission.createTime);
+            const year = createTime.getFullYear();
+            const month = createTime.getMonth() + 1;
 
             // 根据成果提交表中的实际任务类别计算累加次数
-            const taskData = selectedSubmission.data as any;
             const tasks = taskData.tasks || [];
             
             // 统计各类别的任务数量
