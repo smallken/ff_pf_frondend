@@ -230,30 +230,39 @@ export default function MintContest() {
               )}
             </p>
             
-            {/* 奖金扩大说明 */}
-            <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-4 mb-6 border border-purple-500/30">
-              <h4 className="text-xl font-bold text-purple-300 mb-3">💥 {language === 'zh' ? '奖金扩大至' : 'Prize Pool Expanded To'}</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h5 className="font-semibold text-yellow-300 mb-2">{language === 'zh' ? '工作室/个人' : 'Studio/Individual'}</h5>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex items-center justify-between px-3 py-1 bg-black/30 rounded">
-                      <span>{language === 'zh' ? '第一名' : '1st'}:</span>
-                      <span className="text-yellow-400 font-bold">$5000 / $2500</span>
-                    </div>
-                    <div className="flex items-center justify-between px-3 py-1 bg-black/30 rounded">
-                      <span>{language === 'zh' ? '第二名' : '2nd'}:</span>
-                      <span className="text-yellow-400 font-bold">$2000 / $1000</span>
-                    </div>
-                    <div className="flex items-center justify-between px-3 py-1 bg-black/30 rounded">
-                      <span>{language === 'zh' ? '第三名' : '3rd'}:</span>
-                      <span className="text-yellow-400 font-bold">$1000 / $500</span>
-                    </div>
+            {/* 奖金扩大说明 - 更醒目的显示 */}
+            <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-2xl p-6 mb-6 border-2 border-yellow-400/50 shadow-2xl">
+              <h4 className="text-2xl md:text-3xl font-bold text-center text-yellow-300 mb-6">
+                💥 {language === 'zh' ? '奖金扩大至' : 'Prize Pool Expanded To'}
+              </h4>
+              <div className="space-y-4">
+                {/* 工作室/个人标题 */}
+                <div className="text-center">
+                  <h5 className="text-xl font-bold text-yellow-200 mb-4">
+                    {language === 'zh' ? '工作室/个人' : 'Studio/Individual'}
+                  </h5>
+                </div>
+                
+                {/* 奖金列表 */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-yellow-900/40 to-orange-900/40 rounded-lg border border-yellow-500/30">
+                    <span className="text-lg font-semibold text-white">{language === 'zh' ? '第一名：' : '1st:'}</span>
+                    <span className="text-2xl md:text-3xl font-bold text-yellow-300">$5000 / $2500</span>
+                  </div>
+                  <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-yellow-900/40 to-orange-900/40 rounded-lg border border-yellow-500/30">
+                    <span className="text-lg font-semibold text-white">{language === 'zh' ? '第二名：' : '2nd:'}</span>
+                    <span className="text-2xl md:text-3xl font-bold text-yellow-300">$2000 / $1000</span>
+                  </div>
+                  <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-yellow-900/40 to-orange-900/40 rounded-lg border border-yellow-500/30">
+                    <span className="text-lg font-semibold text-white">{language === 'zh' ? '第三名：' : '3rd:'}</span>
+                    <span className="text-2xl md:text-3xl font-bold text-yellow-300">$1000 / $500</span>
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <p className="text-sm text-gray-300">
-                    {language === 'zh' ? '左侧为工作室赛道奖金，右侧为个人赛道奖金。总奖金池大幅增加，奖励更丰厚！' : 'Left side: Studio track prizes, Right side: Individual track prizes. Total prize pool significantly increased, rewards are more generous!'}
+                
+                {/* 说明文字 */}
+                <div className="text-center mt-4 pt-4 border-t border-yellow-500/30">
+                  <p className="text-base text-yellow-100">
+                    {language === 'zh' ? '左侧为工作室赛道奖金，右侧为个人赛道奖金。总奖金池大幅增加，奖励更丰厚！' : 'Left: Studio track prizes, Right: Individual track prizes. Total prize pool significantly increased!'}
                   </p>
                 </div>
               </div>

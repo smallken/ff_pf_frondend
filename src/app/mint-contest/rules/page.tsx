@@ -63,9 +63,9 @@ export default function MintRules() {
               </p>
               <p>
                 {language === 'zh' ? (
-                  '在这里：你可以用实力证明自己，在链上留下属于团队或个人的荣耀记录；你可以凭借一次次Mint，冲击排行榜，赢取最高 1500 USDT 的现金大奖；你还将有机会获得项目方、基金、全球资源的关注与支持，打开更多合作与成长的机会。'
+                  '在这里：你可以用实力证明自己，在链上留下属于团队或个人的荣耀记录；你可以凭借一次次Mint，冲击排行榜，赢取最高 $5000 的现金大奖；你还将有机会获得项目方、基金、全球资源的关注与支持，打开更多合作与成长的机会。'
                 ) : (
-                  'Here: You can prove yourself with strength and leave glorious records on the chain for your team or personal achievements; You can climb the leaderboard through continuous Minting and win up to 1500 USDT in cash prizes; You will also have the opportunity to gain attention and support from project parties, funds, and global resources, opening up more opportunities for cooperation and growth.'
+                  'Here: You can prove yourself with strength and leave glorious records on the chain for your team or personal achievements; You can climb the leaderboard through continuous Minting and win up to $5000 in cash prizes; You will also have the opportunity to gain attention and support from project parties, funds, and global resources, opening up more opportunities for cooperation and growth.'
                 )}
               </p>
               <p>
@@ -166,15 +166,15 @@ export default function MintRules() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-300">{language === 'zh' ? '第一名' : '1st Place'}</span>
-                      <span className="text-yellow-400 font-bold">1500 USDT</span>
+                      <span className="text-yellow-400 font-bold">$5000</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-300">{language === 'zh' ? '第二名' : '2nd Place'}</span>
-                      <span className="text-yellow-400 font-bold">1000 USDT</span>
+                      <span className="text-yellow-400 font-bold">$2000</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-300">{language === 'zh' ? '第三名' : '3rd Place'}</span>
-                      <span className="text-yellow-400 font-bold">500 USDT</span>
+                      <span className="text-yellow-400 font-bold">$1000</span>
                     </div>
                   </div>
                 </div>
@@ -183,15 +183,15 @@ export default function MintRules() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-300">{language === 'zh' ? '第一名' : '1st Place'}</span>
-                      <span className="text-cyan-400 font-bold">800 USDT</span>
+                      <span className="text-cyan-400 font-bold">$2500</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-300">{language === 'zh' ? '第二名' : '2nd Place'}</span>
-                      <span className="text-cyan-400 font-bold">500 USDT</span>
+                      <span className="text-cyan-400 font-bold">$1000</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-300">{language === 'zh' ? '第三名' : '3rd Place'}</span>
-                      <span className="text-cyan-400 font-bold">300 USDT</span>
+                      <span className="text-cyan-400 font-bold">$500</span>
                     </div>
                   </div>
                 </div>
