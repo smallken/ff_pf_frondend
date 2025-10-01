@@ -725,6 +725,8 @@ export default function Admin() {
         const taskSubmissionData = taskData as any;
         const userId = taskSubmissionData.userId || taskSubmissionData.user?.id || taskSubmissionData.submitterId;
         
+        console.log('🔍 尝试从后端获取类别次数，userId:', userId, 'taskData:', taskData);
+        
         if (userId) {
           const createTime = new Date(submission.createTime);
           const taskDataAny = taskData as any;
@@ -732,13 +734,20 @@ export default function Admin() {
           const year = completionDate.getFullYear();
           const month = completionDate.getMonth() + 1;
           
+          const apiUrl = `http://localhost:8100/api/monthly-reward/user/${userId}/${year}/${month}`;
+          console.log('🌐 调用API:', apiUrl);
+          
           // 调用后端API获取monthlyReward数据
-          const response = await fetch(`http://localhost:8100/api/monthly-reward/user/${userId}/${year}/${month}`, {
+          const response = await fetch(apiUrl, {
             credentials: 'include'
           });
           
+          console.log('📡 API响应状态:', response.status, response.statusText);
+          
           if (response.ok) {
             const result = await response.json();
+            console.log('📦 API返回数据:', result);
+            
             if (result.code === 0 && result.data) {
               // 使用后端返回的实际类别次数
               const backendCounts = {
@@ -751,13 +760,19 @@ export default function Admin() {
               setOriginalCategoryCounts(backendCounts);
               setEditCategoryCounts(backendCounts);
               
-              console.log('🎬 弹窗打开时从后端获取类别次数:', backendCounts);
+              console.log('✅ 弹窗打开时从后端获取类别次数:', backendCounts);
               return;
+            } else {
+              console.warn('⚠️ API返回数据格式不正确:', result);
             }
+          } else {
+            console.warn('⚠️ API响应状态不是OK:', response.status);
           }
+        } else {
+          console.warn('⚠️ 无法获取userId');
         }
       } catch (error) {
-        console.warn('⚠️ 从后端获取类别次数失败，使用tasks数组计算:', error);
+        console.error('❌ 从后端获取类别次数失败:', error);
       }
       
       // 如果后端获取失败，使用tasks数组计算的值
