@@ -883,12 +883,25 @@ export default function Admin() {
 
       // 如果有变化才进行调整
       if (Object.values(adjustments).some(adj => adj !== 0)) {
-        const currentDate = new Date();
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth() + 1;
+        // 从表单数据中获取正确的年月，而不是使用当前时间
+        const taskData = selectedReviewedSubmission.data as any;
+        let year: number, month: number;
+        
+        // 尝试从表单的创建时间或完成时间获取年月
+        const createTime = new Date(selectedReviewedSubmission.createTime);
+        const completionDate = taskData.completionDate ? new Date(taskData.completionDate) : createTime;
+        
+        year = completionDate.getFullYear();
+        month = completionDate.getMonth() + 1;
+        
+        console.log('📅 使用表单对应的年月:', { 
+          formCreateTime: selectedReviewedSubmission.createTime,
+          completionDate: taskData.completionDate,
+          calculatedYear: year,
+          calculatedMonth: month 
+        });
 
         // 获取用户ID，尝试多种方式
-        const taskData = selectedReviewedSubmission.data as any;
         let userId = taskData.userId || taskData.user?.id || taskData.submitterId;
         
         console.log('🔍 调试信息:', {

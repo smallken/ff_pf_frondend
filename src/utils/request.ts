@@ -93,8 +93,28 @@ const createRequest = async <T>(config: RequestConfig): Promise<T> => {
   requestOptions.signal = controller.signal;
 
   try {
+    // 添加请求调试日志
+    if (fullUrl.includes('adjust-category-counts')) {
+      console.log('🚀 发送API请求:', {
+        url: fullUrl,
+        method: interceptedConfig.method,
+        headers: interceptedConfig.headers,
+        body: data,
+        credentials: requestOptions.credentials
+      });
+    }
+    
     const response = await fetch(fullUrl, requestOptions);
     clearTimeout(timeoutId);
+    
+    // 添加响应调试日志
+    if (fullUrl.includes('adjust-category-counts')) {
+      console.log('📥 收到API响应:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Array.from(response.headers.entries())
+      });
+    }
     
     const result = await responseInterceptor<T>(response);
     return result.data;
