@@ -951,28 +951,40 @@ export default function Admin() {
 
         console.log('✅ 类别次数调整成功');
         
-        // 更新界面显示的类别次数（应用调整后的值）
-        const newCategoryCounts = {
-          promotion: originalCategoryCounts.promotion + adjustments.promotion,
-          short: originalCategoryCounts.short + adjustments.short,
-          long: originalCategoryCounts.long + adjustments.long,
-          community: originalCategoryCounts.community + adjustments.community,
-        };
+        // 重新获取已审核数据以确保数据同步
+        await fetchReviewedSubmissions(reviewedCurrentPage);
         
-        // 更新原始值和编辑值
-        setOriginalCategoryCounts(newCategoryCounts);
-        setEditCategoryCounts(newCategoryCounts);
-        
-        console.log('🔄 更新界面显示的类别次数:', newCategoryCounts);
+        // 重新获取当前选中项的最新数据
+        // 由于fetchReviewedSubmissions会更新allReviewedSubmissions状态，我们需要稍等一下再使用它
+        setTimeout(() => {
+          const updatedSubmission = allReviewedSubmissions.find((s: ReviewedSubmission) => s.id === selectedReviewedSubmission.id);
+          
+          if (updatedSubmission) {
+            setSelectedReviewedSubmission(updatedSubmission);
+            
+            // 重新初始化类别次数状态（使用最新数据）
+            if (updatedSubmission.type === 'task') {
+              const taskData = updatedSubmission.data as TaskSubmissionVO;
+              const newCategoryCounts = {
+                promotion: taskData.tasks?.filter(task => task.submissionCategory === 'promotion').length || 0,
+                short: taskData.tasks?.filter(task => task.submissionCategory === 'short').length || 0,
+                long: taskData.tasks?.filter(task => task.submissionCategory === 'long').length || 0,
+                community: taskData.tasks?.filter(task => task.submissionCategory === 'community').length || 0,
+              };
+              
+              setOriginalCategoryCounts(newCategoryCounts);
+              setEditCategoryCounts(newCategoryCounts);
+              
+              console.log('🔄 重新获取数据后的类别次数:', newCategoryCounts);
+            }
+          }
+        }, 100); // 给状态更新一点时间
         
         setSuccess('类别次数已更新');
         setTimeout(() => setSuccess(''), 3000);
       }
 
       setIsEditingCategoryCounts(false);
-      
-      // 重新获取已审核数据以确保数据同步
-      await fetchReviewedSubmissions(reviewedCurrentPage);
     } catch (error: any) {
       console.error('❌ 更新类别次数失败:', error);
       setError(error.message || '更新类别次数失败，请重试');
