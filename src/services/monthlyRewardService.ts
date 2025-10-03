@@ -137,5 +137,10 @@ export const monthlyRewardService = {
     communityIncrement: number;
   }): Promise<boolean> {
     return request.post('/monthly-reward/admin/increment-scores', data);
+  },
+
+  // 管理员：获取有数据的年月列表
+  async getAvailableYearMonths(): Promise<Array<{year: number; month: number}>> {
+    return request.get('/monthly-reward/admin/available-months');
   }
 };
