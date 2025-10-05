@@ -293,8 +293,8 @@ export default function StudioPage() {
                   />
                   <span className="text-gray-300 text-sm">
                     {language === 'zh' 
-                      ? '本团队已阅读并理解《FlipFlop Mint大赛规则书（9.20 – 10.05）》'
-                      : 'Our team has read and understood the "FlipFlop Mint Contest Rules (9.20 – 10.05)"'
+                      ? '本团队已阅读并理解《FlipFlop Mint大赛规则书（9月20日 – 12月31日）》'
+                      : 'Our team has read and understood the "FlipFlop Mint Contest Rules (Sept 20 – Dec 31)"'
                     }
                   </span>
                 </label>
