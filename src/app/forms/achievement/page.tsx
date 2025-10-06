@@ -191,7 +191,7 @@ export default function AchievementForm() {
               
               if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || '上传失败');
+                throw new Error(errorData.error || (language === 'zh' ? '上传失败' : 'Upload failed'));
               }
               
               const result = await response.json();
@@ -199,8 +199,8 @@ export default function AchievementForm() {
               console.log('📸 截图上传到Vercel Blob成功:', screenshotPath);
             } catch (error) {
               console.error('❌ 截图上传到Vercel Blob失败:', error);
-              const errorMessage = error instanceof Error ? error.message : '未知错误';
-              throw new Error(`截图上传失败: ${errorMessage}`);
+              const errorMessage = error instanceof Error ? error.message : (language === 'zh' ? '未知错误' : 'Unknown error');
+              throw new Error(language === 'zh' ? `截图上传失败: ${errorMessage}` : `Screenshot upload failed: ${errorMessage}`);
             }
           }
           
@@ -218,7 +218,9 @@ export default function AchievementForm() {
       // 调用后端成果提交表API
       const submissionId = await taskSubmissionService.addTaskSubmission(submitData);
       // 显示成功提示
-      setSuccess('🎉 成果提交表提交成功！我们将在1-3个工作日内审核您的提交。');
+      setSuccess(language === 'zh' 
+        ? '🎉 成果提交表提交成功！我们将在1-3个工作日内审核您的提交。'
+        : '🎉 Achievement form submitted successfully! We will review your submission within 1-3 business days.');
       
       // 2秒后自动消失提示
       setTimeout(() => {

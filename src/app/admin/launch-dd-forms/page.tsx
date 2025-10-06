@@ -167,7 +167,7 @@ export default function LaunchDDFormsAdmin() {
       document.body.removeChild(link);
     } catch (err) {
       console.error('下载失败:', err);
-      alert('下载失败，请重试');
+      alert(language === 'zh' ? '下载失败，请重试' : 'Download failed, please try again');
     }
   };
 

@@ -146,7 +146,9 @@ export default function ApplicationForm() {
       await formService.submitApplicationForm(formData);
 
       // 显示成功提示
-      setSuccess('🎉 申请表提交成功！我们将在1-3个工作日内审核您的申请。');
+      setSuccess(language === 'zh' 
+        ? '🎉 申请表提交成功！我们将在1-3个工作日内审核您的申请。'
+        : '🎉 Application form submitted successfully! We will review your application within 1-3 business days.');
       
       // 2秒后自动消失提示
       setTimeout(() => {

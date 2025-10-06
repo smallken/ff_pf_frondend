@@ -8,18 +8,18 @@ export async function POST(request: NextRequest) {
     const biz = formData.get('biz') as string;
 
     if (!file) {
-      return NextResponse.json({ error: '没有文件' }, { status: 400 });
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
     if (!biz) {
-      return NextResponse.json({ error: '缺少业务类型' }, { status: 400 });
+      return NextResponse.json({ error: 'Business type is required' }, { status: 400 });
     }
 
     // 检查环境变量
     const token = process.env.BLOB_READ_WRITE_TOKEN;
     if (!token) {
       console.error('❌ Vercel Blob Token未配置');
-      return NextResponse.json({ error: '服务器配置错误' }, { status: 500 });
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
     // 生成文件名
@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('❌ 文件上传失败:', error);
     return NextResponse.json({ 
-      error: '文件上传失败',
-      details: error instanceof Error ? error.message : '未知错误'
+      error: 'File upload failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }

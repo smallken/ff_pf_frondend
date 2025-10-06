@@ -255,12 +255,12 @@ export default function AdminMonthlyReward() {
       const userIds = userId ? [userId] : Array.from(selectedUsers);
       
       if (userIds.length === 0) {
-        alert('请选择要标记的用户');
+        alert(language === 'zh' ? '请选择要标记的用户' : 'Please select users to mark');
         return;
       }
 
       // 二次确认
-      if (!confirm(`确认将选中的 ${userIds.length} 位用户标记为已发奖励吗？`)) {
+      if (!confirm(language === 'zh' ? `确认将选中的 ${userIds.length} 位用户标记为已发奖励吗？` : `Confirm marking ${userIds.length} user(s) as paid?`)) {
         return;
       }
 
@@ -268,16 +268,16 @@ export default function AdminMonthlyReward() {
       const result = await monthlyRewardService.markAsPaid(userIds, currentYear, currentMonth);
 
       if (result && result.success !== false) {
-        alert(`成功标记 ${userIds.length} 个用户为已发奖励`);
+        alert(language === 'zh' ? `成功标记 ${userIds.length} 个用户为已发奖励` : `Successfully marked ${userIds.length} user(s) as paid`);
         setSelectedUsers(new Set());
         fetchStats();
         fetchPendingUsers();
       } else {
-        throw new Error(result?.message || '标记失败');
+        throw new Error(result?.message || (language === 'zh' ? '标记失败' : 'Mark failed'));
       }
     } catch (err: any) {
       console.error('标记已发奖励失败:', err);
-      alert('标记失败：' + (err.message || '未知错误'));
+      alert((language === 'zh' ? '标记失败：' : 'Mark failed: ') + (err.message || (language === 'zh' ? '未知错误' : 'Unknown error')));
     } finally {
       setMarkingPaid(false);
     }
@@ -308,12 +308,12 @@ export default function AdminMonthlyReward() {
       const userIds = Array.from(selectedHistoricalUsers);
       
       if (userIds.length === 0) {
-        alert('请选择要标记的用户');
+        alert(language === 'zh' ? '请选择要标记的用户' : 'Please select users to mark');
         return;
       }
 
       // 二次确认
-      if (!confirm(`确认将选中的 ${userIds.length} 位用户标记为已发奖励吗？`)) {
+      if (!confirm(language === 'zh' ? `确认将选中的 ${userIds.length} 位用户标记为已发奖励吗？` : `Confirm marking ${userIds.length} user(s) as paid?`)) {
         return;
       }
 
@@ -321,16 +321,16 @@ export default function AdminMonthlyReward() {
       const result = await monthlyRewardService.markAsPaid(userIds, selectedHistoricalYear, selectedHistoricalMonth);
 
       if (result && result.success !== false) {
-        alert(`成功标记 ${userIds.length} 个用户为已发奖励`);
+        alert(language === 'zh' ? `成功标记 ${userIds.length} 个用户为已发奖励` : `Successfully marked ${userIds.length} user(s) as paid`);
         setSelectedHistoricalUsers(new Set());
         fetchHistoricalPendingUsers();
         fetchHistoricalRewards();
       } else {
-        throw new Error(result?.message || '标记失败');
+        throw new Error(result?.message || (language === 'zh' ? '标记失败' : 'Mark failed'));
       }
     } catch (err: any) {
       console.error('标记已发奖励失败:', err);
-      alert('标记失败：' + (err.message || '未知错误'));
+      alert((language === 'zh' ? '标记失败：' : 'Mark failed: ') + (err.message || (language === 'zh' ? '未知错误' : 'Unknown error')));
     } finally {
       setMarkingPaid(false);
     }

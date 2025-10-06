@@ -95,7 +95,7 @@ export default function LaunchRegistration() {
         
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || '代币Logo上传失败');
+          throw new Error(errorData.error || (language === 'zh' ? '代币Logo上传失败' : 'Token logo upload failed'));
         }
         
         const result = await response.json();

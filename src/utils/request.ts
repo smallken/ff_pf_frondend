@@ -170,7 +170,7 @@ export const uploadFile = async (url: string, file: File, biz: string): Promise<
     const result = await response.json();
     
     if (result.code !== ERROR_CODES.SUCCESS) {
-      throw new Error(result.message || '上传失败');
+      throw new Error(result.message || 'Upload failed');
     }
 
     return result;

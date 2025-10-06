@@ -36,7 +36,7 @@ interface ReviewedSubmission {
 }
 
 export default function Admin() {
-  const { t, formatDate } = useLanguage();
+  const { t, formatDate, language } = useLanguage();
   const { isAuthenticated, user } = useAuth();
   
   // 构建图片URL的辅助函数
@@ -840,7 +840,7 @@ export default function Admin() {
       );
 
       setIsEditingReviewed(false);
-      setSuccess('审核结果已更新，邮件通知已发送给用户');
+      setSuccess(language === 'zh' ? '审核结果已更新，邮件通知已发送给用户' : 'Review result updated, email notification sent to user');
       setTimeout(() => setSuccess(''), 3000);
       
       // 重新获取已审核数据以确保数据同步
@@ -991,7 +991,7 @@ export default function Admin() {
         // 重新获取已审核数据列表以确保数据同步
         await fetchReviewedSubmissions(reviewedCurrentPage);
         
-        setSuccess('类别次数已更新');
+        setSuccess(language === 'zh' ? '类别次数已更新' : 'Category counts updated');
         setTimeout(() => setSuccess(''), 3000);
       }
 
@@ -1009,7 +1009,7 @@ export default function Admin() {
     if (!selectedSubmission) return;
 
     if (status === 1 && selectedSubmission.type === 'task' && monthlyPointLoading) {
-      alert('本月积分数据加载中，请稍后再试');
+      alert(language === 'zh' ? '本月积分数据加载中，请稍后再试' : 'Monthly points data is loading, please try again later');
       return;
     }
 
@@ -3276,7 +3276,7 @@ function LaunchRegistrationsTab() {
       document.body.removeChild(link);
     } catch (err) {
       console.error('下载失败:', err);
-      alert('下载失败，请重试');
+      alert(language === 'zh' ? '下载失败，请重试' : 'Download failed, please try again');
     }
   };
 
@@ -3547,7 +3547,7 @@ function LaunchDDFormsTab() {
       document.body.removeChild(link);
     } catch (err) {
       console.error('下载失败:', err);
-      alert('下载失败，请重试');
+      alert(language === 'zh' ? '下载失败，请重试' : 'Download failed, please try again');
     }
   };
 
@@ -3789,7 +3789,7 @@ function MintFormsTab() {
       document.body.removeChild(link);
     } catch (err) {
       console.error('下载失败:', err);
-      alert('下载失败，请重试');
+      alert(language === 'zh' ? '下载失败，请重试' : 'Download failed, please try again');
     }
   };
 
