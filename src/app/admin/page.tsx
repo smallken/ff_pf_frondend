@@ -1037,15 +1037,6 @@ export default function Admin() {
         status
       });
 
-      let monthlyPointUpdatePayload: {
-        userId: number;
-        pointYear: number;
-        pointMonth: number;
-        pointDelta?: number;
-        finalPoint?: number;
-      } | null = null;
-      let monthlyPointCapApplied = false;
-
       if (selectedSubmission.type === 'application') {
         const reviewData = {
           formId: selectedSubmission.id,
@@ -1067,42 +1058,9 @@ export default function Admin() {
         await taskSubmissionService.updateTaskSubmission(reviewData);
         console.log('✅ 任务提交审核成功');
 
-        // 如果审核通过，累加月度奖励次数
+        // 如果审核通过，累加月度奖励类别次数
         if (status === 1) {
-          const taskData = selectedSubmission.data as TaskSubmissionVO;
-          if (taskData?.userId) {
-            const now = new Date();
-            const baseMonthlyPoint = monthlyPoint?.point ?? 0;
-            const maxMonthlyPoint = MONTHLY_POINT_LIMIT;
-            const year = monthlyPoint?.pointYear ?? now.getFullYear();
-            const month = monthlyPoint?.pointMonth ?? now.getMonth() + 1;
-            const availableForMonth = Math.max(0, maxMonthlyPoint - baseMonthlyPoint);
-            const requestedPoints = Math.max(0, basePoints);
-            const effectiveDelta = Math.min(requestedPoints, availableForMonth);
-            pointsToAward = Math.floor(effectiveDelta) || 0; // 确保是整数
-            monthlyPointCapApplied = requestedPoints > availableForMonth || baseMonthlyPoint >= maxMonthlyPoint;
-            const expectedTotal = baseMonthlyPoint + effectiveDelta;
-            const cappedTotal = Math.min(maxMonthlyPoint, expectedTotal);
-
-            if (effectiveDelta > 0 || monthlyPointCapApplied) {
-              monthlyPointUpdatePayload = {
-                userId: taskData.userId,
-                pointYear: year,
-                pointMonth: month,
-              };
-
-              if (monthlyPointCapApplied || effectiveDelta !== requestedPoints) {
-                monthlyPointUpdatePayload.finalPoint = cappedTotal;
-              } else if (effectiveDelta > 0) {
-                monthlyPointUpdatePayload.pointDelta = effectiveDelta;
-              }
-            }
-
-            if (monthlyPointCapApplied) {
-              setReviewForm(prev => ({ ...prev, points: effectiveDelta }));
-            }
-          }
-
+          // 月度积分更新已由后端统一处理，前端只需更新类别次数
           try {
             // 使用任务提交的创建时间，而不是当前审核时间
             const taskData = selectedSubmission.data as any;
@@ -1143,19 +1101,15 @@ export default function Admin() {
             // 调用累加次数接口
             console.warn('⚠️ 重要提醒：如果分数被错误修改，可能是后端的refreshMonthlyRewardScores接口被调用了！');
             const result = await monthlyRewardService.incrementMonthlyRewardScores(incrementData);
+            
+            // 审核成功后，重新获取用户的月度积分（已由后端更新）
+            if (selectedSubmission.data?.userId) {
+              const updatedMonthlyPoint = await monthlyPointService.getUserMonthlyPoints(selectedSubmission.data.userId);
+              setMonthlyPoint(updatedMonthlyPoint);
+            }
           } catch (error) {
             console.error('更新月度奖励数据失败:', error);
             // 不阻止审核流程，只记录错误
-          }
-
-          if (monthlyPointUpdatePayload) {
-            try {
-              const updatedMonthlyPoint = await monthlyPointService.updateUserMonthlyPoints(monthlyPointUpdatePayload);
-              setMonthlyPoint(updatedMonthlyPoint);
-            } catch (error) {
-              console.error('更新月度积分失败:', error);
-              // 不阻止审核流程
-            }
           }
         }
       } else if (selectedSubmission.type === 'activity') {
