@@ -6,6 +6,31 @@ import { useLanguage } from './contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import LogoutConfirmModal from './components/LogoutConfirmModal';
 
+const shillUsContent = {
+  title: { zh: 'ShillUs', en: 'ShillUs' },
+  tagline: { zh: '通过预约 AMA 展示自我', en: 'Showcase your vision with a dedicated AMA' },
+  description: {
+    zh: '若您是项目方、社区、KOL、MCN、活动主办方、开发者、媒体、培训机构、风投、孵化器、中心化交易所、去中心化交易所等，欢迎展示自我并成为我们的合作伙伴。',
+    en: 'Projects, communities, KOLs, studios, event hosts, builders, media, educators, investors, incubators, centralized or decentralized exchanges—partner with us to share your story.'
+  },
+  highlight: {
+    zh: '向我们的观众展示您的身份、正在构建的事业以及未来方向。预约专属 AMA，我们将在次日于 X 平台发布合作海报，触达北美、中国、非洲、欧洲、日韩、东南亚、印度等地区的观众。',
+    en: 'Spotlight who you are, what you are building, and where you are heading. Book an exclusive AMA and we will publish the co-branded poster on X the next day, reaching audiences across North America, China, Africa, Europe, Japan & Korea, Southeast Asia, India, and beyond.'
+  },
+  schedule: {
+    zh: '时间：每周一、三、五 12:00-13:00（UTC）',
+    en: 'Schedule: Monday, Wednesday & Friday · 12:00–13:00 (UTC)'
+  },
+  requirements: {
+    zh: ['填写项目名称及简介', 'Twitter 账号'],
+    en: ['Project name and short introduction', 'Twitter handle']
+  },
+  ctaPrimary: { zh: '立即预约', en: 'Book your slot' },
+  ctaSecondary: { zh: '了解 Twitter AMA 专场', en: 'Learn about the Twitter AMA' },
+  calendlyLink: 'https://calendly.com/shillus-ffpp/60min',
+  secondaryLink: 'https://twitter.com/FlipFlopShillUs'
+};
+
 // 模块卡片数据
 const moduleCards = [
   {
@@ -143,8 +168,8 @@ export default function PathPortHome() {
               </span>
             </p>
 
-            </div>
-            
+          </div>
+
           {/* Module Cards Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto mb-16">
             {moduleCards.map((card) => (
@@ -191,6 +216,98 @@ export default function PathPortHome() {
               </div>
             ))}
           </div>
+
+          {/* ShillUs Showcase Section */}
+          <section className="relative mb-20">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/10 to-cyan-500/20 dark:from-blue-500/15 dark:via-purple-500/10 dark:to-cyan-500/15 blur-3xl rounded-3xl"></div>
+            <div className="relative overflow-hidden rounded-3xl border border-white/30 dark:border-gray-700/40 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl shadow-2xl">
+              <div className="absolute -top-32 -right-24 w-72 h-72 bg-gradient-to-br from-blue-400/20 to-purple-500/20 rounded-full blur-3xl"></div>
+              <div className="absolute -bottom-24 -left-20 w-64 h-64 bg-gradient-to-br from-cyan-400/25 to-blue-500/15 rounded-full blur-3xl"></div>
+
+              <div className="relative px-8 py-10 md:px-12 md:py-12">
+                <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[2fr,1fr] lg:items-center">
+                  <div>
+                    <div className="inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-blue-500/15 to-purple-500/20 border border-white/40 dark:border-gray-700/50 rounded-full text-xs md:text-sm font-semibold text-blue-700 dark:text-blue-200 uppercase tracking-wide mb-6">
+                      <span className="w-2 h-2 mr-2 rounded-full bg-blue-500 animate-pulse"></span>
+                      {shillUsContent.title[language as 'zh' | 'en']}
+                    </div>
+
+                    <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 dark:from-blue-300 dark:via-purple-300 dark:to-cyan-300 bg-clip-text text-transparent mb-4">
+                      {shillUsContent.tagline[language as 'zh' | 'en']}
+                    </h2>
+
+                    <p className="text-base md:text-lg text-gray-700 dark:text-gray-200 leading-relaxed mb-4">
+                      {shillUsContent.description[language as 'zh' | 'en']}
+                    </p>
+                    <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
+                      {shillUsContent.highlight[language as 'zh' | 'en']}
+                    </p>
+
+                    <div className="grid gap-4 md:grid-cols-2 md:gap-6">
+                      <div className="p-5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-white/50 dark:border-gray-700/60 shadow-lg">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white text-lg font-semibold">⏰</span>
+                          <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
+                            {language === 'zh' ? '预约时间' : 'Schedule'}
+                          </h3>
+                        </div>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                          {shillUsContent.schedule[language as 'zh' | 'en']}
+                        </p>
+                      </div>
+
+                      <div className="p-5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-white/50 dark:border-gray-700/60 shadow-lg">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 text-white text-lg font-semibold">📝</span>
+                          <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
+                            {language === 'zh' ? '预约需提供' : 'Required Details'}
+                          </h3>
+                        </div>
+                        <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                          {shillUsContent.requirements[language as 'zh' | 'en'].map((item, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <span className="mt-1 inline-flex h-2 w-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"></span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="relative p-6 rounded-3xl bg-gradient-to-br from-blue-500 via-purple-500 to-cyan-500 text-white shadow-xl">
+                    <div className="absolute -top-6 -right-6 w-16 h-16 rounded-full bg-white/20 blur-xl"></div>
+                    <div className="relative">
+                      <h3 className="text-xl font-semibold mb-2">Calendly</h3>
+                      <p className="text-sm text-white/80 mb-6">
+                        {shillUsContent.title[language as 'zh' | 'en']} · FlipFlop PathPort
+                      </p>
+
+                      <div className="space-y-4">
+                        <a
+                          href={shillUsContent.calendlyLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-full px-5 py-3 rounded-full bg-white text-blue-600 font-semibold shadow-lg hover:shadow-xl transition-shadow duration-300"
+                        >
+                          {shillUsContent.ctaPrimary[language as 'zh' | 'en']}
+                          <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                          </svg>
+                        </a>
+                      </div>
+
+                      <p className="text-xs text-white/60 mt-6 leading-relaxed">
+                        {language === 'zh'
+                          ? '预约成功后，我们会与你确认具体环节并准备合作海报与物料。'
+                          : 'After booking, we will confirm the flow with you and prepare the co-branded visual assets.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
 
         </div>
       </section>
