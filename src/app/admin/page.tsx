@@ -1389,6 +1389,12 @@ export default function Admin() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         {t('admin.table.formtype')}
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        提交类别
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        任务类型
+                    </th>
                     <th 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 select-none"
                       onClick={() => handleSort('createTime')}
@@ -1424,12 +1430,17 @@ export default function Admin() {
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {paginatedPendingSubmissions.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                        <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                           {sortedFilteredPendingSubmissions.length === 0 ? t('admin.no.pending') : '没有找到符合条件的表单'}
                         </td>
                       </tr>
                     ) : (
-                      paginatedPendingSubmissions.map((submission) => (
+                      paginatedPendingSubmissions.map((submission) => {
+                        const taskData = submission.type === 'task' ? (submission.data as TaskSubmissionVO) : null;
+                        const categories = taskData?.tasks?.map(t => t.submissionCategory).filter((v, i, a) => a.indexOf(v) === i) || [];
+                        const taskTypes = taskData?.tasks?.map(t => t.taskType).filter((v, i, a) => a.indexOf(v) === i) || [];
+                        
+                        return (
                         <tr key={`${submission.type}-${submission.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                             <div>
@@ -1439,6 +1450,28 @@ export default function Admin() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             {submission.title}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                            {submission.type === 'task' ? (
+                              <div className="flex flex-wrap gap-1">
+                                {categories.map((cat, idx) => (
+                                  <span key={idx} className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded text-xs">
+                                    {cat}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                            {submission.type === 'task' ? (
+                              <div className="flex flex-wrap gap-1">
+                                {taskTypes.map((type, idx) => (
+                                  <span key={idx} className="inline-block bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-0.5 rounded text-xs">
+                                    {type}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {new Date(submission.createTime).toLocaleDateString()}
@@ -1457,7 +1490,8 @@ export default function Admin() {
                         </button>
                       </td>
                     </tr>
-                      ))
+                        );
+                      })
                     )}
                 </tbody>
               </table>
@@ -1611,6 +1645,12 @@ export default function Admin() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         {t('admin.table.formtype')}
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        提交类别
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        任务类型
+                      </th>
                       <th 
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 select-none"
                         onClick={() => handleReviewedSort('createTime')}
@@ -1673,12 +1713,17 @@ export default function Admin() {
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {filteredReviewedSubmissions.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                        <td colSpan={9} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                           {reviewedSubmissions.length === 0 ? t('admin.no.reviewed') : '没有找到符合条件的表单'}
                         </td>
                       </tr>
                     ) : (
-                      filteredReviewedSubmissions.map((submission) => (
+                      filteredReviewedSubmissions.map((submission) => {
+                        const taskData = submission.type === 'task' ? (submission.data as TaskSubmissionVO) : null;
+                        const categories = taskData?.tasks?.map(t => t.submissionCategory).filter((v, i, a) => a.indexOf(v) === i) || [];
+                        const taskTypes = taskData?.tasks?.map(t => t.taskType).filter((v, i, a) => a.indexOf(v) === i) || [];
+                        
+                        return (
                         <tr key={`${submission.type}-${submission.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                             <div>
@@ -1688,6 +1733,28 @@ export default function Admin() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             {submission.title}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                            {submission.type === 'task' ? (
+                              <div className="flex flex-wrap gap-1">
+                                {categories.map((cat, idx) => (
+                                  <span key={idx} className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded text-xs">
+                                    {cat}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : '-'}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                            {submission.type === 'task' ? (
+                              <div className="flex flex-wrap gap-1">
+                                {taskTypes.map((type, idx) => (
+                                  <span key={idx} className="inline-block bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-0.5 rounded text-xs">
+                                    {type}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {new Date(submission.createTime).toLocaleDateString()}
@@ -1722,7 +1789,8 @@ export default function Admin() {
                         </button>
                       </td>
                     </tr>
-                      ))
+                        );
+                      })
                     )}
                 </tbody>
               </table>
