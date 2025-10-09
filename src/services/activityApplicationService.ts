@@ -63,13 +63,15 @@ export const activityApplicationService = {
       pageSize: Math.floor(params.pageSize || 10),
     };
     
-    // 只添加有值的可选参数
-    if (params.reviewStatus !== undefined) {
+    // 只添加有值的可选参数（包括0值）
+    if (params.reviewStatus !== undefined && params.reviewStatus !== null) {
       requestData.reviewStatus = params.reviewStatus;
     }
-    if (params.organizer !== undefined) {
+    if (params.organizer !== undefined && params.organizer !== null) {
       requestData.organizer = params.organizer;
     }
+    
+    console.log('🔍 ActivityApplication请求参数:', requestData);
     
     return request.post<PageData<ActivityApplication>>(
       API_ENDPOINTS.ACTIVITY_APPLICATION.LIST,

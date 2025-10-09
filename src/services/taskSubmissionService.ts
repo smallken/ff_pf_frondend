@@ -58,16 +58,18 @@ export const taskSubmissionService = {
       pageSize: Math.floor(params.pageSize || 10),
     };
     
-    // 只添加有值的可选参数
-    if (params.submissionCategory !== undefined) {
+    // 只添加有值的可选参数（包括0值）
+    if (params.submissionCategory !== undefined && params.submissionCategory !== null) {
       requestData.submissionCategory = params.submissionCategory;
     }
-    if (params.name !== undefined) {
+    if (params.name !== undefined && params.name !== null) {
       requestData.name = params.name;
     }
-    if (params.reviewStatus !== undefined) {
+    if (params.reviewStatus !== undefined && params.reviewStatus !== null) {
       requestData.reviewStatus = params.reviewStatus;
     }
+    
+    console.log('🔍 TaskSubmission请求参数:', requestData);
     
     return request.post<PageData<TaskSubmissionVO>>(
       API_ENDPOINTS.TASK_SUBMISSION.LIST,
