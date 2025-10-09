@@ -57,14 +57,23 @@ export const activityApplicationService = {
     reviewStatus?: number;
     organizer?: string;
   } = {}): Promise<PageData<ActivityApplication>> => {
+    // 🚀 优化：只发送有值的参数，避免undefined导致后端参数验证失败
+    const requestData: any = {
+      current: Math.floor(params.current || 1),
+      pageSize: Math.floor(params.pageSize || 10),
+    };
+    
+    // 只添加有值的可选参数
+    if (params.reviewStatus !== undefined) {
+      requestData.reviewStatus = params.reviewStatus;
+    }
+    if (params.organizer !== undefined) {
+      requestData.organizer = params.organizer;
+    }
+    
     return request.post<PageData<ActivityApplication>>(
       API_ENDPOINTS.ACTIVITY_APPLICATION.LIST,
-      {
-        current: Math.floor(params.current || 1),
-        pageSize: Math.floor(params.pageSize || 10),
-        reviewStatus: params.reviewStatus,
-        organizer: params.organizer,
-      }
+      requestData
     );
   },
 

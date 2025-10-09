@@ -52,16 +52,22 @@ export const taskSubmissionService = {
     name?: string;
     reviewStatus?: number;
   } = {}): Promise<PageData<TaskSubmissionVO>> => {
-    const requestData = {
+    // 🚀 优化：只发送有值的参数，避免undefined导致后端参数验证失败
+    const requestData: any = {
       current: Math.floor(params.current || 1),
       pageSize: Math.floor(params.pageSize || 10),
-      submissionCategory: params.submissionCategory,
-      name: params.name,
-      reviewStatus: params.reviewStatus,
     };
     
-    console.log('🔍 TaskSubmission getAllTaskSubmissions 请求参数:', requestData);
-    console.log('🔍 原始参数:', params);
+    // 只添加有值的可选参数
+    if (params.submissionCategory !== undefined) {
+      requestData.submissionCategory = params.submissionCategory;
+    }
+    if (params.name !== undefined) {
+      requestData.name = params.name;
+    }
+    if (params.reviewStatus !== undefined) {
+      requestData.reviewStatus = params.reviewStatus;
+    }
     
     return request.post<PageData<TaskSubmissionVO>>(
       API_ENDPOINTS.TASK_SUBMISSION.LIST,

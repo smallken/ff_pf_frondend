@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { taskSubmissionService } from '../../../services';
-import { gleamService, GleamTaskStatus } from '../../../services/gleamService';
 import CustomDateInput from '../../components/CustomDateInput';
 
 export default function AchievementForm() {
@@ -17,55 +16,6 @@ export default function AchievementForm() {
   useEffect(() => {
     // This will trigger a re-render when language changes
   }, [language]);
-
-  // 加载Gleam脚本
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://widget.gleamjs.io/e.js';
-    script.async = true;
-    document.body.appendChild(script);
-    
-    return () => {
-      // 清理脚本
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, []);
-
-  // 检查Gleam任务状态
-  const checkGleamStatus = async () => {
-    if (!isAuthenticated) {
-      return;
-    }
-    
-    setCheckingGleamStatus(true);
-    try {
-      const status = await gleamService.getGleamStatus();
-      setGleamStatus(status);
-      
-      if (status.hasCompleted) {
-        setSuccess(
-          language === 'zh' 
-            ? `✅ 您已完成${status.completedCount}次Gleam任务，本周还可提交${status.remainingTimes}次`
-            : `✅ You have completed ${status.completedCount} Gleam tasks, ${status.remainingTimes} submissions remaining this week`
-        );
-        
-        setTimeout(() => setSuccess(''), 5000);
-      }
-    } catch (error: any) {
-      console.error('查询Gleam状态失败:', error);
-    } finally {
-      setCheckingGleamStatus(false);
-    }
-  };
-
-  // 用户登录后自动检查Gleam状态
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      checkGleamStatus();
-    }
-  }, [isAuthenticated, user]);
 
   // 自动填充用户信息
   useEffect(() => {
@@ -102,8 +52,6 @@ export default function AchievementForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [gleamStatus, setGleamStatus] = useState<GleamTaskStatus | null>(null);
-  const [checkingGleamStatus, setCheckingGleamStatus] = useState(false);
 
   // 错误信息翻译函数
   const translateError = (errorMsg: string): string => {
@@ -412,10 +360,6 @@ export default function AchievementForm() {
           { key: 'community.offline', value: 'forms.task.community.offline' },
           { key: 'community.viral', value: 'forms.task.community.viral' }
         ];
-      case 'gleam':
-        return [
-          { key: 'gleam.twitter', value: 'Gleam Twitter验证' }
-        ];
       default:
         return [];
     }
@@ -481,33 +425,6 @@ export default function AchievementForm() {
                     <button
                       onClick={() => setError('')}
                       className="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
-                    >
-                      {language === 'zh' ? '我知道了' : 'Got it'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 成功弹窗 */}
-            {success && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-slideDown">
-                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-4">
-                    <div className="flex items-center text-white">
-                      <svg className="h-8 w-8 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <h3 className="text-xl font-bold">成功</h3>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed mb-6">
-                      {success}
-                    </p>
-                    <button
-                      onClick={() => setSuccess('')}
-                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
                     >
                       {language === 'zh' ? '我知道了' : 'Got it'}
                     </button>
@@ -693,7 +610,6 @@ export default function AchievementForm() {
                                   <option value="short">{t('forms.achievement.category.short')}</option>
                                   <option value="long">{t('forms.achievement.category.long')}</option>
                                   <option value="community">{t('forms.achievement.category.community')}</option>
-                                  <option value="gleam">🎯 Gleam自动验证</option>
                                 </select>
                                 {isDisabled && (
                                   <p className="mt-1 text-sm text-orange-600 dark:text-orange-400">
@@ -755,123 +671,19 @@ export default function AchievementForm() {
                     </div>
                     {!task.collapsed && (
                       <div className="p-4 space-y-4">
-                        {/* Gleam特殊UI */}
-                        {task.submissionCategory === 'gleam' ? (
-                          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6">
-                            <div className="text-center mb-4">
-                              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                                🎯 Gleam自动验证任务
-                              </h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                点击下方按钮完成Twitter关注、查看和转发任务，完成后自动验证并获得积分
-                              </p>
-                            </div>
-                            
-                            {/* 状态显示 */}
-                            {gleamStatus && (
-                              <div className={`mb-4 p-4 rounded-lg ${
-                                gleamStatus.hasCompleted 
-                                  ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700'
-                                  : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
-                              }`}>
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                      {gleamStatus.hasCompleted ? '✅ 已完成任务' : '📋 任务状态'}
-                                    </p>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                      本周已完成 <span className="font-bold">{gleamStatus.completedCount}</span> 次，
-                                      还可提交 <span className="font-bold">{gleamStatus.remainingTimes}</span> 次
-                                    </p>
-                                    {gleamStatus.lastCompletionTime && (
-                                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                                        最近完成：{new Date(gleamStatus.lastCompletionTime).toLocaleString('zh-CN')}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={checkGleamStatus}
-                                    disabled={checkingGleamStatus}
-                                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
-                                  >
-                                    {checkingGleamStatus ? '检查中...' : '🔄 刷新状态'}
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Gleam Widget */}
-                            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4">
-                              <a 
-                                className="e-widget no-button" 
-                                href="https://gleam.io/UFklA/flipflop" 
-                                rel="nofollow"
-                              >
-                                FlipFlop
-                              </a>
-                            </div>
-                            
-                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 mb-4">
-                              <div className="flex items-start">
-                                <svg className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                </svg>
-                                <div className="text-sm text-red-800 dark:text-red-300">
-                                  <p className="font-bold mb-2">⚠️ 重要：必须使用注册的Twitter账号</p>
-                                  <p className="mb-2">
-                                    Gleam通过<span className="font-bold underline">Twitter账号</span>验证任务完成情况。
-                                    即使在Gleam输入不同邮箱，只要Twitter账号相同，都会显示已完成。
-                                  </p>
-                                  <p className="font-semibold text-red-900 dark:text-red-200">
-                                    ✓ 请确保使用您注册本系统时绑定的Twitter账号完成Gleam任务
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-                              <div className="flex items-start">
-                                <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <div className="text-sm text-yellow-800 dark:text-yellow-300">
-                                  <p className="font-semibold mb-1">任务说明：</p>
-                                  <ul className="list-disc list-inside space-y-1">
-                                    <li>完成Twitter关注、查看和转发后，系统自动验证</li>
-                                    <li>验证通过自动发放<span className="font-bold">5积分</span>，无需手动提交</li>
-                                    <li>每周最多提交<span className="font-bold">3次</span>Gleam任务</li>
-                                    <li>完成后点击"刷新状态"按钮查看最新进度</li>
-                                  </ul>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {/* 隐藏字段，用于表单提交 */}
-                            <input type="hidden" value="https://gleam.io/UFklA/flipflop" />
-                            <input type="hidden" value={new Date().toISOString().split('T')[0]} />
-                          </div>
-                        ) : (
-                          <>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('forms.achievement.contentlink')} {isContentLinkRequired(task.taskType) && (<span className="text-red-500">{t('forms.required')}</span>)}
-                              </label>
-                              <input
-                                type="url"
-                                required={isContentLinkRequired(task.taskType)}
-                                placeholder={t('forms.placeholder.contentlink')}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                                value={task.contentLink}
-                                onChange={(e) => handleTaskChange(index, 'contentLink', e.target.value)}
-                              />
-                            </div>
-                          </>
-                        )}
-                        
-                        {/* 非Gleam任务显示截图和其他字段 */}
-                        {task.submissionCategory !== 'gleam' && (
-                          <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {t('forms.achievement.contentlink')} {isContentLinkRequired(task.taskType) && (<span className="text-red-500">{t('forms.required')}</span>)}
+                          </label>
+                          <input
+                            type="url"
+                            required={isContentLinkRequired(task.taskType)}
+                            placeholder={t('forms.placeholder.contentlink')}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                            value={task.contentLink}
+                            onChange={(e) => handleTaskChange(index, 'contentLink', e.target.value)}
+                          />
+                        </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {t('forms.achievement.screenshot')} {isScreenshotRequired(task.taskType) && (<span className="text-red-500">{t('forms.required')}</span>)}
@@ -967,8 +779,6 @@ export default function AchievementForm() {
                             />
                           </div>
                         </div>
-                        </>
-                        )}
                       </div>
                     )}
                   </div>
