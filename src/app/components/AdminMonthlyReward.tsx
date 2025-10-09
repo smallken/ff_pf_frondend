@@ -69,32 +69,25 @@ export default function AdminMonthlyReward() {
   const fetchHistoricalRewards = async () => {
     try {
       setHistoricalLoading(true);
-      // 使用动态月份列表获取历史奖励数据
-      const yearMonths = await monthlyRewardService.getAvailableYearMonths();
-      console.log('获取到的年月列表:', yearMonths);
-      const historicalData = [];
+      // 🚀 优化：使用批量API一次性获取所有月份的统计数据
+      console.log('开始批量获取历史奖励数据...');
+      const allStats = await monthlyRewardService.getAllMonthlyStats();
+      console.log('批量获取到的统计数据:', allStats);
       
-      for (const ym of yearMonths) {
-        try {
-          const data = await monthlyRewardService.getMonthlyRewardStats(ym.year, ym.month);
-          console.log(`${ym.year}年${ym.month}月的统计数据:`, data);
-          // 只要有任何数据就显示（包括待发放和已发放）
-          const record = {
-            year: ym.year,
-            month: ym.month,
-            ...data,
-            // 确保数值类型正确
-            totalRewardAmount: data.totalRewardAmount ?? 0,
-            totalRewardedUsers: data.totalRewardedUsers ?? 0,
-            pendingRewardAmount: data.pendingRewardAmount ?? 0,
-            pendingRewardedUsers: data.pendingRewardedUsers ?? 0
-          };
-          console.log(`添加到historicalData:`, record);
-          historicalData.push(record);
-        } catch (err) {
-          console.error(`获取${ym.year}年${ym.month}月数据失败:`, err);
-        }
-      }
+      // 转换数据格式，确保数值类型正确
+      const historicalData = allStats.map(data => ({
+        year: data.rewardYear,
+        month: data.rewardMonth,
+        totalRewardAmount: data.totalRewardAmount ?? 0,
+        totalRewardedUsers: data.totalRewardedUsers ?? 0,
+        pendingRewardAmount: data.pendingRewardAmount ?? 0,
+        pendingRewardedUsers: data.pendingRewardedUsers ?? 0,
+        basicLevelUsers: data.basicLevelUsers ?? 0,
+        advanced1LevelUsers: data.advanced1LevelUsers ?? 0,
+        advanced2LevelUsers: data.advanced2LevelUsers ?? 0,
+        advanced3LevelUsers: data.advanced3LevelUsers ?? 0
+      }));
+      
       console.log('最终的historicalData:', historicalData);
       setHistoricalRewards(historicalData);
     } catch (err: any) {
