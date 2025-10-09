@@ -404,31 +404,48 @@ export default function Admin() {
       setLoading(true);
       setError(''); // 清除之前的错误
       
-      const pageSize = 50; // 🚀 优化：增加页面大小减少请求次数（从20改为50，保守设置避免后端限制）
+      const pageSize = 100; // 🚀 优化：后端支持的最大值
+      const maxRecords = 500; // 🚀 限制：只加载最新500条，避免数据量过大
+      const maxPages = Math.ceil(maxRecords / pageSize); // 最多5页
 
-      const fetchAllPages = async (service: any, params: any) => {
-        let current = 1;
-        let hasMore = true;
+      const fetchLimitedPages = async (service: any, params: any) => {
         const allRecords: any[] = [];
-        let total = 0;
-
-        while (hasMore) {
-          const response = await service({ ...params, current: Math.floor(current), pageSize: Math.floor(pageSize) });
-          const records = response?.records || [];
-          total = response?.total ?? total;
-          allRecords.push(...records);
-          const reachedTotal = total ? allRecords.length >= total : false;
-          hasMore = records.length === pageSize && !reachedTotal;
-          current++;
+        
+        for (let current = 1; current <= maxPages; current++) {
+          try {
+            // 确保参数格式正确，避免后端参数验证错误
+            const response = await service({ 
+              ...params, 
+              current: Math.floor(current), 
+              pageSize: Math.floor(pageSize) 
+            });
+            
+            const records = response?.records || [];
+            allRecords.push(...records);
+            
+            // 如果返回的数据少于pageSize，说明没有更多数据了
+            if (records.length < pageSize) {
+              break;
+            }
+            
+            // 达到500条限制，停止加载
+            if (allRecords.length >= maxRecords) {
+              break;
+            }
+          } catch (err) {
+            console.error('获取分页数据失败:', err);
+            // 某一页失败不影响已加载的数据
+            break;
+          }
         }
 
-        return allRecords;
+        return allRecords.slice(0, maxRecords); // 确保不超过500条
       };
 
       const [applicationForms, taskSubmissions, activityApplications] = await Promise.all([
-        fetchAllPages(formService.getFormList, { status: 0 }),
-        fetchAllPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 0 }),
-        fetchAllPages(activityApplicationService.getAllApplications, { reviewStatus: 0 })
+        fetchLimitedPages(formService.getFormList, { status: 0 }),
+        fetchLimitedPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 0 }),
+        fetchLimitedPages(activityApplicationService.getAllApplications, { reviewStatus: 0 })
       ]);
 
       const pending: PendingSubmission[] = [];
@@ -503,43 +520,53 @@ export default function Admin() {
 
   // 获取所有已审核表单数据（获取多页数据）
   const fetchAllReviewedData = async () => {
-    const maxPageSize = 50; // 🚀 优化：增加页面大小减少请求次数（从20改为50，保守设置避免后端限制）
-    const allData = {
-      approvedForms: [],
-      rejectedForms: [],
-      approvedTaskSubmissions: [],
-      rejectedTaskSubmissions: [],
-      approvedActivities: [],
-      rejectedActivities: []
-    };
+    const pageSize = 100; // 🚀 优化：后端支持的最大值
+    const maxRecords = 500; // 🚀 限制：每种状态最多加载500条，避免数据量过大
+    const maxPages = Math.ceil(maxRecords / pageSize); // 最多5页
 
-    // 获取所有页面的数据
-    const fetchAllPages = async (service: any, params: any, dataKey: string) => {
-      let currentPage = 1;
-      let hasMore = true;
-      const allRecords = [];
+    // 获取限定数量的页面数据
+    const fetchLimitedPages = async (service: any, params: any) => {
+      const allRecords: any[] = [];
 
-      while (hasMore) {
-        const response = await service({ ...params, current: Math.floor(currentPage), pageSize: Math.floor(maxPageSize) });
-        if (response.records && response.records.length > 0) {
-          allRecords.push(...response.records);
-          hasMore = response.records.length === maxPageSize;
-          currentPage++;
-        } else {
-          hasMore = false;
+      for (let current = 1; current <= maxPages; current++) {
+        try {
+          // 确保参数格式正确，避免后端参数验证错误
+          const response = await service({ 
+            ...params, 
+            current: Math.floor(current), 
+            pageSize: Math.floor(pageSize) 
+          });
+          
+          const records = response?.records || [];
+          allRecords.push(...records);
+          
+          // 如果返回的数据少于pageSize，说明没有更多数据了
+          if (records.length < pageSize) {
+            break;
+          }
+          
+          // 达到500条限制，停止加载
+          if (allRecords.length >= maxRecords) {
+            break;
+          }
+        } catch (err) {
+          console.error('获取已审核数据失败:', err);
+          // 某一页失败不影响已加载的数据
+          break;
         }
       }
-      return allRecords;
+      
+      return allRecords.slice(0, maxRecords); // 确保不超过500条
     };
 
-    // 并行获取所有类型的所有数据
+    // 并行获取所有类型的数据（每种状态限制500条）
     const [approvedForms, rejectedForms, approvedTaskSubmissions, rejectedTaskSubmissions, approvedActivities, rejectedActivities] = await Promise.all([
-      fetchAllPages(formService.getFormList, { status: 1 }, 'approvedForms'),
-      fetchAllPages(formService.getFormList, { status: 2 }, 'rejectedForms'),
-      fetchAllPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 1 }, 'approvedTaskSubmissions'),
-      fetchAllPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 2 }, 'rejectedTaskSubmissions'),
-      fetchAllPages(activityApplicationService.getAllApplications, { reviewStatus: 1 }, 'approvedActivities'),
-      fetchAllPages(activityApplicationService.getAllApplications, { reviewStatus: 2 }, 'rejectedActivities')
+      fetchLimitedPages(formService.getFormList, { status: 1 }),
+      fetchLimitedPages(formService.getFormList, { status: 2 }),
+      fetchLimitedPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 1 }),
+      fetchLimitedPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 2 }),
+      fetchLimitedPages(activityApplicationService.getAllApplications, { reviewStatus: 1 }),
+      fetchLimitedPages(activityApplicationService.getAllApplications, { reviewStatus: 2 })
     ]);
 
     return {
