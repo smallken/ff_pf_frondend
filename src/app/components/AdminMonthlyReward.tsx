@@ -69,23 +69,33 @@ export default function AdminMonthlyReward() {
   const fetchHistoricalRewards = async () => {
     try {
       setHistoricalLoading(true);
-      // 🚀 优化：使用批量API一次性获取所有月份的统计数据
-      const allStats = await monthlyRewardService.getAllMonthlyStats();
+      // 使用动态月份列表获取历史奖励数据
+      const yearMonths = await monthlyRewardService.getAvailableYearMonths();
+      console.log('获取到的年月列表:', yearMonths);
+      const historicalData = [];
       
-      // 转换数据格式，确保数值类型正确
-      const historicalData = allStats.map(data => ({
-        year: data.rewardYear,
-        month: data.rewardMonth,
-        totalRewardAmount: data.totalRewardAmount ?? 0,
-        totalRewardedUsers: data.totalRewardedUsers ?? 0,
-        pendingRewardAmount: data.pendingRewardAmount ?? 0,
-        pendingRewardedUsers: data.pendingRewardedUsers ?? 0,
-        basicLevelUsers: data.basicLevelUsers ?? 0,
-        advanced1LevelUsers: data.advanced1LevelUsers ?? 0,
-        advanced2LevelUsers: data.advanced2LevelUsers ?? 0,
-        advanced3LevelUsers: data.advanced3LevelUsers ?? 0
-      }));
-      
+      for (const ym of yearMonths) {
+        try {
+          const data = await monthlyRewardService.getMonthlyRewardStats(ym.year, ym.month);
+          console.log(`${ym.year}年${ym.month}月的统计数据:`, data);
+          // 只要有任何数据就显示（包括待发放和已发放）
+          const record = {
+            year: ym.year,
+            month: ym.month,
+            ...data,
+            // 确保数值类型正确
+            totalRewardAmount: data.totalRewardAmount ?? 0,
+            totalRewardedUsers: data.totalRewardedUsers ?? 0,
+            pendingRewardAmount: data.pendingRewardAmount ?? 0,
+            pendingRewardedUsers: data.pendingRewardedUsers ?? 0
+          };
+          console.log(`添加到historicalData:`, record);
+          historicalData.push(record);
+        } catch (err) {
+          console.error(`获取${ym.year}年${ym.month}月数据失败:`, err);
+        }
+      }
+      console.log('最终的historicalData:', historicalData);
       setHistoricalRewards(historicalData);
     } catch (err: any) {
       console.error('获取历史奖励数据失败:', err);
@@ -550,6 +560,9 @@ export default function AdminMonthlyReward() {
                     />
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    序号
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     用户信息
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -579,6 +592,9 @@ export default function AdminMonthlyReward() {
                         onChange={() => handleSelectUser(user.userId)}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {index + 1}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
@@ -821,6 +837,9 @@ export default function AdminMonthlyReward() {
                     />
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    序号
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     用户信息
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -850,6 +869,9 @@ export default function AdminMonthlyReward() {
                         onChange={() => handleSelectHistoricalUser(user.userId)}
                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                       />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {index + 1}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>

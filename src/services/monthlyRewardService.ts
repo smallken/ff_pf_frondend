@@ -142,10 +142,5 @@ export const monthlyRewardService = {
   // 管理员：获取有数据的年月列表
   async getAvailableYearMonths(): Promise<Array<{year: number; month: number}>> {
     return request.get('/monthly-reward/admin/available-months');
-  },
-
-  // 管理员：批量获取所有月份的奖励统计（优化版本）
-  async getAllMonthlyStats(): Promise<MonthlyRewardStatsVO[]> {
-    return request.get('/monthly-reward/admin/all-stats');
   }
 };
