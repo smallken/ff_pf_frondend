@@ -64,7 +64,8 @@ export default function Admin() {
   const [pendingSubmissions, setPendingSubmissions] = useState<PendingSubmission[]>([]);
   const [pendingPageSize, setPendingPageSize] = useState(20);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
-  const [pendingTotal, setPendingTotal] = useState(0); // 待审核表单总数
+  const [pendingTotal, setPendingTotal] = useState(0); // 待审核表单总数（加载的数量）
+  const [pendingActualTotal, setPendingActualTotal] = useState(0); // 实际总数（数据库中的真实数量）
   const [reviewedSubmissions, setReviewedSubmissions] = useState<ReviewedSubmission[]>([]);
   const [allReviewedSubmissions, setAllReviewedSubmissions] = useState<ReviewedSubmission[]>([]); // 存储所有数据
   const [selectedSubmission, setSelectedSubmission] = useState<PendingSubmission | null>(null);
@@ -182,7 +183,7 @@ export default function Admin() {
     setReviewedSortConfig({ key, direction });
   };
 
-  // 待审核表单：对当前页数据进行排序（仅排序当前页，非全局排序）
+  // 待审核表单：排序和分页
   const sortedPendingSubmissions = useMemo(() => {
     const sorted = [...pendingSubmissions];
     
@@ -221,14 +222,16 @@ export default function Admin() {
     return sorted;
   }, [pendingSubmissions, sortConfig]);
   
-  const paginatedPendingSubmissions = sortedPendingSubmissions;
-  
-  // 分页信息基于服务端返回的total
-  const pendingDisplayTotal = pendingTotal;
-  const pendingPageCount = Math.max(1, Math.ceil(pendingTotal / pendingPageSize));
+  // 前端分页
+  const pendingDisplayTotal = sortedPendingSubmissions.length;
+  const pendingPageCount = Math.max(1, Math.ceil(pendingDisplayTotal / pendingPageSize));
   const pendingStartIndex = (pendingCurrentPage - 1) * pendingPageSize;
-  const pendingRangeStart = pendingTotal === 0 ? 0 : pendingStartIndex + 1;
-  const pendingRangeEnd = pendingTotal === 0 ? 0 : Math.min(pendingStartIndex + pendingPageSize, pendingTotal);
+  const paginatedPendingSubmissions = sortedPendingSubmissions.slice(
+    pendingStartIndex, 
+    pendingStartIndex + pendingPageSize
+  );
+  const pendingRangeStart = pendingDisplayTotal === 0 ? 0 : pendingStartIndex + 1;
+  const pendingRangeEnd = pendingDisplayTotal === 0 ? 0 : Math.min(pendingStartIndex + pendingPageSize, pendingDisplayTotal);
 
   // 基于所有数据进行筛选
   const filteredAllReviewedSubmissions = allReviewedSubmissions.filter(submission => {
@@ -376,55 +379,70 @@ export default function Admin() {
     }
   };
 
-  // 获取待审核表单（按需加载：只请求当前页数据）
-  const fetchPendingSubmissions = async (page: number = 1) => {
+  // 获取待审核表单（优化版：并发加载所有数据，但只获取前200条避免过慢）
+  const fetchPendingSubmissions = async () => {
     try {
       setLoading(true);
       setError(''); // 清除之前的错误
       
-      // 并发请求3种类型的当前页数据
-      const [applicationFormsPage, taskSubmissionsPage, activityApplicationsPage] = await Promise.all([
-        formService.getFormList({ status: 0, current: page, pageSize: pendingPageSize }),
-        taskSubmissionService.getAllTaskSubmissions({ reviewStatus: 0, current: page, pageSize: pendingPageSize }),
-        activityApplicationService.getAllApplications({ reviewStatus: 0, current: page, pageSize: pendingPageSize })
-      ]);
-
-      const applicationForms = applicationFormsPage?.records || [];
-      const taskSubmissions = taskSubmissionsPage?.records || [];
-      const activityApplications = activityApplicationsPage?.records || [];
+      const pageSize = 20;
+      const maxPages = 10; // 每种类型最多10页（200条），总共最多600条
       
-      // 计算总数（3种类型的总和）- 添加防御性检查
-      const appTotal = Number(applicationFormsPage?.total || 0);
-      const taskTotal = Number(taskSubmissionsPage?.total || 0);
-      const activityTotal = Number(activityApplicationsPage?.total || 0);
-      
-      // 调试日志
-      console.log('📊 待审核表单总数统计:', {
-        申请表: appTotal,
-        任务提交: taskTotal,
-        活动申请: activityTotal,
-        原始响应: {
-          applicationFormsPage,
-          taskSubmissionsPage,
-          activityApplicationsPage
+      // 并发加载多页数据
+      const fetchLimitedPages = async (service: any, params: any) => {
+        const pagePromises = [];
+        for (let i = 1; i <= maxPages; i++) {
+          pagePromises.push(
+            service({ ...params, current: i, pageSize })
+              .then((response: any) => ({
+                records: response?.records || [],
+                total: response?.total || 0
+              }))
+              .catch(() => ({ records: [], total: 0 }))
+          );
         }
+        const results = await Promise.all(pagePromises);
+        const allRecords = results.flatMap(r => r.records);
+        const total = results[0]?.total || 0; // 使用第一页的total
+        return { records: allRecords, total };
+      };
+      
+      // 并发获取3种类型的数据
+      const [appResult, taskResult, activityResult] = await Promise.all([
+        fetchLimitedPages(formService.getFormList, { status: 0 }),
+        fetchLimitedPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 0 }),
+        fetchLimitedPages(activityApplicationService.getAllApplications, { reviewStatus: 0 })
+      ]);
+      
+      const applicationForms = appResult.records;
+      const taskSubmissions = taskResult.records;
+      const activityApplications = activityResult.records;
+      
+      // 计算总数
+      const appTotal = Number(appResult.total || 0);
+      const taskTotal = Number(taskResult.total || 0);
+      const activityTotal = Number(activityResult.total || 0);
+      
+      const loadedCount = applicationForms.length + taskSubmissions.length + activityApplications.length;
+      const totalCount = appTotal + taskTotal + activityTotal;
+      
+      console.log('📊 待审核表单加载完成:', {
+        申请表: `${applicationForms.length}/${appTotal}`,
+        任务提交: `${taskSubmissions.length}/${taskTotal}`,
+        活动申请: `${activityApplications.length}/${activityTotal}`,
+        已加载: loadedCount,
+        实际总数: totalCount
       });
       
-      // 检查是否有异常值（单个类型超过100万条明显异常）
-      const MAX_REASONABLE_TOTAL = 1000000;
-      const safeAppTotal = appTotal > MAX_REASONABLE_TOTAL ? 0 : appTotal;
-      const safeTaskTotal = taskTotal > MAX_REASONABLE_TOTAL ? 0 : taskTotal;
-      const safeActivityTotal = activityTotal > MAX_REASONABLE_TOTAL ? 0 : activityTotal;
-      
-      if (appTotal !== safeAppTotal || taskTotal !== safeTaskTotal || activityTotal !== safeActivityTotal) {
-        console.warn('⚠️ 检测到异常的total值，已过滤:', {
-          原始: { appTotal, taskTotal, activityTotal },
-          过滤后: { safeAppTotal, safeTaskTotal, safeActivityTotal }
-        });
+      // 检查是否有更多数据未加载
+      if (loadedCount < totalCount) {
+        const missingCount = totalCount - loadedCount;
+        console.warn(`⚠️ 由于性能优化，只加载了前${loadedCount}条记录，还有${missingCount}条未加载`);
       }
       
-      const totalCount = safeAppTotal + safeTaskTotal + safeActivityTotal;
-      setPendingTotal(totalCount);
+      setPendingTotal(loadedCount); // 显示实际加载的数量
+      setPendingActualTotal(totalCount); // 保存实际总数
+      setError(''); // 清除错误
 
       const pending: PendingSubmission[] = [];
 
@@ -1141,7 +1159,7 @@ export default function Admin() {
   useEffect(() => {
     if (isAuthenticated && user?.userRole === 'admin') {
       if (activeTab === 'forms') {
-        fetchPendingSubmissions(1); // 切换到表单审核时，加载第1页
+        fetchPendingSubmissions(); // 加载所有待审核表单
       } else if (activeTab === 'reviewed') {
         // 切换到已审核表单时重置分页状态
         setReviewedCurrentPage(1);
@@ -1152,13 +1170,6 @@ export default function Admin() {
       // 月度奖励模块的数据获取在组件内部处理
     }
   }, [isAuthenticated, user, activeTab]);
-
-  // 监听分页变化，按需请求数据
-  useEffect(() => {
-    if (activeTab === 'forms' && isAuthenticated && user?.userRole === 'admin') {
-      fetchPendingSubmissions(pendingCurrentPage);
-    }
-  }, [pendingCurrentPage, pendingPageSize]);
 
   // 监听筛选条件变化，重置到第一页
   useEffect(() => {
@@ -1345,6 +1356,27 @@ export default function Admin() {
               </div>
             </div>
             
+            {/* 数据加载提示 */}
+            {pendingTotal > 0 && pendingTotal < pendingActualTotal && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4 mb-4">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm text-blue-700 dark:text-blue-300">
+                    <p className="font-medium mb-1">
+                      {language === 'zh' ? '数据加载提示' : 'Data Loading Notice'}
+                    </p>
+                    <p>
+                      {language === 'zh' 
+                        ? `为提升加载速度，当前只显示前 ${pendingTotal} 条记录（实际共 ${pendingActualTotal} 条，还有 ${pendingActualTotal - pendingTotal} 条未显示）` 
+                        : `For improved loading speed, only the first ${pendingTotal} records are displayed (total: ${pendingActualTotal}, ${pendingActualTotal - pendingTotal} more not shown)`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-4">
                 <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
@@ -1410,7 +1442,7 @@ export default function Admin() {
                     {paginatedPendingSubmissions.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                          {pendingTotal === 0 ? t('admin.no.pending') : '没有找到符合条件的表单'}
+                          {pendingDisplayTotal === 0 ? t('admin.no.pending') : '没有找到符合条件的表单'}
                         </td>
                       </tr>
                     ) : (
