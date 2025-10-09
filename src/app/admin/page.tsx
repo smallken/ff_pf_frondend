@@ -64,6 +64,8 @@ export default function Admin() {
   const [pendingSubmissions, setPendingSubmissions] = useState<PendingSubmission[]>([]);
   const [pendingPageSize, setPendingPageSize] = useState(20);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
+  const [hasMorePending, setHasMorePending] = useState(false); // 是否还有更多待审核数据
+  const [loadingMore, setLoadingMore] = useState(false); // 正在加载更多
   const [reviewedSubmissions, setReviewedSubmissions] = useState<ReviewedSubmission[]>([]);
   const [allReviewedSubmissions, setAllReviewedSubmissions] = useState<ReviewedSubmission[]>([]); // 存储所有数据
   const [selectedSubmission, setSelectedSubmission] = useState<PendingSubmission | null>(null);
@@ -405,31 +407,39 @@ export default function Admin() {
       setError(''); // 清除之前的错误
       
       const pageSize = 100; // 🚀 优化：后端支持的最大值
-      const maxRecords = 500; // 🚀 限制：只加载最新500条，避免数据量过大
+      const maxRecords = 500; // 🚀 限制：初始加载500条，避免数据量过大
       const maxPages = Math.ceil(maxRecords / pageSize); // 最多5页
 
       const fetchLimitedPages = async (service: any, params: any) => {
         const allRecords: any[] = [];
+        let hasMore = false;
+        let totalCount = 0;
         
         for (let current = 1; current <= maxPages; current++) {
           try {
-            // 确保参数格式正确，避免后端参数验证错误
+            // 🎯 关键：添加sortField和sortOrder，按创建时间升序（最早的在前）
             const response = await service({ 
               ...params, 
               current: Math.floor(current), 
-              pageSize: Math.floor(pageSize) 
+              pageSize: Math.floor(pageSize),
+              sortField: 'createTime',
+              sortOrder: 'ascend' // 升序：最早提交的排在前面
             });
             
             const records = response?.records || [];
+            totalCount = response?.total || 0;
             allRecords.push(...records);
             
             // 如果返回的数据少于pageSize，说明没有更多数据了
             if (records.length < pageSize) {
+              hasMore = false;
               break;
             }
             
             // 达到500条限制，停止加载
             if (allRecords.length >= maxRecords) {
+              // 🎯 关键：检查总数是否大于已加载数量
+              hasMore = totalCount > allRecords.length;
               break;
             }
           } catch (err) {
@@ -438,15 +448,40 @@ export default function Admin() {
             break;
           }
         }
+        
+        // 🎯 最终判断：如果总数大于已加载数量，说明还有更多
+        if (totalCount > allRecords.length) {
+          hasMore = true;
+        }
 
-        return allRecords.slice(0, maxRecords); // 确保不超过500条
+        return { records: allRecords.slice(0, maxRecords), hasMore }; // 返回数据和是否有更多
       };
 
-      const [applicationForms, taskSubmissions, activityApplications] = await Promise.all([
+      const [applicationFormsResult, taskSubmissionsResult, activityApplicationsResult] = await Promise.all([
         fetchLimitedPages(formService.getFormList, { status: 0 }),
         fetchLimitedPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 0 }),
         fetchLimitedPages(activityApplicationService.getAllApplications, { reviewStatus: 0 })
       ]);
+      
+      const applicationForms = applicationFormsResult.records;
+      const taskSubmissions = taskSubmissionsResult.records;
+      const activityApplications = activityApplicationsResult.records;
+      
+      // 判断是否还有更多数据
+      const hasMore = applicationFormsResult.hasMore || taskSubmissionsResult.hasMore || activityApplicationsResult.hasMore;
+      
+      // 🐛 调试日志
+      console.log('📊 待审核数据加载统计:', {
+        表单数量: applicationForms.length,
+        表单有更多: applicationFormsResult.hasMore,
+        任务数量: taskSubmissions.length,
+        任务有更多: taskSubmissionsResult.hasMore,
+        活动数量: activityApplications.length,
+        活动有更多: activityApplicationsResult.hasMore,
+        总计有更多: hasMore
+      });
+      
+      setHasMorePending(hasMore);
 
       const pending: PendingSubmission[] = [];
 
@@ -498,13 +533,7 @@ export default function Admin() {
         }
       });
 
-      // 按创建时间排序（最新的在前）
-      pending.sort((a, b) => {
-        const timeA = new Date(a.createTime).getTime();
-        const timeB = new Date(b.createTime).getTime();
-        return timeB - timeA;
-      });
-      
+      // 🎯 不需要前端排序，保持后端返回的顺序（按创建时间升序，最早的在前）
       setPendingSubmissions(pending);
       setPendingCurrentPage(prev => {
         const maxPage = Math.max(1, Math.ceil(pending.length / pendingPageSize));
@@ -515,6 +544,126 @@ export default function Admin() {
       setError(error.message || t('admin.error.fetch.pending'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 🎯 加载更多待审核表单（追加后面500条）
+  const loadMorePending = async () => {
+    if (loadingMore || !hasMorePending) return;
+    
+    try {
+      setLoadingMore(true);
+      
+      const pageSize = 100;
+      const maxRecords = 500; // 每次再加载500条
+      const maxPages = Math.ceil(maxRecords / pageSize);
+      const startPage = 6; // 从第6页开始（前5页已加载）
+      
+      const fetchMorePages = async (service: any, params: any) => {
+        const allRecords: any[] = [];
+        let hasMore = false;
+        
+        for (let current = startPage; current < startPage + maxPages; current++) {
+          try {
+            const response = await service({ 
+              ...params, 
+              current: Math.floor(current), 
+              pageSize: Math.floor(pageSize),
+              sortField: 'createTime',
+              sortOrder: 'ascend'
+            });
+            
+            const records = response?.records || [];
+            const total = response?.total || 0;
+            allRecords.push(...records);
+            
+            hasMore = (current * pageSize) < total;
+            
+            if (records.length < pageSize) {
+              hasMore = false;
+              break;
+            }
+            
+            if (allRecords.length >= maxRecords) {
+              break;
+            }
+          } catch (err) {
+            console.error('加载更多数据失败:', err);
+            break;
+          }
+        }
+        
+        return { records: allRecords, hasMore };
+      };
+      
+      const [formsResult, tasksResult, activitiesResult] = await Promise.all([
+        fetchMorePages(formService.getFormList, { status: 0 }),
+        fetchMorePages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 0 }),
+        fetchMorePages(activityApplicationService.getAllApplications, { reviewStatus: 0 })
+      ]);
+      
+      const applicationForms = formsResult.records;
+      const taskSubmissions = tasksResult.records;
+      const activityApplications = activitiesResult.records;
+      
+      const hasMore = formsResult.hasMore || tasksResult.hasMore || activitiesResult.hasMore;
+      setHasMorePending(hasMore);
+      
+      const morePending: PendingSubmission[] = [];
+      
+      // 添加新加载的申请表
+      applicationForms.forEach((form: ApplicationForm) => {
+        if (form && form.id) {
+          morePending.push({
+            id: form.id,
+            type: 'application',
+            title: t('admin.forms.application'),
+            userName: form.name || t('admin.unknown.user'),
+            userEmail: form.email || '',
+            status: form.status || 0,
+            createTime: form.createTime || new Date().toISOString(),
+            data: form
+          });
+        }
+      });
+      
+      taskSubmissions.forEach((task: TaskSubmissionVO) => {
+        if (task && task.id) {
+          morePending.push({
+            id: task.id,
+            type: 'task',
+            title: t('admin.forms.task'),
+            userName: task.name || t('admin.unknown.user'),
+            userEmail: task.email || '',
+            status: task.reviewStatus || 0,
+            createTime: task.createTime || new Date().toISOString(),
+            data: task
+          });
+        }
+      });
+      
+      activityApplications.forEach((activity: ActivityApplication) => {
+        if (activity && activity.id) {
+          morePending.push({
+            id: activity.id,
+            type: 'activity',
+            title: t('admin.forms.activity'),
+            userName: activity.organizer || t('admin.unknown.user'),
+            userEmail: activity.email || '',
+            status: activity.reviewStatus || 0,
+            createTime: activity.createTime || new Date().toISOString(),
+            data: activity
+          });
+        }
+      });
+      
+      // 追加到现有数据
+      setPendingSubmissions(prev => [...prev, ...morePending]);
+    } catch (error: any) {
+      console.error('加载更多失败:', error);
+      setError(error.message || '加载更多数据失败');
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -1523,6 +1672,25 @@ export default function Admin() {
                 </tbody>
               </table>
             </div>
+            
+            {/* 🎯 加载更多按钮 */}
+            {hasMorePending && (
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-yellow-50 dark:bg-yellow-900/10">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                    <span className="font-medium">💡 提示：</span> 当前显示最早提交的{pendingSubmissions.length}条数据（优先审核），还有更多待审核表单未加载
+                  </div>
+                  <button
+                    onClick={loadMorePending}
+                    disabled={loadingMore}
+                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loadingMore ? '加载中...' : '📥 加载更多 (再加载500条)'}
+                  </button>
+                </div>
+              </div>
+            )}
+            
             {pendingDisplayTotal > 0 && (
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="text-sm text-gray-700 dark:text-gray-300">
