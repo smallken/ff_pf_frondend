@@ -70,9 +70,7 @@ export default function AdminMonthlyReward() {
     try {
       setHistoricalLoading(true);
       // 🚀 优化：使用批量API一次性获取所有月份的统计数据
-      console.log('开始批量获取历史奖励数据...');
       const allStats = await monthlyRewardService.getAllMonthlyStats();
-      console.log('批量获取到的统计数据:', allStats);
       
       // 转换数据格式，确保数值类型正确
       const historicalData = allStats.map(data => ({
@@ -88,7 +86,6 @@ export default function AdminMonthlyReward() {
         advanced3LevelUsers: data.advanced3LevelUsers ?? 0
       }));
       
-      console.log('最终的historicalData:', historicalData);
       setHistoricalRewards(historicalData);
     } catch (err: any) {
       console.error('获取历史奖励数据失败:', err);

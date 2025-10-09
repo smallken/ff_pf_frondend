@@ -404,7 +404,7 @@ export default function Admin() {
       setLoading(true);
       setError(''); // 清除之前的错误
       
-      const pageSize = 20; // 后端限制最大20
+      const pageSize = 200; // 🚀 优化：增加页面大小减少请求次数（从20改为200）
 
       const fetchAllPages = async (service: any, params: any) => {
         let current = 1;
@@ -503,7 +503,7 @@ export default function Admin() {
 
   // 获取所有已审核表单数据（获取多页数据）
   const fetchAllReviewedData = async () => {
-    const maxPageSize = 20; // 后端API限制最大页面大小为20
+    const maxPageSize = 200; // 🚀 优化：增加页面大小减少请求次数（从20改为200）
     const allData = {
       approvedForms: [],
       rejectedForms: [],
