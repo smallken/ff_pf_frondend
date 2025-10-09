@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { formService, taskSubmissionService, activityApplicationService, userService, monthlyRewardService, monthlyPointService } from '../../services';
+import { adminService } from '../../services/adminService'; // 新增：UNION API Service
 import type { ApplicationForm, TaskSubmissionVO, ActivityApplication, AdminStatsVO, MonthlyPointVO } from '../../types/api';
 import AdminMonthlyReward from '../components/AdminMonthlyReward';
 import { API_CONFIG } from '../../config/api';
@@ -74,7 +75,8 @@ export default function Admin() {
   // 已审核表单分页状态
   const [reviewedCurrentPage, setReviewedCurrentPage] = useState(1);
   const [reviewedPageSize] = useState(20);
-  const [reviewedTotal, setReviewedTotal] = useState(0);
+  const [reviewedTotal, setReviewedTotal] = useState(0); // 实际总数
+  const [reviewedLoadedCount, setReviewedLoadedCount] = useState(0); // 已加载数量
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showReviewedModal, setShowReviewedModal] = useState(false);
   const [reviewForm, setReviewForm] = useState({
@@ -510,26 +512,158 @@ export default function Admin() {
     }
   };
 
-  // 获取已审核表单数据（优化：每种类型最多100条，6种共最多600条，避免生产环境卡顿）
+  // ==================== 新版本：使用UNION API（待后端完成后启用） ====================
+  // TODO: 后端API完成后，将上面的fetchPendingSubmissions替换为下面的fetchPendingSubmissions_V2
+  
+  /**
+   * 【新版本】获取待审核表单（使用UNION ALL分页API）
+   * 
+   * 优势：
+   * - 只需1次API调用（vs旧版3次）
+   * - 数据完整无缺失
+   * - 支持全局排序
+   * - 加载速度更快
+   * 
+   * 依赖：后端API POST /api/admin/pending-submissions/page
+   * 状态：🚧 待后端完成
+   */
+  const fetchPendingSubmissions_V2 = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      // 单个API调用，替代旧版的3个并发请求
+      const response = await adminService.getPendingSubmissionsPage({
+        current: pendingCurrentPage,
+        pageSize: pendingPageSize,
+        sortField: 'createTime',
+        sortOrder: 'asc'  // 早的在前
+      });
+      
+      // 转换数据格式为前端需要的格式
+      const pending: PendingSubmission[] = response.records.map(item => ({
+        id: item.id,
+        type: item.type,
+        title: item.title,
+        userName: item.userName,
+        userEmail: item.userEmail,
+        status: item.status,
+        createTime: item.createTime,
+        data: item.data
+      }));
+      
+      setPendingSubmissions(pending);
+      setPendingTotal(response.total);
+      setPendingActualTotal(response.total); // 新版本中，实际总数 = 加载总数
+      
+      console.log('✅ 待审核表单加载完成（UNION API）:', {
+        当前页: response.current,
+        每页数量: response.size,
+        本页记录数: response.records.length,
+        总记录数: response.total,
+        总页数: response.pages
+      });
+      
+      setError('');
+    } catch (error: any) {
+      console.error('❌ 获取待审核表单失败（UNION API）:', error);
+      setError(error.message || '获取待审核表单失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * 【新版本】获取已审核表单（使用UNION ALL分页API）
+   * 
+   * 依赖：后端API POST /api/admin/reviewed-submissions/page
+   * 状态：🚧 待后端完成
+   */
+  const fetchReviewedSubmissions_V2 = async () => {
+    try {
+      setReviewedLoading(true);
+      setError('');
+      
+      // 将前端的表单类型转换为后端需要的type参数
+      let typeFilter = '';
+      if (filters.formType === t('admin.forms.application')) {
+        typeFilter = 'application';
+      } else if (filters.formType === t('admin.forms.achievement')) {
+        typeFilter = 'task';
+      } else if (filters.formType === t('admin.forms.activity')) {
+        typeFilter = 'activity';
+      }
+      
+      // 单个API调用
+      const response = await adminService.getReviewedSubmissionsPage({
+        current: reviewedCurrentPage,
+        pageSize: reviewedPageSize,
+        status: filters.status,  // 筛选：通过(1)/拒绝(2)/全部('')
+        type: typeFilter,
+        sortField: reviewedSortConfig?.key || 'createTime',
+        sortOrder: reviewedSortConfig?.direction || 'desc'
+      });
+      
+      // 转换数据格式
+      const reviewed: ReviewedSubmission[] = response.records.map(item => ({
+        id: item.id,
+        type: item.type,
+        title: item.title,
+        userName: item.userName,
+        userEmail: item.userEmail,
+        status: item.status,
+        createTime: item.createTime,
+        reviewTime: item.data.reviewTime || item.data.updateTime || item.createTime,
+        reviewMessage: item.data.reviewMessage || '',
+        reviewScore: item.data.reviewScore || item.data.points || 0,
+        data: item.data
+      }));
+      
+      setAllReviewedSubmissions(reviewed);
+      setReviewedTotal(response.total);
+      setReviewedLoadedCount(response.records.length);
+      
+      console.log('✅ 已审核表单加载完成（UNION API）:', {
+        当前页: response.current,
+        总记录数: response.total
+      });
+      
+      setError('');
+    } catch (error: any) {
+      console.error('❌ 获取已审核表单失败（UNION API）:', error);
+      setError(error.message || '获取已审核表单失败');
+    } finally {
+      setReviewedLoading(false);
+    }
+  };
+
+  // ==================== 以上是新版本函数，暂不使用 ====================
+
+  // 获取已审核表单数据（优化：并发加载，每种类型最多200条）
   const fetchAllReviewedData = async () => {
     const maxPageSize = 20; // 后端API限制最大页面大小为20
-    const maxPages = 5; // 每种类型获取5页（100条），6种类型共最多600条
+    const maxPages = 10; // 每种类型获取10页（200条），6种类型共最多1200条
 
     const fetchLimitedPages = async (service: any, params: any) => {
       const pagePromises = [];
       for (let i = 1; i <= maxPages; i++) {
         pagePromises.push(
           service({ ...params, current: i, pageSize: maxPageSize })
-            .then((response: any) => response?.records || [])
-            .catch(() => [])
+            .then((response: any) => ({
+              records: response?.records || [],
+              total: response?.total || 0
+            }))
+            .catch(() => ({ records: [], total: 0 }))
         );
       }
-      const pagesResults = await Promise.all(pagePromises);
-      return pagesResults.flat();
+      const results = await Promise.all(pagePromises);
+      const allRecords = results.flatMap(r => r.records);
+      const total = results[0]?.total || 0; // 使用第一页的total
+      return { records: allRecords, total };
     };
 
     // 并行获取所有类型的数据（每种类型并发获取多页）
-    const [approvedForms, rejectedForms, approvedTaskSubmissions, rejectedTaskSubmissions, approvedActivities, rejectedActivities] = await Promise.all([
+    const [approvedFormsResult, rejectedFormsResult, approvedTaskSubmissionsResult, rejectedTaskSubmissionsResult, approvedActivitiesResult, rejectedActivitiesResult] = await Promise.all([
       fetchLimitedPages(formService.getFormList, { status: 1 }),
       fetchLimitedPages(formService.getFormList, { status: 2 }),
       fetchLimitedPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 1 }),
@@ -538,13 +672,48 @@ export default function Admin() {
       fetchLimitedPages(activityApplicationService.getAllApplications, { reviewStatus: 2 })
     ]);
 
+    const loadedCount = approvedFormsResult.records.length + 
+                       rejectedFormsResult.records.length +
+                       approvedTaskSubmissionsResult.records.length +
+                       rejectedTaskSubmissionsResult.records.length +
+                       approvedActivitiesResult.records.length +
+                       rejectedActivitiesResult.records.length;
+    
+    const actualTotal = approvedFormsResult.total + 
+                       rejectedFormsResult.total +
+                       approvedTaskSubmissionsResult.total +
+                       rejectedTaskSubmissionsResult.total +
+                       approvedActivitiesResult.total +
+                       rejectedActivitiesResult.total;
+
+    console.log('📊 已审核表单加载完成:', {
+      通过申请: `${approvedFormsResult.records.length}/${approvedFormsResult.total}`,
+      拒绝申请: `${rejectedFormsResult.records.length}/${rejectedFormsResult.total}`,
+      通过任务: `${approvedTaskSubmissionsResult.records.length}/${approvedTaskSubmissionsResult.total}`,
+      拒绝任务: `${rejectedTaskSubmissionsResult.records.length}/${rejectedTaskSubmissionsResult.total}`,
+      通过活动: `${approvedActivitiesResult.records.length}/${approvedActivitiesResult.total}`,
+      拒绝活动: `${rejectedActivitiesResult.records.length}/${rejectedActivitiesResult.total}`,
+      已加载: loadedCount,
+      实际总数: actualTotal
+    });
+
+    if (loadedCount < actualTotal) {
+      console.warn(`⚠️ 已审核表单：只加载了前${loadedCount}条记录，还有${actualTotal - loadedCount}条未加载`);
+    }
+
+    // 保存统计数据用于显示提示
+    setReviewedTotal(actualTotal);
+    setReviewedLoadedCount(loadedCount);
+
     return {
-      approvedForms: { records: approvedForms },
-      rejectedForms: { records: rejectedForms },
-      approvedTaskSubmissions: { records: approvedTaskSubmissions },
-      rejectedTaskSubmissions: { records: rejectedTaskSubmissions },
-      approvedActivities: { records: approvedActivities },
-      rejectedActivities: { records: rejectedActivities }
+      approvedForms: { records: approvedFormsResult.records, total: approvedFormsResult.total },
+      rejectedForms: { records: rejectedFormsResult.records, total: rejectedFormsResult.total },
+      approvedTaskSubmissions: { records: approvedTaskSubmissionsResult.records, total: approvedTaskSubmissionsResult.total },
+      rejectedTaskSubmissions: { records: rejectedTaskSubmissionsResult.records, total: rejectedTaskSubmissionsResult.total },
+      approvedActivities: { records: approvedActivitiesResult.records, total: approvedActivitiesResult.total },
+      rejectedActivities: { records: rejectedActivitiesResult.records, total: rejectedActivitiesResult.total },
+      loadedCount,
+      actualTotal
     };
   };
 
@@ -1633,6 +1802,27 @@ export default function Admin() {
                 </div>
               </div>
             </div>
+            
+            {/* 数据加载提示 */}
+            {reviewedLoadedCount > 0 && reviewedLoadedCount < reviewedTotal && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4 mb-4">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm text-blue-700 dark:text-blue-300">
+                    <p className="font-medium mb-1">
+                      {language === 'zh' ? '数据加载提示' : 'Data Loading Notice'}
+                    </p>
+                    <p>
+                      {language === 'zh' 
+                        ? `为提升加载速度，当前只显示前 ${reviewedLoadedCount} 条记录（实际共 ${reviewedTotal} 条，还有 ${reviewedTotal - reviewedLoadedCount} 条未显示）` 
+                        : `For improved loading speed, only the first ${reviewedLoadedCount} records are displayed (total: ${reviewedTotal}, ${reviewedTotal - reviewedLoadedCount} more not shown)`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-4">
