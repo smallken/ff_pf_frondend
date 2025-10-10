@@ -84,16 +84,18 @@ export default function Admin() {
   });
 
   const handlePendingPageChange = (page: number) => {
-    setPendingCurrentPage(prev => {
-      const target = Math.max(1, Math.min(page, pendingPageCount));
-      return target === prev ? prev : target;
-    });
+    const target = Math.max(1, Math.min(page, pendingPageCount));
+    if (target !== pendingCurrentPage) {
+      setPendingCurrentPage(target);
+      fetchPendingSubmissions(target); // 调用API获取新页面数据
+    }
   };
 
   const handlePendingPageSizeChange = (size: number) => {
     if (size !== pendingPageSize) {
       setPendingPageSize(size);
       setPendingCurrentPage(1);
+      fetchPendingSubmissions(1); // 调用API获取新的大小的页面数据
     }
   };
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -173,6 +175,10 @@ export default function Admin() {
       direction = 'desc';
     }
     setSortConfig({ key, direction });
+    
+    // 应用排序后重新获取数据（重置到第一页）
+    setPendingCurrentPage(1);
+    fetchPendingSubmissions(1);
   };
 
   // 已审核表单排序函数
@@ -184,55 +190,11 @@ export default function Admin() {
     setReviewedSortConfig({ key, direction });
   };
 
-  // 待审核表单：排序和分页
-  const sortedPendingSubmissions = useMemo(() => {
-    const sorted = [...pendingSubmissions];
     
-    if (sortConfig) {
-      sorted.sort((a, b) => {
-        let aValue: any;
-        let bValue: any;
-        
-        switch (sortConfig.key) {
-          case 'createTime':
-            aValue = new Date(a.createTime).getTime();
-            bValue = new Date(b.createTime).getTime();
-            break;
-          case 'userName':
-            aValue = a.userName.toLowerCase();
-            bValue = b.userName.toLowerCase();
-            break;
-          case 'formType':
-            aValue = a.type;
-            bValue = b.type;
-            break;
-          default:
-            return 0;
-        }
-        
-        if (aValue < bValue) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    
-    return sorted;
-  }, [pendingSubmissions, sortConfig]);
-  
-  // 前端分页
-  const pendingDisplayTotal = sortedPendingSubmissions.length;
-  const pendingPageCount = Math.max(1, Math.ceil(pendingDisplayTotal / pendingPageSize));
-  const pendingStartIndex = (pendingCurrentPage - 1) * pendingPageSize;
-  const paginatedPendingSubmissions = sortedPendingSubmissions.slice(
-    pendingStartIndex, 
-    pendingStartIndex + pendingPageSize
-  );
-  const pendingRangeStart = pendingDisplayTotal === 0 ? 0 : pendingStartIndex + 1;
-  const pendingRangeEnd = pendingDisplayTotal === 0 ? 0 : Math.min(pendingStartIndex + pendingPageSize, pendingDisplayTotal);
+  // 计算分页信息
+  const pendingPageCount = Math.max(1, Math.ceil(pendingTotal / pendingPageSize));
+  const pendingRangeStart = pendingTotal === 0 ? 0 : (pendingCurrentPage - 1) * pendingPageSize + 1;
+  const pendingRangeEnd = pendingTotal === 0 ? 0 : Math.min(pendingCurrentPage * pendingPageSize, pendingTotal);
 
   // 基于所有数据进行筛选
   const filteredAllReviewedSubmissions = allReviewedSubmissions.filter(submission => {
@@ -384,50 +346,44 @@ export default function Admin() {
     }
   };
 
-  // 获取待审核表单（优化版：并发加载所有数据，但只获取前200条避免过慢）
-  const fetchPendingSubmissions = async () => {
+  // 获取待审核表单（优化版：服务端分页实现）
+  const fetchPendingSubmissions = async (page: number = pendingCurrentPage) => {
     try {
       setLoading(true);
       setError(''); // 清除之前的错误
+
+      // 存储每个API的结果
+      let applicationForms: ApplicationForm[] = [];
+      let taskSubmissions: TaskSubmissionVO[] = [];
+      let activityApplications: ActivityApplication[] = [];
       
-      const pageSize = 20;
-      const maxPages = 10; // 每种类型最多10页（200条），总共最多600条
-      
-      // 并发加载多页数据
-      const fetchLimitedPages = async (service: any, params: any) => {
-        const pagePromises = [];
-        for (let i = 1; i <= maxPages; i++) {
-          pagePromises.push(
-            service({ ...params, current: i, pageSize })
-              .then((response: any) => ({
-                records: response?.records || [],
-                total: response?.total || 0
-              }))
-              .catch(() => ({ records: [], total: 0 }))
-          );
-        }
-        const results = await Promise.all(pagePromises);
-        const allRecords = results.flatMap(r => r.records);
-        const total = results[0]?.total || 0; // 使用第一页的total
-        return { records: allRecords, total };
-      };
-      
-      // 并发获取3种类型的数据
-      const [appResult, taskResult, activityResult] = await Promise.all([
-        fetchLimitedPages(formService.getFormList, { status: 0 }),
-        fetchLimitedPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 0 }),
-        fetchLimitedPages(activityApplicationService.getAllApplications, { reviewStatus: 0 })
+      // 存储每种类型的总数
+      let appTotal = 0;
+      let taskTotal = 0;
+      let activityTotal = 0;
+
+      // 计算每种类型请求的页码和页大小
+      // 为了简化实现，我们这里请求每种类型的第page页，每种类型请求pendingPageSize/3条数据
+      const typePage = page;
+      const typePageSize = Math.ceil(pendingPageSize / 3);
+
+      // 并发请求3种类型的当前页数据
+      const [appResponse, taskResponse, activityResponse] = await Promise.all([
+        formService.getFormList({ status: 0, current: typePage, pageSize: typePageSize }),
+        taskSubmissionService.getAllTaskSubmissions({ reviewStatus: 0, current: typePage, pageSize: typePageSize }),
+        activityApplicationService.getAllApplications({ reviewStatus: 0, current: typePage, pageSize: typePageSize })
       ]);
       
-      const applicationForms = appResult.records;
-      const taskSubmissions = taskResult.records;
-      const activityApplications = activityResult.records;
+      // 提取数据和总数
+      applicationForms = appResponse?.records || [];
+      taskSubmissions = taskResponse?.records || [];
+      activityApplications = activityResponse?.records || [];
+      
+      appTotal = Number(appResponse?.total || 0);
+      taskTotal = Number(taskResponse?.total || 0);
+      activityTotal = Number(activityResponse?.total || 0);
       
       // 计算总数
-      const appTotal = Number(appResult.total || 0);
-      const taskTotal = Number(taskResult.total || 0);
-      const activityTotal = Number(activityResult.total || 0);
-      
       const loadedCount = applicationForms.length + taskSubmissions.length + activityApplications.length;
       const totalCount = appTotal + taskTotal + activityTotal;
       
@@ -436,16 +392,12 @@ export default function Admin() {
         任务提交: `${taskSubmissions.length}/${taskTotal}`,
         活动申请: `${activityApplications.length}/${activityTotal}`,
         已加载: loadedCount,
-        实际总数: totalCount
+        实际总数: totalCount,
+        当前页: page,
+        每页大小: pendingPageSize
       });
-      
-      // 检查是否有更多数据未加载
-      if (loadedCount < totalCount) {
-        const missingCount = totalCount - loadedCount;
-        console.warn(`⚠️ 由于性能优化，只加载了前${loadedCount}条记录，还有${missingCount}条未加载`);
-      }
-      
-      setPendingTotal(loadedCount); // 显示实际加载的数量
+            
+      setPendingTotal(totalCount); // 设置为实际总数
       setPendingActualTotal(totalCount); // 保存实际总数
       setError(''); // 清除错误
 
@@ -503,7 +455,7 @@ export default function Admin() {
       pending.sort((a, b) => {
         const timeA = new Date(a.createTime).getTime();
         const timeB = new Date(b.createTime).getTime();
-        return timeA - timeB; // 倒序排序
+        return timeA - timeB; // 升序排序：早的在前
       });
       
       setPendingSubmissions(pending);
@@ -1484,14 +1436,14 @@ export default function Admin() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {paginatedPendingSubmissions.length === 0 ? (
+                    {pendingSubmissions.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                          {pendingDisplayTotal === 0 ? t('admin.no.pending') : '没有找到符合条件的表单'}
+                          {pendingTotal === 0 ? t('admin.no.pending') : '没有找到符合条件的表单'}
                         </td>
                       </tr>
                     ) : (
-                      paginatedPendingSubmissions.map((submission) => {
+                      pendingSubmissions.map((submission: PendingSubmission) => {
                         const taskData = submission.type === 'task' ? (submission.data as TaskSubmissionVO) : null;
                         const categories = taskData?.tasks?.map(t => t.submissionCategory).filter((v, i, a) => a.indexOf(v) === i) || [];
                         const taskTypes = taskData?.tasks?.map(t => t.taskType).filter((v, i, a) => a.indexOf(v) === i) || [];
@@ -1552,10 +1504,10 @@ export default function Admin() {
                 </tbody>
               </table>
             </div>
-            {pendingDisplayTotal > 0 && (
+            {pendingTotal > 0 && (
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                  显示第 {pendingRangeStart} 到 {pendingRangeEnd} 条，共 {pendingDisplayTotal} 条记录
+                  显示第 {pendingRangeStart} 到 {pendingRangeEnd} 条，共 {pendingTotal} 条记录
                 </div>
                 <div className="flex items-center gap-3">
                   <select
