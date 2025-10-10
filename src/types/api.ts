@@ -97,6 +97,10 @@ export interface AdminStatsVO {
   rejectedApplications: number;
   rejectedTaskSubmissions: number;
   rejectedActivityApplications: number;
+  currentMonthApprovedPromotionTasks: number;
+  currentMonthApprovedShortTasks: number;
+  currentMonthApprovedLongTasks: number;
+  currentMonthApprovedCommunityTasks: number;
 }
 
 export interface MonthlyPointVO {

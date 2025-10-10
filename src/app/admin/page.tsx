@@ -74,7 +74,8 @@ export default function Admin() {
   // 已审核表单分页状态
   const [reviewedCurrentPage, setReviewedCurrentPage] = useState(1);
   const [reviewedPageSize] = useState(20);
-  const [reviewedTotal, setReviewedTotal] = useState(0);
+  const [reviewedTotal, setReviewedTotal] = useState(0); // 实际总数
+  const [reviewedLoadedCount, setReviewedLoadedCount] = useState(0); // 已加载数量
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showReviewedModal, setShowReviewedModal] = useState(false);
   const [reviewForm, setReviewForm] = useState({
@@ -341,6 +342,10 @@ export default function Admin() {
     rejectedApplications: 0,
     rejectedTaskSubmissions: 0,
     rejectedActivityApplications: 0,
+    currentMonthApprovedPromotionTasks: 0,
+    currentMonthApprovedShortTasks: 0,
+    currentMonthApprovedLongTasks: 0,
+    currentMonthApprovedCommunityTasks: 0,
   });
 
   const fetchMonthlyPointInfo = async (userId: number) => {
@@ -510,26 +515,31 @@ export default function Admin() {
     }
   };
 
-  // 获取已审核表单数据（优化：每种类型最多100条，6种共最多600条，避免生产环境卡顿）
+  // 获取已审核表单数据（优化：并发加载，每种类型最多200条）
   const fetchAllReviewedData = async () => {
     const maxPageSize = 20; // 后端API限制最大页面大小为20
-    const maxPages = 5; // 每种类型获取5页（100条），6种类型共最多600条
+    const maxPages = 10; // 每种类型获取10页（200条），6种类型共最多1200条
 
     const fetchLimitedPages = async (service: any, params: any) => {
       const pagePromises = [];
       for (let i = 1; i <= maxPages; i++) {
         pagePromises.push(
           service({ ...params, current: i, pageSize: maxPageSize })
-            .then((response: any) => response?.records || [])
-            .catch(() => [])
+            .then((response: any) => ({
+              records: response?.records || [],
+              total: response?.total || 0
+            }))
+            .catch(() => ({ records: [], total: 0 }))
         );
       }
-      const pagesResults = await Promise.all(pagePromises);
-      return pagesResults.flat();
+      const results = await Promise.all(pagePromises);
+      const allRecords = results.flatMap(r => r.records);
+      const total = results[0]?.total || 0; // 使用第一页的total
+      return { records: allRecords, total };
     };
 
     // 并行获取所有类型的数据（每种类型并发获取多页）
-    const [approvedForms, rejectedForms, approvedTaskSubmissions, rejectedTaskSubmissions, approvedActivities, rejectedActivities] = await Promise.all([
+    const [approvedFormsResult, rejectedFormsResult, approvedTaskSubmissionsResult, rejectedTaskSubmissionsResult, approvedActivitiesResult, rejectedActivitiesResult] = await Promise.all([
       fetchLimitedPages(formService.getFormList, { status: 1 }),
       fetchLimitedPages(formService.getFormList, { status: 2 }),
       fetchLimitedPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 1 }),
@@ -538,13 +548,48 @@ export default function Admin() {
       fetchLimitedPages(activityApplicationService.getAllApplications, { reviewStatus: 2 })
     ]);
 
+    const loadedCount = approvedFormsResult.records.length + 
+                       rejectedFormsResult.records.length +
+                       approvedTaskSubmissionsResult.records.length +
+                       rejectedTaskSubmissionsResult.records.length +
+                       approvedActivitiesResult.records.length +
+                       rejectedActivitiesResult.records.length;
+    
+    const actualTotal = approvedFormsResult.total + 
+                       rejectedFormsResult.total +
+                       approvedTaskSubmissionsResult.total +
+                       rejectedTaskSubmissionsResult.total +
+                       approvedActivitiesResult.total +
+                       rejectedActivitiesResult.total;
+
+    console.log('📊 已审核表单加载完成:', {
+      通过申请: `${approvedFormsResult.records.length}/${approvedFormsResult.total}`,
+      拒绝申请: `${rejectedFormsResult.records.length}/${rejectedFormsResult.total}`,
+      通过任务: `${approvedTaskSubmissionsResult.records.length}/${approvedTaskSubmissionsResult.total}`,
+      拒绝任务: `${rejectedTaskSubmissionsResult.records.length}/${rejectedTaskSubmissionsResult.total}`,
+      通过活动: `${approvedActivitiesResult.records.length}/${approvedActivitiesResult.total}`,
+      拒绝活动: `${rejectedActivitiesResult.records.length}/${rejectedActivitiesResult.total}`,
+      已加载: loadedCount,
+      实际总数: actualTotal
+    });
+
+    if (loadedCount < actualTotal) {
+      console.warn(`⚠️ 已审核表单：只加载了前${loadedCount}条记录，还有${actualTotal - loadedCount}条未加载`);
+    }
+
+    // 保存统计数据用于显示提示
+    setReviewedTotal(actualTotal);
+    setReviewedLoadedCount(loadedCount);
+
     return {
-      approvedForms: { records: approvedForms },
-      rejectedForms: { records: rejectedForms },
-      approvedTaskSubmissions: { records: approvedTaskSubmissions },
-      rejectedTaskSubmissions: { records: rejectedTaskSubmissions },
-      approvedActivities: { records: approvedActivities },
-      rejectedActivities: { records: rejectedActivities }
+      approvedForms: { records: approvedFormsResult.records, total: approvedFormsResult.total },
+      rejectedForms: { records: rejectedFormsResult.records, total: rejectedFormsResult.total },
+      approvedTaskSubmissions: { records: approvedTaskSubmissionsResult.records, total: approvedTaskSubmissionsResult.total },
+      rejectedTaskSubmissions: { records: rejectedTaskSubmissionsResult.records, total: rejectedTaskSubmissionsResult.total },
+      approvedActivities: { records: approvedActivitiesResult.records, total: approvedActivitiesResult.total },
+      rejectedActivities: { records: rejectedActivitiesResult.records, total: rejectedActivitiesResult.total },
+      loadedCount,
+      actualTotal
     };
   };
 
@@ -1634,6 +1679,27 @@ export default function Admin() {
               </div>
             </div>
             
+            {/* 数据加载提示 */}
+            {reviewedLoadedCount > 0 && reviewedLoadedCount < reviewedTotal && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4 mb-4">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm text-blue-700 dark:text-blue-300">
+                    <p className="font-medium mb-1">
+                      {language === 'zh' ? '数据加载提示' : 'Data Loading Notice'}
+                    </p>
+                    <p>
+                      {language === 'zh' 
+                        ? `为提升加载速度，当前只显示前 ${reviewedLoadedCount} 条记录（实际共 ${reviewedTotal} 条，还有 ${reviewedTotal - reviewedLoadedCount} 条未显示）` 
+                        : `For improved loading speed, only the first ${reviewedLoadedCount} records are displayed (total: ${reviewedTotal}, ${reviewedTotal - reviewedLoadedCount} more not shown)`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-4">
                 <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
@@ -1997,6 +2063,50 @@ export default function Admin() {
                           {stats.averagePoints.toFixed(1)}
                         </span>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 本月已审核通过任务类型统计 */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    本月已审核通过的任务类型统计
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center shadow-sm border border-blue-100 dark:border-blue-800/50">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                        {stats.currentMonthApprovedPromotionTasks}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">传播类任务</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center shadow-sm border border-green-100 dark:border-green-800/50">
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">
+                        {stats.currentMonthApprovedShortTasks}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">短篇类任务</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center shadow-sm border border-purple-100 dark:border-purple-800/50">
+                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
+                        {stats.currentMonthApprovedLongTasks}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">长篇类任务</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center shadow-sm border border-orange-100 dark:border-orange-800/50">
+                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-1">
+                        {stats.currentMonthApprovedCommunityTasks}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">社区类任务</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800/50">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">本月已审核通过任务总数</span>
+                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                        {Number(stats.currentMonthApprovedPromotionTasks) + Number(stats.currentMonthApprovedShortTasks) + Number(stats.currentMonthApprovedLongTasks) + Number(stats.currentMonthApprovedCommunityTasks)}
+                      </span>
                     </div>
                   </div>
                 </div>
