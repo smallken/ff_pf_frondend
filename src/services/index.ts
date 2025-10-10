@@ -10,3 +10,4 @@ export { taskSubmissionService } from './taskSubmissionService';
 export { monthlyRewardService } from './monthlyRewardService';
 export { monthlyPointService } from './monthlyPointService';
 export { adminUnifiedService } from './adminUnifiedService';
+export { analyticsService } from './analyticsService';

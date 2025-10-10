@@ -21,6 +21,7 @@ import type {
   UnifiedSubmissionVO
 } from '../../types/api';
 import AdminMonthlyReward from '../components/AdminMonthlyReward';
+import AdminAnalytics from '../components/AdminAnalytics';
 import { API_CONFIG } from '../../config/api';
 
 // 统一的待审核表单类型
@@ -1445,6 +1446,16 @@ export default function Admin() {
                 {t('admin.tab.stats')}
               </button>
               <button
+                onClick={() => setActiveTab('analytics')}
+                className={`py-4 px-6 border-b-2 font-medium text-sm ${
+                  activeTab === 'analytics'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                数据分析
+              </button>
+              <button
                 onClick={() => setActiveTab('monthly-reward')}
                 className={`py-4 px-6 border-b-2 font-medium text-sm ${
                   activeTab === 'monthly-reward'
@@ -2226,6 +2237,13 @@ export default function Admin() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* 数据分析 */}
+        {activeTab === 'analytics' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <AdminAnalytics />
           </div>
         )}
 
