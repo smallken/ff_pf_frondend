@@ -342,33 +342,22 @@ export default function AdminAnalytics() {
       {/* 任务类型细分 */}
       {analyticsData.taskCategoryStats && analyticsData.taskCategoryStats.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">成果表任务类型统计</h3>
+          <div className="mb-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">成果表任务类型统计（本月已通过）</h3>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              ⚠️ 注意：以下仅显示本月已通过的任务数量，不包含待审核和已拒绝的数据
+            </p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {analyticsData.taskCategoryStats.map((category) => (
               <div key={category.category} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                 <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">{category.categoryName}</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-xs text-gray-500">总数</span>
-                    <span className="text-xs font-medium">{category.total}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-500">已通过</span>
-                    <span className="text-xs font-medium text-green-600">{category.approved}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-500">已拒绝</span>
-                    <span className="text-xs font-medium text-red-600">{category.rejected}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-500">待审核</span>
-                    <span className="text-xs font-medium text-yellow-600">{category.pending}</span>
-                  </div>
-                  <div className="pt-2 border-t">
-                    <div className="flex justify-between">
-                      <span className="text-xs font-medium text-gray-600">通过率</span>
-                      <span className="text-xs font-bold text-blue-600">{category.approvalRate.toFixed(1)}%</span>
-                    </div>
+                    <span className="text-xs text-gray-500">本月已通过</span>
+                    <span className="text-lg font-bold text-green-600">{category.approved}</span>
                   </div>
                 </div>
               </div>

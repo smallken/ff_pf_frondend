@@ -92,92 +92,98 @@ export const analyticsService = {
       // 获取管理员统计数据
       const stats: AdminStatsVO = await userService.getAdminStats();
       
-      // 转换为 AnalyticsData 格式
+      // 转换为 AnalyticsData 格式（确保所有数值都是数字类型）
+      const toNumber = (val: any): number => {
+        const num = Number(val);
+        return isNaN(num) ? 0 : num;
+      };
+      
       const analyticsData: AnalyticsData = {
-        totalSubmissions: stats.totalSubmissions,
-        approvedSubmissions: stats.approvedForms,
-        rejectedSubmissions: stats.rejectedForms,
-        pendingSubmissions: stats.pendingForms,
+        totalSubmissions: toNumber(stats.totalSubmissions),
+        approvedSubmissions: toNumber(stats.approvedForms),
+        rejectedSubmissions: toNumber(stats.rejectedForms),
+        pendingSubmissions: toNumber(stats.pendingForms),
         
         // 申请表统计
         applicationStats: {
-          total: stats.pendingApplications + stats.approvedApplications + stats.rejectedApplications,
-          approved: stats.approvedApplications,
-          rejected: stats.rejectedApplications,
-          pending: stats.pendingApplications,
-          approvalRate: stats.approvedApplications > 0 
-            ? (stats.approvedApplications / (stats.approvedApplications + stats.rejectedApplications)) * 100 
+          total: toNumber(stats.pendingApplications) + toNumber(stats.approvedApplications) + toNumber(stats.rejectedApplications),
+          approved: toNumber(stats.approvedApplications),
+          rejected: toNumber(stats.rejectedApplications),
+          pending: toNumber(stats.pendingApplications),
+          approvalRate: toNumber(stats.approvedApplications) > 0 
+            ? (toNumber(stats.approvedApplications) / (toNumber(stats.approvedApplications) + toNumber(stats.rejectedApplications))) * 100 
             : 0,
-          rejectionRate: stats.rejectedApplications > 0 
-            ? (stats.rejectedApplications / (stats.approvedApplications + stats.rejectedApplications)) * 100 
+          rejectionRate: toNumber(stats.rejectedApplications) > 0 
+            ? (toNumber(stats.rejectedApplications) / (toNumber(stats.approvedApplications) + toNumber(stats.rejectedApplications))) * 100 
             : 0,
         },
         
         // 成果表统计
         taskStats: {
-          total: stats.pendingTaskSubmissions + stats.approvedTaskSubmissions + stats.rejectedTaskSubmissions,
-          approved: stats.approvedTaskSubmissions,
-          rejected: stats.rejectedTaskSubmissions,
-          pending: stats.pendingTaskSubmissions,
-          approvalRate: stats.approvedTaskSubmissions > 0 
-            ? (stats.approvedTaskSubmissions / (stats.approvedTaskSubmissions + stats.rejectedTaskSubmissions)) * 100 
+          total: toNumber(stats.pendingTaskSubmissions) + toNumber(stats.approvedTaskSubmissions) + toNumber(stats.rejectedTaskSubmissions),
+          approved: toNumber(stats.approvedTaskSubmissions),
+          rejected: toNumber(stats.rejectedTaskSubmissions),
+          pending: toNumber(stats.pendingTaskSubmissions),
+          approvalRate: toNumber(stats.approvedTaskSubmissions) > 0 
+            ? (toNumber(stats.approvedTaskSubmissions) / (toNumber(stats.approvedTaskSubmissions) + toNumber(stats.rejectedTaskSubmissions))) * 100 
             : 0,
-          rejectionRate: stats.rejectedTaskSubmissions > 0 
-            ? (stats.rejectedTaskSubmissions / (stats.approvedTaskSubmissions + stats.rejectedTaskSubmissions)) * 100 
+          rejectionRate: toNumber(stats.rejectedTaskSubmissions) > 0 
+            ? (toNumber(stats.rejectedTaskSubmissions) / (toNumber(stats.approvedTaskSubmissions) + toNumber(stats.rejectedTaskSubmissions))) * 100 
             : 0,
         },
         
         // 活动表统计
         activityStats: {
-          total: stats.pendingActivityApplications + stats.approvedActivityApplications + stats.rejectedActivityApplications,
-          approved: stats.approvedActivityApplications,
-          rejected: stats.rejectedActivityApplications,
-          pending: stats.pendingActivityApplications,
-          approvalRate: stats.approvedActivityApplications > 0 
-            ? (stats.approvedActivityApplications / (stats.approvedActivityApplications + stats.rejectedActivityApplications)) * 100 
+          total: toNumber(stats.pendingActivityApplications) + toNumber(stats.approvedActivityApplications) + toNumber(stats.rejectedActivityApplications),
+          approved: toNumber(stats.approvedActivityApplications),
+          rejected: toNumber(stats.rejectedActivityApplications),
+          pending: toNumber(stats.pendingActivityApplications),
+          approvalRate: toNumber(stats.approvedActivityApplications) > 0 
+            ? (toNumber(stats.approvedActivityApplications) / (toNumber(stats.approvedActivityApplications) + toNumber(stats.rejectedActivityApplications))) * 100 
             : 0,
-          rejectionRate: stats.rejectedActivityApplications > 0 
-            ? (stats.rejectedActivityApplications / (stats.approvedActivityApplications + stats.rejectedActivityApplications)) * 100 
+          rejectionRate: toNumber(stats.rejectedActivityApplications) > 0 
+            ? (toNumber(stats.rejectedActivityApplications) / (toNumber(stats.approvedActivityApplications) + toNumber(stats.rejectedActivityApplications))) * 100 
             : 0,
         },
         
-        // 任务类型细分统计
+        // 任务类型细分统计 - 注意：后端只提供了本月已通过的数据
+        // 如果需要完整的待审核、已拒绝数据，需要后端提供更详细的API
         taskCategoryStats: [
           {
             category: 'promotion',
             categoryName: '传播类',
-            total: stats.currentMonthApprovedPromotionTasks,
-            approved: stats.currentMonthApprovedPromotionTasks,
-            rejected: 0,
-            pending: 0,
-            approvalRate: 100,
+            total: toNumber(stats.currentMonthApprovedPromotionTasks),
+            approved: toNumber(stats.currentMonthApprovedPromotionTasks),
+            rejected: 0, // 后端未提供此数据
+            pending: 0, // 后端未提供此数据
+            approvalRate: toNumber(stats.currentMonthApprovedPromotionTasks) > 0 ? 100 : 0,
           },
           {
             category: 'short',
             categoryName: '短篇类',
-            total: stats.currentMonthApprovedShortTasks,
-            approved: stats.currentMonthApprovedShortTasks,
-            rejected: 0,
-            pending: 0,
-            approvalRate: 100,
+            total: toNumber(stats.currentMonthApprovedShortTasks),
+            approved: toNumber(stats.currentMonthApprovedShortTasks),
+            rejected: 0, // 后端未提供此数据
+            pending: 0, // 后端未提供此数据
+            approvalRate: toNumber(stats.currentMonthApprovedShortTasks) > 0 ? 100 : 0,
           },
           {
             category: 'long',
             categoryName: '长篇类',
-            total: stats.currentMonthApprovedLongTasks,
-            approved: stats.currentMonthApprovedLongTasks,
-            rejected: 0,
-            pending: 0,
-            approvalRate: 100,
+            total: toNumber(stats.currentMonthApprovedLongTasks),
+            approved: toNumber(stats.currentMonthApprovedLongTasks),
+            rejected: 0, // 后端未提供此数据
+            pending: 0, // 后端未提供此数据
+            approvalRate: toNumber(stats.currentMonthApprovedLongTasks) > 0 ? 100 : 0,
           },
           {
             category: 'community',
             categoryName: '社区类',
-            total: stats.currentMonthApprovedCommunityTasks,
-            approved: stats.currentMonthApprovedCommunityTasks,
-            rejected: 0,
-            pending: 0,
-            approvalRate: 100,
+            total: toNumber(stats.currentMonthApprovedCommunityTasks),
+            approved: toNumber(stats.currentMonthApprovedCommunityTasks),
+            rejected: 0, // 后端未提供此数据
+            pending: 0, // 后端未提供此数据
+            approvalRate: toNumber(stats.currentMonthApprovedCommunityTasks) > 0 ? 100 : 0,
           },
         ],
         
