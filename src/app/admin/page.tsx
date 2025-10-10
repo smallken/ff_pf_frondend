@@ -517,12 +517,23 @@ export default function Admin() {
     let currentPage = 1;
     let hasMore = true;
     let totalCount = 0;
+    let pageCount = 0;
+
+    console.log(`🔍 开始分页获取数据，API: ${apiCall.name}, 参数:`, params);
 
     while (hasMore) {
       const response = await apiCall({
         ...params,
         current: currentPage,
         pageSize: maxPageSize
+      });
+      
+      pageCount++;
+      console.log(`📄 第${pageCount}页数据:`, {
+        当前页: currentPage,
+        返回记录数: response?.records?.length || 0,
+        总记录数: response?.total || 0,
+        累计记录数: allRecords.length
       });
       
       if (response?.records && response.records.length > 0) {
@@ -532,18 +543,20 @@ export default function Admin() {
         // 如果返回的记录数少于pageSize，说明已经到最后一页
         if (response.records.length < maxPageSize) {
           hasMore = false;
+          console.log(`✅ 数据获取完成，共${pageCount}页，${allRecords.length}条记录`);
         } else {
           currentPage++;
         }
       } else {
         hasMore = false;
+        console.log(`✅ 数据获取完成，共${pageCount}页，${allRecords.length}条记录`);
       }
     }
 
     return { records: allRecords, total: totalCount };
   };
 
-  // 获取待审核表单（获取所有数据）
+  // 获取待审核表单（获取所有数据，默认按最早时间排序）
   const fetchPendingSubmissions = async (
     page: number = pendingCurrentPage,
     sortField: string = sortConfig?.key || 'createTime',
@@ -555,24 +568,24 @@ export default function Admin() {
 
       console.log('🔍 开始获取所有待审核数据:', { page, sortField, sortOrder });
 
-      // 并发获取所有数据
+      // 强制按创建时间升序获取，确保最早的数据先显示
       const [appResult, taskResult, activityResult] = await Promise.all([
         fetchAllData(formService.getFormList, {
           status: 0,
-          sortField: sortField,
-          sortOrder: sortOrder,
+          sortField: 'createTime', // 强制按创建时间排序
+          sortOrder: 'asc', // 强制升序，最早的数据在前
           ...(filters.user && { userName: filters.user })
         }, 20), // ApplicationForm没有限制，但为了安全使用20
         fetchAllData(taskSubmissionService.getAllTaskSubmissions, {
           reviewStatus: 0,
-          sortField: sortField,
-          sortOrder: sortOrder,
+          sortField: 'createTime', // 强制按创建时间排序
+          sortOrder: 'asc', // 强制升序，最早的数据在前
           ...(filters.user && { name: filters.user })
         }, 20), // TaskSubmission限制为20
         fetchAllData(activityApplicationService.getAllApplications, {
           reviewStatus: 0,
-          sortField: sortField,
-          sortOrder: sortOrder,
+          sortField: 'createTime', // 强制按创建时间排序
+          sortOrder: 'asc', // 强制升序，最早的数据在前
           ...(filters.user && { organizer: filters.user })
         }, 100) // ActivityApplication没有限制，使用100
       ]);
@@ -586,6 +599,17 @@ export default function Admin() {
         tasks: taskResponse?.records?.length || 0,
         activities: activityResponse?.records?.length || 0
       });
+
+      // 检查最早和最晚的创建时间
+      const allRecords = [...(appResponse?.records || []), ...(taskResponse?.records || []), ...(activityResponse?.records || [])];
+      if (allRecords.length > 0) {
+        const createTimes = allRecords.map(record => new Date(record.createTime)).sort();
+        console.log('📅 数据时间范围:', {
+          最早时间: createTimes[0]?.toISOString(),
+          最晚时间: createTimes[createTimes.length - 1]?.toISOString(),
+          总记录数: allRecords.length
+        });
+      }
 
       // 合并数据
       const allData: PendingSubmission[] = [];
@@ -695,35 +719,59 @@ export default function Admin() {
 
   // 获取已审核表单数据（优化：并发加载，每种类型最多200条）
   const fetchAllReviewedData = async () => {
-    const maxPageSize = 20; // 后端API限制最大页面大小为20
-    const maxPages = 10; // 每种类型获取10页（200条），6种类型共最多1200条
+    // 使用与待审核表单相同的全量数据获取逻辑
+    const fetchAllReviewedDataForType = async (service: any, params: any, maxPageSize: number = 20) => {
+      const allRecords: any[] = [];
+      let currentPage = 1;
+      let hasMore = true;
+      let totalCount = 0;
+      let pageCount = 0;
 
-    const fetchLimitedPages = async (service: any, params: any) => {
-      const pagePromises = [];
-      for (let i = 1; i <= maxPages; i++) {
-        pagePromises.push(
-          service({ ...params, current: i, pageSize: maxPageSize })
-            .then((response: any) => ({
-              records: response?.records || [],
-              total: response?.total || 0
-            }))
-            .catch(() => ({ records: [], total: 0 }))
-        );
+      console.log(`🔍 开始获取已审核数据，API: ${service.name}, 参数:`, params);
+
+      while (hasMore) {
+        const response = await service({
+          ...params,
+          current: currentPage,
+          pageSize: maxPageSize
+        });
+        
+        pageCount++;
+        console.log(`📄 已审核数据第${pageCount}页:`, {
+          当前页: currentPage,
+          返回记录数: response?.records?.length || 0,
+          总记录数: response?.total || 0,
+          累计记录数: allRecords.length
+        });
+        
+        if (response?.records && response.records.length > 0) {
+          allRecords.push(...response.records);
+          totalCount = response.total || 0;
+          
+          // 如果返回的记录数少于pageSize，说明已经到最后一页
+          if (response.records.length < maxPageSize) {
+            hasMore = false;
+            console.log(`✅ 已审核数据获取完成，共${pageCount}页，${allRecords.length}条记录`);
+          } else {
+            currentPage++;
+          }
+        } else {
+          hasMore = false;
+          console.log(`✅ 已审核数据获取完成，共${pageCount}页，${allRecords.length}条记录`);
+        }
       }
-      const results = await Promise.all(pagePromises);
-      const allRecords = results.flatMap(r => r.records);
-      const total = results[0]?.total || 0; // 使用第一页的total
-      return { records: allRecords, total };
+
+      return { records: allRecords, total: totalCount };
     };
 
-    // 并行获取所有类型的数据（每种类型并发获取多页）
+    // 并行获取所有类型的数据（获取全量数据）
     const [approvedFormsResult, rejectedFormsResult, approvedTaskSubmissionsResult, rejectedTaskSubmissionsResult, approvedActivitiesResult, rejectedActivitiesResult] = await Promise.all([
-      fetchLimitedPages(formService.getFormList, { status: 1 }),
-      fetchLimitedPages(formService.getFormList, { status: 2 }),
-      fetchLimitedPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 1 }),
-      fetchLimitedPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 2 }),
-      fetchLimitedPages(activityApplicationService.getAllApplications, { reviewStatus: 1 }),
-      fetchLimitedPages(activityApplicationService.getAllApplications, { reviewStatus: 2 })
+      fetchAllReviewedDataForType(formService.getFormList, { status: 1 }, 20), // 通过申请
+      fetchAllReviewedDataForType(formService.getFormList, { status: 2 }, 20), // 拒绝申请
+      fetchAllReviewedDataForType(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 1 }, 20), // 通过任务
+      fetchAllReviewedDataForType(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 2 }, 20), // 拒绝任务
+      fetchAllReviewedDataForType(activityApplicationService.getAllApplications, { reviewStatus: 1 }, 100), // 通过活动
+      fetchAllReviewedDataForType(activityApplicationService.getAllApplications, { reviewStatus: 2 }, 100) // 拒绝活动
     ]);
 
     const loadedCount = approvedFormsResult.records.length + 
@@ -1371,9 +1419,40 @@ export default function Admin() {
         console.log('✅ 活动申请审核成功');
       }
 
-      // 重新获取待审核表单
-      await fetchPendingSubmissions();
+      // 异步更新本地状态，不等待重新获取数据
+      const updatedSubmission = {
+        ...selectedSubmission,
+        status: status,
+        reviewMessage: reviewForm.reviewMessage
+      };
+      
+      // 从待审核列表中移除已审核的项目
+      setPendingSubmissions(prev => prev.filter(item => item.id !== selectedSubmission.id));
+      setPendingTotal(prev => Math.max(0, prev - 1));
+      setPendingActualTotal(prev => Math.max(0, prev - 1));
+      
+      // 关闭审核弹窗
       handleCloseReviewModal();
+      
+      // 显示成功消息
+      setSuccess(language === 'zh' ? '审核完成！表单已移至已审核列表' : 'Review completed! Form moved to reviewed list');
+      setTimeout(() => setSuccess(''), 3000);
+      
+      // 异步重新获取数据（不阻塞用户界面）
+      setTimeout(async () => {
+        try {
+          // 刷新待审核表单
+          await fetchPendingSubmissions();
+          
+          // 如果当前在已审核表单页面，也刷新已审核数据
+          if (activeTab === 'reviewed') {
+            console.log('🔄 审核完成后刷新已审核表单数据');
+            await fetchReviewedSubmissions(reviewedCurrentPage);
+          }
+        } catch (error) {
+          console.error('异步刷新数据失败:', error);
+        }
+      }, 1000);
     } catch (error: any) {
       console.error('❌ 审核失败:', error);
       console.error('❌ 错误详情:', {
