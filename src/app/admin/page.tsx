@@ -511,6 +511,10 @@ export default function Admin() {
     }
   };
 
+  // 防重复请求的状态
+  const [isFetchingPending, setIsFetchingPending] = useState(false);
+  const [isFetchingReviewed, setIsFetchingReviewed] = useState(false);
+
   // 获取所有数据的辅助函数
   const fetchAllData = async (apiCall: Function, params: any, maxPageSize: number = 20) => {
     const allRecords: any[] = [];
@@ -518,10 +522,9 @@ export default function Admin() {
     let hasMore = true;
     let totalCount = 0;
     let pageCount = 0;
+    const maxPages = 50; // 添加最大页数限制，防止无限循环
 
-    console.log(`🔍 开始分页获取数据，API: ${apiCall.name}, 参数:`, params);
-
-    while (hasMore) {
+    while (hasMore && pageCount < maxPages) {
       const response = await apiCall({
         ...params,
         current: currentPage,
@@ -529,12 +532,6 @@ export default function Admin() {
       });
       
       pageCount++;
-      console.log(`📄 第${pageCount}页数据:`, {
-        当前页: currentPage,
-        返回记录数: response?.records?.length || 0,
-        总记录数: response?.total || 0,
-        累计记录数: allRecords.length
-      });
       
       if (response?.records && response.records.length > 0) {
         allRecords.push(...response.records);
@@ -543,13 +540,11 @@ export default function Admin() {
         // 如果返回的记录数少于pageSize，说明已经到最后一页
         if (response.records.length < maxPageSize) {
           hasMore = false;
-          console.log(`✅ 数据获取完成，共${pageCount}页，${allRecords.length}条记录`);
         } else {
           currentPage++;
         }
       } else {
         hasMore = false;
-        console.log(`✅ 数据获取完成，共${pageCount}页，${allRecords.length}条记录`);
       }
     }
 
@@ -562,11 +557,15 @@ export default function Admin() {
     sortField: string = sortConfig?.key || 'createTime',
     sortOrder: 'asc' | 'desc' = sortConfig?.direction || 'asc'
   ) => {
+    // 防重复请求
+    if (isFetchingPending) {
+      return;
+    }
+
     try {
+      setIsFetchingPending(true);
       setLoading(true);
       setError('');
-
-      console.log('🔍 开始获取所有待审核数据:', { page, sortField, sortOrder });
 
       // 强制按创建时间升序获取，确保最早的数据先显示
       const [appResult, taskResult, activityResult] = await Promise.all([
@@ -594,22 +593,6 @@ export default function Admin() {
       const taskResponse = { records: taskResult.records, total: taskResult.total };
       const activityResponse = { records: activityResult.records, total: activityResult.total };
 
-      console.log('📊 API返回数据:', {
-        applications: appResponse?.records?.length || 0,
-        tasks: taskResponse?.records?.length || 0,
-        activities: activityResponse?.records?.length || 0
-      });
-
-      // 检查最早和最晚的创建时间
-      const allRecords = [...(appResponse?.records || []), ...(taskResponse?.records || []), ...(activityResponse?.records || [])];
-      if (allRecords.length > 0) {
-        const createTimes = allRecords.map(record => new Date(record.createTime)).sort();
-        console.log('📅 数据时间范围:', {
-          最早时间: createTimes[0]?.toISOString(),
-          最晚时间: createTimes[createTimes.length - 1]?.toISOString(),
-          总记录数: allRecords.length
-        });
-      }
 
       // 合并数据
       const allData: PendingSubmission[] = [];
@@ -702,17 +685,12 @@ export default function Admin() {
       setPendingCurrentPage(page);
       setPendingSubmissions(paginatedData);
       
-      console.log('✅ 数据处理完成:', {
-        总数据: filteredData.length,
-        当前页数据: paginatedData.length,
-        当前页: page
-      });
-      
     } catch (error: any) {
       console.error('❌ 获取数据失败:', error);
       setError(error.message || '获取数据失败');
     } finally {
       setLoading(false);
+      setIsFetchingPending(false); // 清理防重复请求状态
     }
   };
 
@@ -727,8 +705,6 @@ export default function Admin() {
       let totalCount = 0;
       let pageCount = 0;
 
-      console.log(`🔍 开始获取已审核数据，API: ${service.name}, 参数:`, params);
-
       while (hasMore) {
         const response = await service({
           ...params,
@@ -737,12 +713,6 @@ export default function Admin() {
         });
         
         pageCount++;
-        console.log(`📄 已审核数据第${pageCount}页:`, {
-          当前页: currentPage,
-          返回记录数: response?.records?.length || 0,
-          总记录数: response?.total || 0,
-          累计记录数: allRecords.length
-        });
         
         if (response?.records && response.records.length > 0) {
           allRecords.push(...response.records);
@@ -751,13 +721,11 @@ export default function Admin() {
           // 如果返回的记录数少于pageSize，说明已经到最后一页
           if (response.records.length < maxPageSize) {
             hasMore = false;
-            console.log(`✅ 已审核数据获取完成，共${pageCount}页，${allRecords.length}条记录`);
           } else {
             currentPage++;
           }
         } else {
           hasMore = false;
-          console.log(`✅ 已审核数据获取完成，共${pageCount}页，${allRecords.length}条记录`);
         }
       }
 
@@ -788,20 +756,6 @@ export default function Admin() {
                        approvedActivitiesResult.total +
                        rejectedActivitiesResult.total;
 
-    console.log('📊 已审核表单加载完成:', {
-      通过申请: `${approvedFormsResult.records.length}/${approvedFormsResult.total}`,
-      拒绝申请: `${rejectedFormsResult.records.length}/${rejectedFormsResult.total}`,
-      通过任务: `${approvedTaskSubmissionsResult.records.length}/${approvedTaskSubmissionsResult.total}`,
-      拒绝任务: `${rejectedTaskSubmissionsResult.records.length}/${rejectedTaskSubmissionsResult.total}`,
-      通过活动: `${approvedActivitiesResult.records.length}/${approvedActivitiesResult.total}`,
-      拒绝活动: `${rejectedActivitiesResult.records.length}/${rejectedActivitiesResult.total}`,
-      已加载: loadedCount,
-      实际总数: actualTotal
-    });
-
-    if (loadedCount < actualTotal) {
-      console.warn(`⚠️ 已审核表单：只加载了前${loadedCount}条记录，还有${actualTotal - loadedCount}条未加载`);
-    }
 
     // 保存统计数据用于显示提示
     setReviewedTotal(actualTotal);
@@ -821,7 +775,13 @@ export default function Admin() {
 
   // 获取已审核表单（支持分页）
   const fetchReviewedSubmissions = async (page: number = reviewedCurrentPage) => {
+    // 防重复请求
+    if (isFetchingReviewed) {
+      return;
+    }
+
     try {
+      setIsFetchingReviewed(true);
       setReviewedLoading(true);
       setError(''); // 清除之前的错误
       
@@ -910,6 +870,7 @@ export default function Admin() {
       setError(error.message || t('admin.error.fetch.reviewed'));
     } finally {
       setReviewedLoading(false);
+      setIsFetchingReviewed(false); // 清理防重复请求状态
     }
   };
 
@@ -1310,13 +1271,6 @@ export default function Admin() {
 
     setReviewLoading(true);
     try {
-      console.log('🔍 开始审核流程:', {
-        submissionId: selectedSubmission.id,
-        submissionType: selectedSubmission.type,
-        status: status,
-        reviewMessage: reviewForm.reviewMessage,
-        points: reviewForm.points
-      });
 
       // 申请表和活动申请表不给予积分奖励
       const basePoints = (selectedSubmission.type === 'application' || selectedSubmission.type === 'activity')
@@ -1324,13 +1278,6 @@ export default function Admin() {
         : (status === 1 ? Math.max(0, reviewForm.points) : 0);
 
       let pointsToAward = Math.floor(basePoints) || 0; // 确保是整数
-      
-      console.log('📊 积分计算:', {
-        basePoints,
-        pointsToAward,
-        submissionType: selectedSubmission.type,
-        status
-      });
 
       if (selectedSubmission.type === 'application') {
         const reviewData = {
@@ -1339,9 +1286,7 @@ export default function Admin() {
           reviewComment: reviewForm.reviewMessage || '', // 确保不为undefined
           score: pointsToAward
         };
-        console.log('📝 申请表审核请求:', reviewData);
         await formService.reviewForm(reviewData);
-        console.log('✅ 申请表审核成功');
       } else if (selectedSubmission.type === 'task') {
         const reviewData = {
           id: selectedSubmission.id,
@@ -1349,9 +1294,7 @@ export default function Admin() {
           reviewMessage: reviewForm.reviewMessage || '', // 确保不为undefined
           reviewScore: pointsToAward
         };
-        console.log('📋 任务提交审核请求:', reviewData);
         await taskSubmissionService.updateTaskSubmission(reviewData);
-        console.log('✅ 任务提交审核成功');
 
         // 如果审核通过，累加月度奖励类别次数
         if (status === 1) {
@@ -1394,7 +1337,6 @@ export default function Admin() {
             };
 
             // 调用累加次数接口
-            console.warn('⚠️ 重要提醒：如果分数被错误修改，可能是后端的refreshMonthlyRewardScores接口被调用了！');
             const result = await monthlyRewardService.incrementMonthlyRewardScores(incrementData);
             
             // 审核成功后，重新获取用户的月度积分（已由后端更新）
@@ -1414,9 +1356,7 @@ export default function Admin() {
           reviewComment: reviewForm.reviewMessage || '', // 后端使用reviewComment字段，确保不为undefined
           reviewScore: pointsToAward
         };
-        console.log('🎪 活动申请审核请求:', reviewData);
         await activityApplicationService.reviewApplication(reviewData);
-        console.log('✅ 活动申请审核成功');
       }
 
       // 异步更新本地状态，不等待重新获取数据
@@ -1441,18 +1381,20 @@ export default function Admin() {
       // 异步重新获取数据（不阻塞用户界面）
       setTimeout(async () => {
         try {
-          // 刷新待审核表单
-          await fetchPendingSubmissions();
+          // 只在待审核页面时刷新待审核数据
+          if (activeTab === 'forms') {
+            // 使用默认参数刷新数据，确保参数正确
+            await fetchPendingSubmissions(1, 'createTime', 'asc');
+          }
           
           // 如果当前在已审核表单页面，也刷新已审核数据
           if (activeTab === 'reviewed') {
-            console.log('🔄 审核完成后刷新已审核表单数据');
             await fetchReviewedSubmissions(reviewedCurrentPage);
           }
         } catch (error) {
           console.error('异步刷新数据失败:', error);
         }
-      }, 1000);
+      }, 2000); // 增加延迟时间，避免频繁请求
     } catch (error: any) {
       console.error('❌ 审核失败:', error);
       console.error('❌ 错误详情:', {
@@ -1511,7 +1453,6 @@ export default function Admin() {
   // 监听筛选条件变化，重新获取数据
   useEffect(() => {
     if (isAuthenticated && user?.userRole === 'admin' && activeTab === 'forms') {
-      console.log('🔄 筛选条件变化，重新获取数据:', filters);
       // 待审核表单：筛选条件变化时重新获取数据
       setPendingCurrentPage(1);
       if (sortConfig) {
@@ -1520,7 +1461,7 @@ export default function Admin() {
         fetchPendingSubmissions(1);
       }
     }
-  }, [filters.user, filters.formType, filters.dateRange]);
+  }, [filters.user, filters.formType, filters.dateRange, isAuthenticated, user?.userRole, activeTab]);
 
   // 权限检查
   if (!isAuthenticated) {

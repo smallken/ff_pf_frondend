@@ -76,8 +76,6 @@ export const taskSubmissionService = {
       requestData.sortOrder = params.sortOrder;
     }
     
-    console.log('🔍 TaskSubmission getAllTaskSubmissions 请求参数:', requestData);
-    console.log('🔍 原始参数:', params);
     
     return request.post<PageData<TaskSubmissionVO>>(
       API_ENDPOINTS.TASK_SUBMISSION.LIST,
