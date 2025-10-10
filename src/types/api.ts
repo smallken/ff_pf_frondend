@@ -340,3 +340,27 @@ export interface EmailVO {
 export interface DeleteRequest {
   id: number;
 }
+
+// 统一提交查询请求
+export interface UnifiedSubmissionQueryRequest extends PageRequest {
+  sortField?: string;
+  sortOrder?: 'asc' | 'desc';
+  types?: ('application' | 'task' | 'activity')[];
+  status?: number[];
+  user?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+// 统一提交记录
+export interface UnifiedSubmissionVO {
+  id: number;
+  type: 'application' | 'task' | 'activity';
+  title: string;
+  userName: string;
+  userEmail: string;
+  status: number;
+  createTime: string;
+  sourceId: number;
+  sourceTable: string;
+}

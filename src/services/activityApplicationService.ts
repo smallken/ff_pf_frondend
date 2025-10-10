@@ -56,15 +56,31 @@ export const activityApplicationService = {
     pageSize?: number;
     reviewStatus?: number;
     organizer?: string;
+    sortField?: string;
+    sortOrder?: string;
   } = {}): Promise<PageData<ActivityApplication>> => {
+    const requestData: any = {
+      current: Math.floor(params.current || 1),
+      pageSize: Math.floor(params.pageSize || 10),
+    };
+    
+    // 只添加非undefined的参数
+    if (params.reviewStatus !== undefined) {
+      requestData.reviewStatus = params.reviewStatus;
+    }
+    if (params.organizer !== undefined) {
+      requestData.organizer = params.organizer;
+    }
+    if (params.sortField !== undefined) {
+      requestData.sortField = params.sortField;
+    }
+    if (params.sortOrder !== undefined) {
+      requestData.sortOrder = params.sortOrder;
+    }
+    
     return request.post<PageData<ActivityApplication>>(
       API_ENDPOINTS.ACTIVITY_APPLICATION.LIST,
-      {
-        current: Math.floor(params.current || 1),
-        pageSize: Math.floor(params.pageSize || 10),
-        reviewStatus: params.reviewStatus,
-        organizer: params.organizer,
-      }
+      requestData
     );
   },
 

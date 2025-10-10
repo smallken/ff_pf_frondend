@@ -51,14 +51,30 @@ export const taskSubmissionService = {
     submissionCategory?: string;
     name?: string;
     reviewStatus?: number;
+    sortField?: string;
+    sortOrder?: string;
   } = {}): Promise<PageData<TaskSubmissionVO>> => {
-    const requestData = {
+    const requestData: any = {
       current: Math.floor(params.current || 1),
       pageSize: Math.floor(params.pageSize || 10),
-      submissionCategory: params.submissionCategory,
-      name: params.name,
-      reviewStatus: params.reviewStatus,
     };
+    
+    // 只添加非undefined的参数
+    if (params.submissionCategory !== undefined) {
+      requestData.submissionCategory = params.submissionCategory;
+    }
+    if (params.name !== undefined) {
+      requestData.name = params.name;
+    }
+    if (params.reviewStatus !== undefined) {
+      requestData.reviewStatus = params.reviewStatus;
+    }
+    if (params.sortField !== undefined) {
+      requestData.sortField = params.sortField;
+    }
+    if (params.sortOrder !== undefined) {
+      requestData.sortOrder = params.sortOrder;
+    }
     
     console.log('🔍 TaskSubmission getAllTaskSubmissions 请求参数:', requestData);
     console.log('🔍 原始参数:', params);

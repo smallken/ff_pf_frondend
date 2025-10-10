@@ -511,39 +511,7 @@ export default function Admin() {
     }
   };
 
-  // 获取所有数据的辅助函数
-  const fetchAllData = async (apiCall: Function, params: any, maxPageSize: number = 20) => {
-    const allRecords: any[] = [];
-    let currentPage = 1;
-    let hasMore = true;
-    let totalCount = 0;
-
-    while (hasMore) {
-      const response = await apiCall({
-        ...params,
-        current: currentPage,
-        pageSize: maxPageSize
-      });
-      
-      if (response?.records && response.records.length > 0) {
-        allRecords.push(...response.records);
-        totalCount = response.total || 0;
-        
-        // 如果返回的记录数少于pageSize，说明已经到最后一页
-        if (response.records.length < maxPageSize) {
-          hasMore = false;
-        } else {
-          currentPage++;
-        }
-      } else {
-        hasMore = false;
-      }
-    }
-
-    return { records: allRecords, total: totalCount };
-  };
-
-  // 获取待审核表单（获取所有数据）
+  // 获取待审核表单（使用统一API）
   const fetchPendingSubmissions = async (
     page: number = pendingCurrentPage,
     sortField: string = sortConfig?.key || 'createTime',
@@ -551,147 +519,98 @@ export default function Admin() {
   ) => {
     try {
       setLoading(true);
+      setError(''); // 清除之前的错误
+
+      // 移除强制日期升序，允许用户选择排序方向
+      
+      console.log('🔍 调用统一API:', {
+        current: page,
+        pageSize: pendingPageSize,
+        sortField,
+        sortOrder,
+        status: [0], // 待审核状态
+        user: filters.user || undefined
+      });
+
+      // 调用统一API
+      const response = await adminUnifiedService.getUnifiedSubmissions({
+        current: page,
+        pageSize: pendingPageSize,
+        sortField,
+        sortOrder,
+        status: [0], // 待审核状态
+        user: filters.user || undefined,
+        types: filters.formType ? [
+          filters.formType === t('admin.forms.application') ? 'application' : 
+          filters.formType === t('admin.forms.achievement') ? 'task' : 
+          filters.formType === t('admin.forms.activity') ? 'activity' : 
+          undefined
+        ].filter(Boolean) as any[] : undefined,
+        startDate: filters.dateRange ? filters.dateRange : undefined,
+        endDate: filters.dateRange ? filters.dateRange : undefined
+      });
+      
+      console.log('📊 统一API返回数据:', {
+        total: response.total,
+        current: response.current,
+        pageSize: response.size,
+        records: response.records.length
+      });
+
+      // 设置分页数据
+      const newTotal = response.total || 0;
+      const newCurrent = response.current || page;
+      
+      console.log('📊 更新分页状态:', {
+        oldTotal: pendingTotal,
+        newTotal,
+        oldCurrent: pendingCurrentPage,
+        newCurrent,
+        pageSize: pendingPageSize,
+        newPageCount: Math.ceil(newTotal / pendingPageSize)
+      });
+      
+      setPendingTotal(newTotal);
+      setPendingActualTotal(newTotal); // 保存实际总数
+      setPendingCurrentPage(page); // 强制使用请求的页码，不依赖API返回
+      
+      // 转换为PendingSubmission数据结构
+      const pending: PendingSubmission[] = response.records.map((item: UnifiedSubmissionVO) => ({
+        id: item.id,
+        type: item.type as 'application' | 'task' | 'activity',
+        title: item.title || t(`admin.forms.${item.type}`),
+        userName: item.userName || t('admin.unknown.user'),
+        userEmail: item.userEmail || '',
+        status: item.status,
+        createTime: item.createTime,
+        data: { 
+          id: item.sourceId,
+          // 这里只是临时的数据，详细数据会在单击时通过getSubmissionDetail获取
+          type: item.type,
+          status: item.status
+        } as any
+      }));
+      
+      // 检查最早的日期
+      if (pending.length > 0 && sortField === 'createTime' && sortOrder === 'asc') {
+        console.log('📅 最早的日期:', {
+          id: pending[0].id,
+          type: pending[0].type,
+          createTime: pending[0].createTime,
+          dateObject: new Date(pending[0].createTime).toISOString()
+        });
+      }
+      
+      // 设置数据
+      setPendingSubmissions(pending);
       setError('');
-
-      console.log('🔍 开始获取所有待审核数据:', { page, sortField, sortOrder });
-
-      // 并发获取所有数据
-      const [appResult, taskResult, activityResult] = await Promise.all([
-        fetchAllData(formService.getFormList, {
-          status: 0,
-          sortField: sortField,
-          sortOrder: sortOrder,
-          ...(filters.user && { userName: filters.user })
-        }, 20), // ApplicationForm没有限制，但为了安全使用20
-        fetchAllData(taskSubmissionService.getAllTaskSubmissions, {
-          reviewStatus: 0,
-          sortField: sortField,
-          sortOrder: sortOrder,
-          ...(filters.user && { name: filters.user })
-        }, 20), // TaskSubmission限制为20
-        fetchAllData(activityApplicationService.getAllApplications, {
-          reviewStatus: 0,
-          sortField: sortField,
-          sortOrder: sortOrder,
-          ...(filters.user && { organizer: filters.user })
-        }, 100) // ActivityApplication没有限制，使用100
-      ]);
-
-      const appResponse = { records: appResult.records, total: appResult.total };
-      const taskResponse = { records: taskResult.records, total: taskResult.total };
-      const activityResponse = { records: activityResult.records, total: activityResult.total };
-
-      console.log('📊 API返回数据:', {
-        applications: appResponse?.records?.length || 0,
-        tasks: taskResponse?.records?.length || 0,
-        activities: activityResponse?.records?.length || 0
-      });
-
-      // 合并数据
-      const allData: PendingSubmission[] = [];
-
-      (appResponse?.records || []).forEach((form: any) => {
-        allData.push({
-          id: form.id,
-          type: 'application',
-          title: t('admin.forms.application'),
-          userName: form.name || t('admin.unknown.user'),
-          userEmail: form.email || '',
-          status: form.status,
-          createTime: form.createTime,
-          data: form
-        });
-      });
-
-      (taskResponse?.records || []).forEach((task: any) => {
-        allData.push({
-          id: task.id,
-          type: 'task',
-          title: t('admin.forms.achievement'),
-          userName: task.name || t('admin.unknown.user'),
-          userEmail: task.email || '',
-          status: task.reviewStatus || 0,
-          createTime: task.createTime,
-          data: task
-        });
-      });
-
-      (activityResponse?.records || []).forEach((activity: any) => {
-        allData.push({
-          id: activity.id,
-          type: 'activity',
-          title: t('admin.forms.activity'),
-          userName: activity.organizer || t('admin.unknown.user'),
-          userEmail: activity.email || '',
-          status: activity.reviewStatus || 0,
-          createTime: activity.createTime,
-          data: activity
-        });
-      });
-
-      // 筛选
-      let filteredData = allData.filter(item => {
-        if (filters.formType) {
-          if (filters.formType === t('admin.forms.application') && item.type !== 'application') return false;
-          if (filters.formType === t('admin.forms.achievement') && item.type !== 'task') return false;
-          if (filters.formType === t('admin.forms.activity') && item.type !== 'activity') return false;
-        }
-        if (filters.dateRange) {
-          const itemDate = new Date(item.createTime).toDateString();
-          const filterDate = new Date(filters.dateRange).toDateString();
-          if (itemDate !== filterDate) return false;
-        }
-        return true;
-      });
-
-      // 排序
-      filteredData.sort((a, b) => {
-        let valueA: any, valueB: any;
-        
-        switch (sortField) {
-          case 'createTime':
-            valueA = new Date(a.createTime).getTime();
-            valueB = new Date(b.createTime).getTime();
-            break;
-          case 'userName':
-            valueA = (a.userName || '').toLowerCase();
-            valueB = (b.userName || '').toLowerCase();
-            break;
-          default:
-            valueA = new Date(a.createTime).getTime();
-            valueB = new Date(b.createTime).getTime();
-        }
-        
-        const comparison = valueA < valueB ? -1 : (valueA > valueB ? 1 : 0);
-        return sortOrder === 'desc' ? -comparison : comparison;
-      });
-
-      // 分页
-      const startIndex = (page - 1) * pendingPageSize;
-      const paginatedData = filteredData.slice(startIndex, startIndex + pendingPageSize);
-
-      // 更新状态
-      // 使用合并后的数据长度作为总数，而不是三个API的总数相加
-      const actualTotal = filteredData.length;
-      setPendingTotal(actualTotal);
-      setPendingActualTotal(actualTotal);
-      setPendingCurrentPage(page);
-      setPendingSubmissions(paginatedData);
-      
-      console.log('✅ 数据处理完成:', {
-        总数据: filteredData.length,
-        当前页数据: paginatedData.length,
-        当前页: page
-      });
-      
     } catch (error: any) {
-      console.error('❌ 获取数据失败:', error);
-      setError(error.message || '获取数据失败');
+      console.error('获取待审核表单失败:', error);
+      setError(error.message || t('admin.error.fetch.pending'));
     } finally {
       setLoading(false);
     }
   };
-
 
   // 获取已审核表单数据（优化：并发加载，每种类型最多200条）
   const fetchAllReviewedData = async () => {
