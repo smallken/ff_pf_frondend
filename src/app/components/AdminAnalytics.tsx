@@ -200,16 +200,23 @@ export default function AdminAnalytics() {
       )}
 
       {/* 统计卡片 */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-2">
+        <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <span>以下统计数据来自真实数据库</span>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">总提交数</h3>
             <span className="text-xs">📊</span>
           </div>
-          <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+          <div className="text-3xl font-bold text-gray-900 dark:text-white">
             {analyticsData.totalSubmissions.toLocaleString()}
           </div>
-          <div className="text-xs text-green-600">↑ +12%</div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
@@ -217,10 +224,9 @@ export default function AdminAnalytics() {
             <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">已通过</h3>
             <span className="text-xs">✓</span>
           </div>
-          <div className="text-3xl font-bold text-green-600 mb-1">
+          <div className="text-3xl font-bold text-green-600">
             {analyticsData.approvedSubmissions.toLocaleString()}
           </div>
-          <div className="text-xs text-green-600">↑ +35%</div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
@@ -228,10 +234,9 @@ export default function AdminAnalytics() {
             <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">已拒绝</h3>
             <span className="text-xs">✗</span>
           </div>
-          <div className="text-3xl font-bold text-red-600 mb-1">
+          <div className="text-3xl font-bold text-red-600">
             {analyticsData.rejectedSubmissions.toLocaleString()}
           </div>
-          <div className="text-xs text-red-600">↓ -43%</div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
@@ -239,10 +244,9 @@ export default function AdminAnalytics() {
             <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">待审核</h3>
             <span className="text-xs">⏳</span>
           </div>
-          <div className="text-3xl font-bold text-yellow-600 mb-1">
+          <div className="text-3xl font-bold text-yellow-600">
             {analyticsData.pendingSubmissions.toLocaleString()}
           </div>
-          <div className="text-xs text-yellow-600">↑ +14%</div>
         </div>
       </div>
 
@@ -265,7 +269,12 @@ export default function AdminAnalytics() {
 
       {/* 时间序列图表 */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">提交趋势</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">提交趋势</h3>
+          <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+            示例数据
+          </span>
+        </div>
         <ResponsiveContainer width="100%" height={400}>
           {chartType === 'bar' ? (
             <BarChart data={analyticsData.timeSeriesData}>
