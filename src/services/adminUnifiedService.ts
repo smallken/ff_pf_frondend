@@ -27,11 +27,11 @@ export const adminUnifiedService = {
    * @returns 详情对象
    */
   async getSubmissionDetail(type: string, sourceId: number): Promise<any> {
+    console.log('🔍 获取表单详情 - 参数:', { type, sourceId });
+    // 直接传递参数对象，而不是嵌套在 params 属性中
     return request.get('/api/admin/submission-detail', {
-      params: { 
-        type, 
-        sourceId 
-      }
+      type, 
+      sourceId 
     });
   }
 };

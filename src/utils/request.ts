@@ -128,7 +128,22 @@ const createRequest = async <T>(config: RequestConfig): Promise<T> => {
 // 导出请求方法
 export const request = {
   get: <T>(url: string, params?: Record<string, any>): Promise<T> => {
-    const queryString = params ? `?${new URLSearchParams(params).toString()}` : '';
+    if (!params) {
+      return createRequest<T>({ url, method: 'GET' });
+    }
+    
+    // 过滤掉 undefined 和 null 值，并将所有值转换为字符串
+    const filteredParams: Record<string, string> = {};
+    Object.keys(params).forEach(key => {
+      const value = params[key];
+      if (value !== undefined && value !== null) {
+        filteredParams[key] = String(value);
+      }
+    });
+    
+    const queryString = Object.keys(filteredParams).length > 0 
+      ? `?${new URLSearchParams(filteredParams).toString()}` 
+      : '';
     return createRequest<T>({ url: `${url}${queryString}`, method: 'GET' });
   },
 

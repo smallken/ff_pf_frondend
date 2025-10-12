@@ -190,12 +190,19 @@ export default function Admin() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  // 筛选状态
+  // 待审核筛选状态
   const [filters, setFilters] = useState({
     user: '',
     formType: '',
     status: '',
     dateRange: ''
+  });
+
+  // 已审核筛选状态（默认只显示已通过的）
+  const [reviewedFilters, setReviewedFilters] = useState({
+    user: '',
+    dateRange: '',
+    status: '1' // 默认显示已通过，1=通过, 2=拒绝
   });
 
   // 排序状态 - 默认按时间倒序（早的在前）
@@ -355,6 +362,10 @@ export default function Admin() {
       direction = 'desc';
     }
     setReviewedSortConfig({ key, direction });
+    
+    // 重置到第一页并重新获取数据
+    setReviewedCurrentPage(1);
+    fetchReviewedSubmissions(1, reviewedFormType, key, direction);
   };
 
     
@@ -368,7 +379,7 @@ export default function Admin() {
   const reviewedRangeStart = reviewedTotal === 0 ? 0 : (reviewedCurrentPage - 1) * reviewedPageSize + 1;
   const reviewedRangeEnd = reviewedTotal === 0 ? 0 : Math.min(reviewedCurrentPage * reviewedPageSize, reviewedTotal);
 
-  // 重置筛选
+  // 重置待审核筛选
   const resetFilters = () => {
     setFilters({
       user: '',
@@ -377,6 +388,16 @@ export default function Admin() {
       dateRange: ''
     });
     setPendingCurrentPage(1);
+  };
+  
+  // 重置已审核筛选
+  const resetReviewedFilters = () => {
+    setReviewedFilters({
+      user: '',
+      dateRange: '',
+      status: '1' // 重置到默认显示已通过
+    });
+    setReviewedCurrentPage(1);
   };
   
   // 切换待审核表单类型
@@ -475,6 +496,24 @@ export default function Admin() {
       let response: any;
       const submissions: PendingSubmission[] = [];
 
+      // 为不同表单类型映射正确的排序字段名
+      // 不同的后端表可能使用不同的字段命名
+      let mappedSortField = sortField;
+      if (sortField === 'createTime') {
+        // ApplicationForm 和 ActivityApplication 都使用 createTime
+        // TaskSubmission 也使用 createTime
+        mappedSortField = 'createTime';
+      }
+
+      console.log('🔍 待审核表单排序参数:', {
+        formType,
+        原始字段: sortField,
+        映射字段: mappedSortField,
+        排序方向: sortOrder,
+        页码: page,
+        筛选条件: filters
+      });
+
       // 根据类型只调用对应的单个API
       switch(formType) {
         case 'application':
@@ -482,7 +521,7 @@ export default function Admin() {
             status: 0,
             current: page,
             pageSize: pendingPageSize,
-            sortField: sortField,
+            sortField: mappedSortField,
             sortOrder: sortOrder,
             ...(filters.user && { userName: filters.user }),
             ...(filters.dateRange && { dateRange: filters.dateRange })
@@ -507,7 +546,7 @@ export default function Admin() {
             reviewStatus: 0,
             current: page,
             pageSize: pendingPageSize,
-            sortField: sortField,
+            sortField: mappedSortField,
             sortOrder: sortOrder,
             ...(filters.user && { name: filters.user }),
             ...(filters.dateRange && { dateRange: filters.dateRange })
@@ -532,7 +571,7 @@ export default function Admin() {
             reviewStatus: 0,
             current: page,
             pageSize: pendingPageSize,
-            sortField: sortField,
+            sortField: mappedSortField,
             sortOrder: sortOrder,
             ...(filters.user && { organizer: filters.user }),
             ...(filters.dateRange && { dateRange: filters.dateRange })
@@ -565,8 +604,25 @@ export default function Admin() {
         页码: page,
         每页数量: pendingPageSize,
         总数: totalCount,
-        当前页数量: submissions.length
+        当前页数量: submissions.length,
+        排序字段: mappedSortField,
+        排序方向: sortOrder
       });
+      
+      // 对于申请表和活动申请表，后端可能不支持排序，在前端进行排序
+      if ((formType === 'application' || formType === 'activity') && sortField === 'createTime') {
+        submissions.sort((a, b) => {
+          const timeA = new Date(a.createTime).getTime();
+          const timeB = new Date(b.createTime).getTime();
+          return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
+        });
+        console.log('🔄 前端排序完成:', {
+          字段: sortField,
+          方向: sortOrder,
+          首条记录时间: submissions[0]?.createTime,
+          末条记录时间: submissions[submissions.length-1]?.createTime
+        });
+      }
       
     } catch (error: any) {
       console.error('❌ 获取数据失败:', error);
@@ -581,7 +637,9 @@ export default function Admin() {
   // 获取已审核表单（只获取当前类型的当前页数据，包含通过和拒绝状态）
   const fetchReviewedSubmissions = async (
     page: number = reviewedCurrentPage,
-    formType: 'application' | 'task' | 'activity' = reviewedFormType
+    formType: 'application' | 'task' | 'activity' = reviewedFormType,
+    sortField: string = 'updateTime',
+    sortOrder: 'asc' | 'desc' = 'desc'
   ) => {
     // 防重复请求
     if (isFetchingReviewed) {
@@ -597,22 +655,73 @@ export default function Admin() {
       let rejectedResponse: any;
       const reviewed: ReviewedSubmission[] = [];
 
+      // 构建筛选参数
+      // 注意：需要将前端的排序字段名映射到后端数据库字段名
+      let backendSortField = sortField;
+      if (sortField === 'reviewTime') {
+        backendSortField = 'updateTime'; // 数据库中使用 updateTime 存储审核时间
+      } else if (sortField === 'updateTime') {
+        backendSortField = 'updateTime'; // 直接使用 updateTime
+      }
+      
+      const filterParams: any = {
+        current: page,
+        pageSize: reviewedPageSize,
+        sortField: backendSortField,
+        sortOrder: sortOrder
+      };
+      
+      console.log('🔍 已审核表单排序参数:', {
+        formType,
+        原始字段: sortField,
+        映射字段: backendSortField,
+        排序方向: sortOrder,
+        页码: page,
+        筛选条件: reviewedFilters,
+        最终参数: filterParams
+      });
+
+      // 添加用户筛选
+      if (reviewedFilters.user) {
+        if (formType === 'application') {
+          filterParams.userName = reviewedFilters.user;
+        } else if (formType === 'task') {
+          filterParams.name = reviewedFilters.user;
+        } else if (formType === 'activity') {
+          filterParams.organizer = reviewedFilters.user;
+        }
+      }
+
+      // 添加日期筛选
+      if (reviewedFilters.dateRange) {
+        filterParams.dateRange = reviewedFilters.dateRange;
+      }
+
       // 根据类型调用对应的API，获取通过和拒绝两种状态的数据
       switch(formType) {
         case 'application':
-          // 并行获取通过和拒绝的数据
-          [approvedResponse, rejectedResponse] = await Promise.all([
-            formService.getFormList({
-              status: 1,
-              current: page,
-              pageSize: reviewedPageSize
-            }),
-            formService.getFormList({
-              status: 2,
-              current: page,
-              pageSize: reviewedPageSize
-            })
-          ]);
+          // 如果有状态筛选，只获取指定状态的数据
+          if (reviewedFilters.status) {
+            const statusNum = parseInt(reviewedFilters.status);
+            const response = await formService.getFormList({
+              ...filterParams,
+              status: statusNum
+            });
+            approvedResponse = statusNum === 1 ? response : { records: [], total: 0 };
+            rejectedResponse = statusNum === 2 ? response : { records: [], total: 0 };
+          } else {
+            // 并行获取通过和拒绝的数据
+            [approvedResponse, rejectedResponse] = await Promise.all([
+              formService.getFormList({
+                ...filterParams,
+                status: 1
+              }),
+              formService.getFormList({
+                ...filterParams,
+                status: 2
+              })
+            ]);
+          }
           
           // 处理通过的申请表
           (approvedResponse?.records || []).forEach((form: any) => {
@@ -650,18 +759,26 @@ export default function Admin() {
           break;
 
         case 'task':
-          [approvedResponse, rejectedResponse] = await Promise.all([
-            taskSubmissionService.getAllTaskSubmissions({
-              reviewStatus: 1,
-              current: page,
-              pageSize: reviewedPageSize
-            }),
-            taskSubmissionService.getAllTaskSubmissions({
-              reviewStatus: 2,
-              current: page,
-              pageSize: reviewedPageSize
-            })
-          ]);
+          if (reviewedFilters.status) {
+            const statusNum = parseInt(reviewedFilters.status);
+            const response = await taskSubmissionService.getAllTaskSubmissions({
+              ...filterParams,
+              reviewStatus: statusNum
+            });
+            approvedResponse = statusNum === 1 ? response : { records: [], total: 0 };
+            rejectedResponse = statusNum === 2 ? response : { records: [], total: 0 };
+          } else {
+            [approvedResponse, rejectedResponse] = await Promise.all([
+              taskSubmissionService.getAllTaskSubmissions({
+                ...filterParams,
+                reviewStatus: 1
+              }),
+              taskSubmissionService.getAllTaskSubmissions({
+                ...filterParams,
+                reviewStatus: 2
+              })
+            ]);
+          }
           
           (approvedResponse?.records || []).forEach((task: any) => {
             reviewed.push({
@@ -697,18 +814,26 @@ export default function Admin() {
           break;
 
         case 'activity':
-          [approvedResponse, rejectedResponse] = await Promise.all([
-            activityApplicationService.getAllApplications({
-              reviewStatus: 1,
-              current: page,
-              pageSize: reviewedPageSize
-            }),
-            activityApplicationService.getAllApplications({
-              reviewStatus: 2,
-              current: page,
-              pageSize: reviewedPageSize
-            })
-          ]);
+          if (reviewedFilters.status) {
+            const statusNum = parseInt(reviewedFilters.status);
+            const response = await activityApplicationService.getAllApplications({
+              ...filterParams,
+              reviewStatus: statusNum
+            });
+            approvedResponse = statusNum === 1 ? response : { records: [], total: 0 };
+            rejectedResponse = statusNum === 2 ? response : { records: [], total: 0 };
+          } else {
+            [approvedResponse, rejectedResponse] = await Promise.all([
+              activityApplicationService.getAllApplications({
+                ...filterParams,
+                reviewStatus: 1
+              }),
+              activityApplicationService.getAllApplications({
+                ...filterParams,
+                reviewStatus: 2
+              })
+            ]);
+          }
           
           (approvedResponse?.records || []).forEach((activity: any) => {
             reviewed.push({
@@ -744,15 +869,50 @@ export default function Admin() {
           break;
       }
 
-      // 按审核时间排序（最新的在前）
-      reviewed.sort((a, b) => {
-        const timeA = new Date(a.reviewTime).getTime();
-        const timeB = new Date(b.reviewTime).getTime();
-        return timeB - timeA;
-      });
+      // 应用客户端排序
+      if (sortField && sortOrder) {
+        reviewed.sort((a, b) => {
+          let valueA: any;
+          let valueB: any;
+          
+          if (sortField === 'createTime') {
+            valueA = new Date(a.createTime).getTime();
+            valueB = new Date(b.createTime).getTime();
+          } else if (sortField === 'reviewTime') {
+            valueA = new Date(a.reviewTime).getTime();
+            valueB = new Date(b.reviewTime).getTime();
+          } else if (sortField === 'userName') {
+            valueA = a.userName.toLowerCase();
+            valueB = b.userName.toLowerCase();
+          } else {
+            valueA = new Date(a.reviewTime).getTime();
+            valueB = new Date(b.reviewTime).getTime();
+          }
+          
+          if (valueA < valueB) {
+            return sortOrder === 'asc' ? -1 : 1;
+          }
+          if (valueA > valueB) {
+            return sortOrder === 'asc' ? 1 : -1;
+          }
+          return 0;
+        });
+      }
 
-      // 计算总数（两种状态的总和）
-      const totalCount = (approvedResponse?.total || 0) + (rejectedResponse?.total || 0);
+      // 计算总数
+      // 注意：当没有状态筛选时，我们并行获取approved和rejected，每个都有自己的total
+      // 我们显示的是合并后的结果，但total应该只反映当前页实际显示的数量
+      // 或者我们可以将两个total相加，但这对分页来说不准确
+      let totalCount: number;
+      if (reviewedFilters.status) {
+        // 有状态筛选时，只使用单个状态的总数
+        totalCount = Math.max(approvedResponse?.total || 0, rejectedResponse?.total || 0);
+      } else {
+        // 没有状态筛选时，显示当前页的实际记录数作为总数
+        // 这样避免了显示错误的巨大数字
+        // 注意：这意味着分页统计不会显示真实的总记录数，但至少是准确的
+        totalCount = reviewed.length;
+      }
       
       setReviewedSubmissions(reviewed);
       setReviewedTotal(totalCount);
@@ -780,7 +940,9 @@ export default function Admin() {
   // 处理已审核表单分页
   const handleReviewedPageChange = (page: number) => {
     setReviewedCurrentPage(page);
-    fetchReviewedSubmissions(page, reviewedFormType); // 重新获取对应页的数据
+    const sortField = reviewedSortConfig?.key || 'updateTime';
+    const sortOrder = reviewedSortConfig?.direction || 'desc';
+    fetchReviewedSubmissions(page, reviewedFormType, sortField, sortOrder);
   };
 
   // 获取统计数据
@@ -1288,13 +1450,17 @@ export default function Admin() {
         try {
           // 只在待审核页面时刷新待审核数据
           if (activeTab === 'forms') {
-            // 使用当前表单类型刷新数据
-            await fetchPendingSubmissions(1, pendingFormType, 'createTime', 'asc');
+            // 使用当前的排序配置
+            const sortField = sortConfig?.key || 'createTime';
+            const sortOrder = sortConfig?.direction || 'asc';
+            await fetchPendingSubmissions(1, pendingFormType, sortField, sortOrder);
           }
           
           // 如果当前在已审核表单页面，也刷新已审核数据
           if (activeTab === 'reviewed') {
-            await fetchReviewedSubmissions(reviewedCurrentPage, reviewedFormType);
+            const sortField = reviewedSortConfig?.key || 'updateTime';
+            const sortOrder = reviewedSortConfig?.direction || 'desc';
+            await fetchReviewedSubmissions(reviewedCurrentPage, reviewedFormType, sortField, sortOrder);
           }
         } catch (error) {
           console.error('异步刷新数据失败:', error);
@@ -1340,7 +1506,9 @@ export default function Admin() {
       } else if (activeTab === 'reviewed') {
         // 切换到已审核表单时重置分页状态
         setReviewedCurrentPage(1);
-        fetchReviewedSubmissions(1, reviewedFormType);
+        const sortField = reviewedSortConfig?.key || 'updateTime';
+        const sortOrder = reviewedSortConfig?.direction || 'desc';
+        fetchReviewedSubmissions(1, reviewedFormType, sortField, sortOrder);
       } else if (activeTab === 'stats') {
         fetchStats();
       }
@@ -1367,6 +1535,16 @@ export default function Admin() {
       }
     }
   }, [filters.user, filters.dateRange, pendingFormType, isAuthenticated, user?.userRole, activeTab]);
+
+  // 监听已审核表单筛选条件变化
+  useEffect(() => {
+    if (isAuthenticated && user?.userRole === 'admin' && activeTab === 'reviewed') {
+      setReviewedCurrentPage(1);
+      const sortField = reviewedSortConfig?.key || 'updateTime';
+      const sortOrder = reviewedSortConfig?.direction || 'desc';
+      fetchReviewedSubmissions(1, reviewedFormType, sortField, sortOrder);
+    }
+  }, [reviewedFilters.user, reviewedFilters.dateRange, reviewedFilters.status, reviewedFormType, isAuthenticated, user?.userRole, activeTab]);
 
   // 权限检查
   if (!isAuthenticated) {
@@ -1822,6 +2000,57 @@ export default function Admin() {
                 >
                   {t('admin.forms.activity')}
                 </button>
+              </div>
+            </div>
+            
+            {/* 筛选器 */}
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    用户筛选
+                  </label>
+                  <input
+                    type="text"
+                    value={reviewedFilters.user}
+                    onChange={(e) => setReviewedFilters(prev => ({ ...prev, user: e.target.value }))}
+                    placeholder="输入用户名或邮箱"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    提交日期
+                  </label>
+                  <input
+                    type="date"
+                    value={reviewedFilters.dateRange}
+                    onChange={(e) => setReviewedFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    审核状态
+                  </label>
+                  <select
+                    value={reviewedFilters.status}
+                    onChange={(e) => setReviewedFilters(prev => ({ ...prev, status: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">全部</option>
+                    <option value="1">已通过</option>
+                    <option value="2">已拒绝</option>
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <button
+                    onClick={resetReviewedFilters}
+                    className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                  >
+                    重置筛选
+                  </button>
+                </div>
               </div>
             </div>
             

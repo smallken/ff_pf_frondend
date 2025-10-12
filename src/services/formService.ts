@@ -50,6 +50,7 @@ export const formService = {
     pageSize?: number;
     sortField?: string;
     sortOrder?: string;
+    dateRange?: string;
   } = {}): Promise<PageData<ApplicationForm>> => {
     const queryParams = new URLSearchParams();
     if (params.status !== undefined) queryParams.append('status', params.status.toString());
@@ -58,6 +59,7 @@ export const formService = {
     if (params.pageSize !== undefined) queryParams.append('pageSize', params.pageSize.toString());
     if (params.sortField !== undefined && params.sortField !== '') queryParams.append('sortField', params.sortField);
     if (params.sortOrder !== undefined && params.sortOrder !== '') queryParams.append('sortOrder', params.sortOrder);
+    if (params.dateRange !== undefined && params.dateRange !== '') queryParams.append('dateRange', params.dateRange);
     
     return request.get<PageData<ApplicationForm>>(`${API_ENDPOINTS.FORM.LIST}?${queryParams.toString()}`);
   },
