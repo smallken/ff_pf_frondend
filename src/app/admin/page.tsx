@@ -965,15 +965,16 @@ export default function Admin() {
 
   // 显示审核弹窗
   const handleShowReviewModal = async (submission: PendingSubmission) => {
-    // 先设置基本信息显示弹窗
+    // 先设置基本信息并显示弹窗（显示加载状态）
     setSelectedSubmission(submission);
+    setShowReviewModal(true);
     setReviewForm({
       reviewMessage: '',
       points: submission.type === 'task' ? 1 : 0 // 默认给予任务提交 1 分
     });
-    setShowReviewModal(true);
     setMonthlyPoint(null);
     setMonthlyPointError('');
+    setLoading(true); // 开始加载
     
     try {
       // 获取ID，确保不为undefined
@@ -992,6 +993,14 @@ export default function Admin() {
       
       console.log('✅ 获取到表单详情:', detailData);
       
+      // 如果是任务提交，检查 tasks 数组
+      if (submission.type === 'task') {
+        console.log('📋 Tasks数组:', detailData?.tasks);
+        if (!detailData?.tasks || detailData.tasks.length === 0) {
+          console.warn('⚠️ 未找到tasks数组或数组为空');
+        }
+      }
+      
       // 更新所选提交的详细数据
       setSelectedSubmission({
         ...submission,
@@ -1006,8 +1015,10 @@ export default function Admin() {
         }
       }
     } catch (error: any) {
-      console.error('获取表单详情失败:', error);
+      console.error('❌ 获取表单详情失败:', error);
       setError(error.message || t('admin.error.fetch.detail') || '获取表单详情失败');
+    } finally {
+      setLoading(false); // 完成加载
     }
   };
 
@@ -1239,6 +1250,7 @@ export default function Admin() {
         
         // 步骤1: 更新TaskSubmission表（单次提交的类别次数）
         const updatePayload = {
+          id: selectedReviewedSubmission.id,
           promotionCount: editCategoryCounts.promotion,
           shortCount: editCategoryCounts.short,
           longCount: editCategoryCounts.long,
@@ -1247,24 +1259,7 @@ export default function Admin() {
 
         console.log('📤 步骤1: 更新TaskSubmission的类别次数:', updatePayload);
 
-        const response = await fetch(`http://localhost:8100/api/taskSubmission/update-category-counts/${selectedReviewedSubmission.id}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify(updatePayload)
-        });
-
-        if (!response.ok) {
-          throw new Error('更新TaskSubmission失败');
-        }
-
-        const result = await response.json();
-        if (result.code !== 0) {
-          throw new Error(result.message || '更新TaskSubmission失败');
-        }
-
+        await taskSubmissionService.updateTaskSubmission(updatePayload);
         console.log('✅ TaskSubmission更新成功');
         
         // 步骤2: 同时更新monthlyReward表（月度总次数）
@@ -1355,42 +1350,51 @@ export default function Admin() {
         };
         await formService.reviewForm(reviewData);
       } else if (selectedSubmission.type === 'task') {
+        // 先计算类别次数（审核通过和拒绝都需要这个数据结构）
+        const taskData = selectedSubmission.data as any;
+        const tasks = taskData.tasks || [];
+        
+        // 统计各类别的任务数量
+        const taskCounts = {
+          promotion: 0,
+          short: 0,
+          long: 0,
+          community: 0
+        };
+        
+        tasks.forEach((task: any) => {
+          const category = task.submissionCategory;
+          if (category === 'promotion') taskCounts.promotion++;
+          else if (category === 'short') taskCounts.short++;
+          else if (category === 'long') taskCounts.long++;
+          else if (category === 'community') taskCounts.community++;
+        });
+
+        console.log('📊 本次提交的类别次数:', taskCounts);
+
+        // 审核时将类别次数写入taskSubmission表
         const reviewData = {
           id: selectedSubmission.id,
           reviewStatus: status,
           reviewMessage: reviewForm.reviewMessage || '', // 确保不为undefined
-          reviewScore: pointsToAward
+          reviewScore: pointsToAward,
+          // 将本次提交的类别次数写入taskSubmission表
+          promotionCount: taskCounts.promotion,
+          shortCount: taskCounts.short,
+          longCount: taskCounts.long,
+          communityCount: taskCounts.community
         };
+        
+        console.log('📤 发送审核请求（包含类别次数）:', reviewData);
         await taskSubmissionService.updateTaskSubmission(reviewData);
 
-        // 如果审核通过，累加月度奖励类别次数
+        // 如果审核通过，将类别次数累加到monthlyReward表
         if (status === 1) {
-          // 月度积分更新已由后端统一处理，前端只需更新类别次数
           try {
             // 使用任务提交的创建时间，而不是当前审核时间
-            const taskData = selectedSubmission.data as any;
             const createTime = new Date(selectedSubmission.createTime);
             const year = createTime.getFullYear();
             const month = createTime.getMonth() + 1;
-
-            // 根据成果提交表中的实际任务类别计算累加次数
-            const tasks = taskData.tasks || [];
-            
-            // 统计各类别的任务数量
-            const taskCounts = {
-              promotion: 0,
-              short: 0,
-              long: 0,
-              community: 0
-            };
-            
-            tasks.forEach((task: any) => {
-              const category = task.submissionCategory;
-              if (category === 'promotion') taskCounts.promotion++;
-              else if (category === 'short') taskCounts.short++;
-              else if (category === 'long') taskCounts.long++;
-              else if (category === 'community') taskCounts.community++;
-            });
 
             // 构建累加次数数据
             const incrementData = {
@@ -1403,6 +1407,8 @@ export default function Admin() {
               communityIncrement: taskCounts.community // 社区类增加次数
             };
 
+            console.log('📤 累加到monthlyReward:', incrementData);
+            
             // 调用累加次数接口
             const result = await monthlyRewardService.incrementMonthlyRewardScores(incrementData);
             
@@ -1411,8 +1417,10 @@ export default function Admin() {
               const updatedMonthlyPoint = await monthlyPointService.getUserMonthlyPoints(selectedSubmission.data.userId);
               setMonthlyPoint(updatedMonthlyPoint);
             }
+            
+            console.log('✅ 类别次数更新完成');
           } catch (error) {
-            console.error('更新月度奖励数据失败:', error);
+            console.error('❌ 更新月度奖励数据失败:', error);
             // 不阻止审核流程，只记录错误
           }
         }
@@ -3301,7 +3309,8 @@ export default function Admin() {
                       </div>
                     </div>
                     
-                    {/* 类别次数统计 */}
+                    {/* 类别次数统计 - 仅对审核通过的表单显示 */}
+                    {selectedReviewedSubmission.status === 1 && (
                     <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
                       <div className="flex justify-between items-center mb-3">
                         <h5 className="text-sm font-semibold text-blue-900 dark:text-blue-200">获得的类别次数</h5>
@@ -3403,6 +3412,7 @@ export default function Admin() {
                         </div>
                       </div>
                     </div>
+                    )}
                   </div>
                 )}
 
