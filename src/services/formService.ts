@@ -45,6 +45,7 @@ export const formService = {
   // 获取所有表单列表（管理员）
   getFormList: (params: {
     status?: number;
+    statusList?: string;  // 新增：多状态查询，格式为 "1,2"
     userName?: string;
     current?: number;
     pageSize?: number;
@@ -54,6 +55,7 @@ export const formService = {
   } = {}): Promise<PageData<ApplicationForm>> => {
     const queryParams = new URLSearchParams();
     if (params.status !== undefined) queryParams.append('status', params.status.toString());
+    if (params.statusList !== undefined && params.statusList !== '') queryParams.append('statusList', params.statusList);  // 新增：支持多状态查询
     if (params.userName !== undefined && params.userName !== '') queryParams.append('userName', params.userName);
     if (params.current !== undefined) queryParams.append('current', params.current.toString());
     if (params.pageSize !== undefined) queryParams.append('pageSize', params.pageSize.toString());

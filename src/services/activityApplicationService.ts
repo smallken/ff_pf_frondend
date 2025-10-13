@@ -55,6 +55,7 @@ export const activityApplicationService = {
     current?: number;
     pageSize?: number;
     reviewStatus?: number;
+    reviewStatusList?: number[];  // 新增：多状态查询
     organizer?: string;
     dateRange?: string;
     sortField?: string;
@@ -68,6 +69,9 @@ export const activityApplicationService = {
     // 只添加非undefined的参数
     if (params.reviewStatus !== undefined) {
       requestData.reviewStatus = params.reviewStatus;
+    }
+    if (params.reviewStatusList !== undefined) {
+      requestData.reviewStatusList = params.reviewStatusList;  // 新增：支持多状态查询
     }
     if (params.organizer !== undefined) {
       requestData.organizer = params.organizer;

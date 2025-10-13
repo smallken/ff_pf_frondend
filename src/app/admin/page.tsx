@@ -703,51 +703,31 @@ export default function Admin() {
         filterParams.dateRange = reviewedFilters.dateRange;
       }
 
-      // 根据类型调用对应的API，获取通过和拒绝两种状态的数据
+      // 根据类型调用对应的API
+      // 使用多状态查询API来正确处理分页
       switch(formType) {
         case 'application':
-          // 如果有状态筛选，只获取指定状态的数据
           if (reviewedFilters.status) {
+            // 有状态筛选时，只获取指定状态的数据
             const statusNum = parseInt(reviewedFilters.status);
             const response = await formService.getFormList({
               ...filterParams,
               status: statusNum
             });
-            approvedResponse = statusNum === 1 ? response : { records: [], total: 0 };
-            rejectedResponse = statusNum === 2 ? response : { records: [], total: 0 };
+            approvedResponse = response;
+            rejectedResponse = { records: [], total: 0 };
           } else {
-            // 并行获取通过和拒绝的数据
-            [approvedResponse, rejectedResponse] = await Promise.all([
-              formService.getFormList({
-                ...filterParams,
-                status: 1
-              }),
-              formService.getFormList({
-                ...filterParams,
-                status: 2
-              })
-            ]);
+            // 没有状态筛选时，使用多状态查询（statusList="1,2"）
+            const response = await formService.getFormList({
+              ...filterParams,
+              statusList: '1,2'  // 后端支持多状态查询
+            });
+            approvedResponse = response;
+            rejectedResponse = { records: [], total: 0 };
           }
           
-          // 处理通过的申请表
+          // 处理申请表（包含所有状态）
           (approvedResponse?.records || []).forEach((form: any) => {
-            reviewed.push({
-              id: form.id,
-              type: 'application',
-              title: t('admin.forms.application'),
-              userName: form.name || t('admin.unknown.user'),
-              userEmail: form.email || '',
-              status: form.status,
-              createTime: form.createTime || new Date().toISOString(),
-              reviewTime: form.updateTime || form.createTime || new Date().toISOString(),
-              reviewMessage: form.reviewMessage || '',
-              reviewScore: form.reviewScore || 0,
-              data: form
-            });
-          });
-          
-          // 处理拒绝的申请表
-          (rejectedResponse?.records || []).forEach((form: any) => {
             reviewed.push({
               id: form.id,
               type: 'application',
@@ -771,38 +751,20 @@ export default function Admin() {
               ...filterParams,
               reviewStatus: statusNum
             });
-            approvedResponse = statusNum === 1 ? response : { records: [], total: 0 };
-            rejectedResponse = statusNum === 2 ? response : { records: [], total: 0 };
+            approvedResponse = response;
+            rejectedResponse = { records: [], total: 0 };
           } else {
-            [approvedResponse, rejectedResponse] = await Promise.all([
-              taskSubmissionService.getAllTaskSubmissions({
-                ...filterParams,
-                reviewStatus: 1
-              }),
-              taskSubmissionService.getAllTaskSubmissions({
-                ...filterParams,
-                reviewStatus: 2
-              })
-            ]);
+            // 使用多状态查询
+            const response = await taskSubmissionService.getAllTaskSubmissions({
+              ...filterParams,
+              reviewStatusList: [1, 2]  // 后端支持多状态查询
+            });
+            approvedResponse = response;
+            rejectedResponse = { records: [], total: 0 };
           }
           
+          // 处理成果提交（包含所有状态）
           (approvedResponse?.records || []).forEach((task: any) => {
-            reviewed.push({
-              id: task.id,
-              type: 'task',
-              title: t('admin.forms.achievement'),
-              userName: task.name || t('admin.unknown.user'),
-              userEmail: task.email || '',
-              status: task.reviewStatus || 0,
-              createTime: task.createTime || new Date().toISOString(),
-              reviewTime: task.updateTime || task.createTime || new Date().toISOString(),
-              reviewMessage: task.reviewMessage || '',
-              reviewScore: task.reviewScore || 0,
-              data: task
-            });
-          });
-          
-          (rejectedResponse?.records || []).forEach((task: any) => {
             reviewed.push({
               id: task.id,
               type: 'task',
@@ -826,38 +788,20 @@ export default function Admin() {
               ...filterParams,
               reviewStatus: statusNum
             });
-            approvedResponse = statusNum === 1 ? response : { records: [], total: 0 };
-            rejectedResponse = statusNum === 2 ? response : { records: [], total: 0 };
+            approvedResponse = response;
+            rejectedResponse = { records: [], total: 0 };
           } else {
-            [approvedResponse, rejectedResponse] = await Promise.all([
-              activityApplicationService.getAllApplications({
-                ...filterParams,
-                reviewStatus: 1
-              }),
-              activityApplicationService.getAllApplications({
-                ...filterParams,
-                reviewStatus: 2
-              })
-            ]);
+            // 使用多状态查询
+            const response = await activityApplicationService.getAllApplications({
+              ...filterParams,
+              reviewStatusList: [1, 2]  // 后端支持多状态查询
+            });
+            approvedResponse = response;
+            rejectedResponse = { records: [], total: 0 };
           }
           
+          // 处理活动申请（包含所有状态）
           (approvedResponse?.records || []).forEach((activity: any) => {
-            reviewed.push({
-              id: activity.id,
-              type: 'activity',
-              title: t('admin.forms.activity'),
-              userName: activity.organizer || t('admin.unknown.user'),
-              userEmail: activity.email || '',
-              status: activity.reviewStatus || 0,
-              createTime: activity.createTime || new Date().toISOString(),
-              reviewTime: activity.updateTime || activity.createTime || new Date().toISOString(),
-              reviewMessage: activity.reviewMessage || '',
-              reviewScore: activity.reviewScore || 0,
-              data: activity
-            });
-          });
-          
-          (rejectedResponse?.records || []).forEach((activity: any) => {
             reviewed.push({
               id: activity.id,
               type: 'activity',
@@ -906,19 +850,9 @@ export default function Admin() {
       }
 
       // 计算总数
-      // 注意：当没有状态筛选时，我们并行获取approved和rejected，每个都有自己的total
-      // 我们显示的是合并后的结果，但total应该只反映当前页实际显示的数量
-      // 或者我们可以将两个total相加，但这对分页来说不准确
-      let totalCount: number;
-      if (reviewedFilters.status) {
-        // 有状态筛选时，只使用单个状态的总数
-        totalCount = Math.max(approvedResponse?.total || 0, rejectedResponse?.total || 0);
-      } else {
-        // 没有状态筛选时，显示当前页的实际记录数作为总数
-        // 这样避免了显示错误的巨大数字
-        // 注意：这意味着分页统计不会显示真实的总记录数，但至少是准确的
-        totalCount = reviewed.length;
-      }
+      // 现在使用多状态查询，approvedResponse包含所有数据（或单一状态的数据）
+      // rejectedResponse仅用于向后兼容，实际上总是空的
+      const totalCount = approvedResponse?.total || 0;
       
       setReviewedSubmissions(reviewed);
       setReviewedTotal(totalCount);
@@ -928,10 +862,9 @@ export default function Admin() {
         类型: formType,
         页码: page,
         每页数量: reviewedPageSize,
-        通过数: approvedResponse?.total || 0,
-        拒绝数: rejectedResponse?.total || 0,
         总数: totalCount,
-        当前页数量: reviewed.length
+        当前页数量: reviewed.length,
+        状态筛选: reviewedFilters.status || '全部'
       });
       
     } catch (error: any) {

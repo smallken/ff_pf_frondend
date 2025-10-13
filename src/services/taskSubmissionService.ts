@@ -53,6 +53,7 @@ export const taskSubmissionService = {
     name?: string;
     dateRange?: string;
     reviewStatus?: number;
+    reviewStatusList?: number[];  // 新增：多状态查询
     sortField?: string;
     sortOrder?: string;
   } = {}): Promise<PageData<TaskSubmissionVO>> => {
@@ -76,6 +77,9 @@ export const taskSubmissionService = {
     }
     if (params.reviewStatus !== undefined) {
       requestData.reviewStatus = params.reviewStatus;
+    }
+    if (params.reviewStatusList !== undefined) {
+      requestData.reviewStatusList = params.reviewStatusList;  // 新增：支持多状态查询
     }
     if (params.sortField !== undefined) {
       requestData.sortField = params.sortField;
