@@ -195,7 +195,9 @@ export default function Admin() {
     user: '',
     formType: '',
     status: '',
-    dateRange: ''
+    dateRange: '',
+    submissionCategory: '', // 提交类别筛选（仅成果提交表）
+    taskType: '' // 任务类型筛选（仅成果提交表）
   });
 
   // 已审核筛选状态（默认只显示已通过的）
@@ -385,7 +387,9 @@ export default function Admin() {
       user: '',
       formType: '',
       status: '',
-      dateRange: ''
+      dateRange: '',
+      submissionCategory: '',
+      taskType: ''
     });
     setPendingCurrentPage(1);
   };
@@ -549,7 +553,9 @@ export default function Admin() {
             sortField: mappedSortField,
             sortOrder: sortOrder,
             ...(filters.user && { name: filters.user }),
-            ...(filters.dateRange && { dateRange: filters.dateRange })
+            ...(filters.dateRange && { dateRange: filters.dateRange }),
+            ...(filters.submissionCategory && { submissionCategory: filters.submissionCategory }),
+            ...(filters.taskType && { taskType: filters.taskType })
           });
           
           (response?.records || []).forEach((task: any) => {
@@ -1542,7 +1548,7 @@ export default function Admin() {
         fetchPendingSubmissions(1, pendingFormType);
       }
     }
-  }, [filters.user, filters.dateRange, pendingFormType, isAuthenticated, user?.userRole, activeTab]);
+  }, [filters.user, filters.dateRange, filters.submissionCategory, filters.taskType, pendingFormType, isAuthenticated, user?.userRole, activeTab]);
 
   // 监听已审核表单筛选条件变化
   useEffect(() => {
@@ -1728,7 +1734,7 @@ export default function Admin() {
             
             {/* 筛选器 */}
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className={`grid grid-cols-1 gap-4 ${pendingFormType === 'task' ? 'md:grid-cols-5' : 'md:grid-cols-3'}`}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     用户筛选
@@ -1752,6 +1758,78 @@ export default function Admin() {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+                {/* 成果提交表专属筛选 */}
+                {pendingFormType === 'task' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        提交类别
+                      </label>
+                      <select
+                        value={filters.submissionCategory}
+                        onChange={(e) => {
+                          const newCategory = e.target.value;
+                          // 为只有单一任务类型的类别自动选择
+                          let autoTaskType = '';
+                          if (newCategory === 'promotion') {
+                            autoTaskType = 'promotion.triple';
+                          } else if (newCategory === 'short') {
+                            autoTaskType = 'short.content';
+                          }
+                          setFilters(prev => ({ 
+                            ...prev, 
+                            submissionCategory: newCategory,
+                            taskType: autoTaskType // 自动选择或清空任务类型
+                          }));
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">全部类别</option>
+                        <option value="promotion">传播类</option>
+                        <option value="short">短篇原创</option>
+                        <option value="long">长篇原创</option>
+                        <option value="community">社区类</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        任务类型
+                      </label>
+                      <select
+                        value={filters.taskType}
+                        onChange={(e) => setFilters(prev => ({ ...prev, taskType: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">全部任务</option>
+                        {/* 传播类 */}
+                        {(!filters.submissionCategory || filters.submissionCategory === 'promotion') && (
+                          <option value="promotion.triple">传播类 - 三连</option>
+                        )}
+                        {/* 短篇原创 */}
+                        {(!filters.submissionCategory || filters.submissionCategory === 'short') && (
+                          <option value="short.content">短篇原创 - 内容</option>
+                        )}
+                        {/* 长篇原创 */}
+                        {(!filters.submissionCategory || filters.submissionCategory === 'long') && (
+                          <>
+                            <option value="long.article">长篇原创 - 文章</option>
+                            <option value="long.video">长篇原创 - 视频</option>
+                            <option value="long.recap">长篇原创 - 回顾</option>
+                          </>
+                        )}
+                        {/* 社区类 */}
+                        {(!filters.submissionCategory || filters.submissionCategory === 'community') && (
+                          <>
+                            <option value="community.ama">社区类 - AMA</option>
+                            <option value="community.telegram">社区类 - Telegram</option>
+                            <option value="community.offline">社区类 - 线下活动</option>
+                            <option value="community.viral">社区类 - 病毒式传播</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </>
+                )}
                 <div className="flex items-end">
                   <button
                     onClick={resetFilters}

@@ -56,6 +56,7 @@ export const activityApplicationService = {
     pageSize?: number;
     reviewStatus?: number;
     organizer?: string;
+    dateRange?: string;
     sortField?: string;
     sortOrder?: string;
   } = {}): Promise<PageData<ActivityApplication>> => {
@@ -70,6 +71,9 @@ export const activityApplicationService = {
     }
     if (params.organizer !== undefined) {
       requestData.organizer = params.organizer;
+    }
+    if (params.dateRange !== undefined) {
+      requestData.dateRange = params.dateRange;
     }
     if (params.sortField !== undefined) {
       requestData.sortField = params.sortField;

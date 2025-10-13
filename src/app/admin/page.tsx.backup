@@ -21,6 +21,7 @@ import type {
   UnifiedSubmissionVO
 } from '../../types/api';
 import AdminMonthlyReward from '../components/AdminMonthlyReward';
+import AdminAnalytics from '../components/AdminAnalytics';
 import { API_CONFIG } from '../../config/api';
 
 // 统一的待审核表单类型
@@ -77,13 +78,14 @@ export default function Admin() {
     return url;
   };
   const [activeTab, setActiveTab] = useState('forms');
+  const [pendingFormType, setPendingFormType] = useState<'application' | 'task' | 'activity'>('task'); // 默认显示成果提交
+  const [reviewedFormType, setReviewedFormType] = useState<'application' | 'task' | 'activity'>('task'); // 已审核表单类型
   const [pendingSubmissions, setPendingSubmissions] = useState<PendingSubmission[]>([]);
   const [pendingPageSize, setPendingPageSize] = useState(20);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
   const [pendingTotal, setPendingTotal] = useState(0); // 待审核表单总数（加载的数量）
   const [pendingActualTotal, setPendingActualTotal] = useState(0); // 实际总数（数据库中的真实数量）
   const [reviewedSubmissions, setReviewedSubmissions] = useState<ReviewedSubmission[]>([]);
-  const [allReviewedSubmissions, setAllReviewedSubmissions] = useState<ReviewedSubmission[]>([]); // 存储所有数据
   const [selectedSubmission, setSelectedSubmission] = useState<PendingSubmission | null>(null);
   const [selectedReviewedSubmission, setSelectedReviewedSubmission] = useState<ReviewedSubmission | null>(null);
   
@@ -114,10 +116,10 @@ export default function Admin() {
       // 切换页面时保持当前排序
       if (sortConfig) {
         console.log('📄 调用API - 带排序:', { page: target, sortConfig });
-        fetchPendingSubmissions(target, sortConfig.key, sortConfig.direction);
+        fetchPendingSubmissions(target, pendingFormType, sortConfig.key, sortConfig.direction);
       } else {
         console.log('📄 调用API - 默认排序:', { page: target });
-        fetchPendingSubmissions(target);
+        fetchPendingSubmissions(target, pendingFormType);
       }
     } else {
       console.log('📄 页面未变化，跳过API调用');
@@ -131,10 +133,10 @@ export default function Admin() {
       
       // 切换页面大小时保持当前排序
       if (sortConfig) {
-        fetchPendingSubmissions(1, sortConfig.key, sortConfig.direction);
+        fetchPendingSubmissions(1, pendingFormType, sortConfig.key, sortConfig.direction);
       } else {
         // 默认排序
-        fetchPendingSubmissions(1);
+        fetchPendingSubmissions(1, pendingFormType);
       }
     }
   };
@@ -188,12 +190,21 @@ export default function Admin() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  // 筛选状态
+  // 待审核筛选状态
   const [filters, setFilters] = useState({
     user: '',
     formType: '',
     status: '',
-    dateRange: ''
+    dateRange: '',
+    submissionCategory: '', // 提交类别筛选（仅成果提交表）
+    taskType: '' // 任务类型筛选（仅成果提交表）
+  });
+
+  // 已审核筛选状态（默认只显示已通过的）
+  const [reviewedFilters, setReviewedFilters] = useState({
+    user: '',
+    dateRange: '',
+    status: '1' // 默认显示已通过，1=通过, 2=拒绝
   });
 
   // 排序状态 - 默认按时间倒序（早的在前）
@@ -224,7 +235,7 @@ export default function Admin() {
     setPendingCurrentPage(1);
     
     // 获取新数据
-    fetchPendingSubmissions(1, key, direction);
+    fetchPendingSubmissions(1, pendingFormType, key, direction);
   };
   
   // 排序当前页数据
@@ -353,6 +364,10 @@ export default function Admin() {
       direction = 'desc';
     }
     setReviewedSortConfig({ key, direction });
+    
+    // 重置到第一页并重新获取数据
+    setReviewedCurrentPage(1);
+    fetchReviewedSubmissions(1, reviewedFormType, key, direction);
   };
 
     
@@ -361,94 +376,44 @@ export default function Admin() {
   const pendingRangeStart = pendingTotal === 0 ? 0 : (pendingCurrentPage - 1) * pendingPageSize + 1;
   const pendingRangeEnd = pendingTotal === 0 ? 0 : Math.min(pendingCurrentPage * pendingPageSize, pendingTotal);
 
-  // 基于所有数据进行筛选
-  const filteredAllReviewedSubmissions = allReviewedSubmissions.filter(submission => {
-    if (filters.user && !submission.userName.toLowerCase().includes(filters.user.toLowerCase()) && 
-        !submission.userEmail.toLowerCase().includes(filters.user.toLowerCase())) {
-      return false;
-    }
-    if (filters.formType && submission.title !== filters.formType) {
-      return false;
-    }
-    if (filters.status && submission.status.toString() !== filters.status) {
-      return false;
-    }
-    if (filters.dateRange) {
-      const submissionDate = new Date(submission.createTime).toDateString();
-      const filterDate = new Date(filters.dateRange).toDateString();
-      if (submissionDate !== filterDate) {
-        return false;
-      }
-    }
-    return true;
-  });
+  // 计算已审核表单分页信息
+  const reviewedPageCount = Math.max(1, Math.ceil(reviewedTotal / reviewedPageSize));
+  const reviewedRangeStart = reviewedTotal === 0 ? 0 : (reviewedCurrentPage - 1) * reviewedPageSize + 1;
+  const reviewedRangeEnd = reviewedTotal === 0 ? 0 : Math.min(reviewedCurrentPage * reviewedPageSize, reviewedTotal);
 
-  // 已审核表单排序
-  const sortedFilteredAllReviewedSubmissions = useMemo(() => {
-    let sorted = [...filteredAllReviewedSubmissions];
-    
-    if (reviewedSortConfig) {
-      sorted.sort((a, b) => {
-        let aValue: any;
-        let bValue: any;
-        
-        switch (reviewedSortConfig.key) {
-          case 'createTime':
-            aValue = new Date(a.createTime).getTime();
-            bValue = new Date(b.createTime).getTime();
-            break;
-          case 'reviewTime':
-            aValue = new Date(a.reviewTime).getTime();
-            bValue = new Date(b.reviewTime).getTime();
-            break;
-          case 'userName':
-            aValue = a.userName.toLowerCase();
-            bValue = b.userName.toLowerCase();
-            break;
-          case 'formType':
-            aValue = a.type;
-            bValue = b.type;
-            break;
-          default:
-            return 0;
-        }
-        
-        if (aValue < bValue) {
-          return reviewedSortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return reviewedSortConfig.direction === 'asc' ? 1 : -1;
-        }
-        return 0;
-      });
-    } else {
-      // 默认按创建时间倒序排列
-      sorted.sort((a, b) => {
-        const timeA = new Date(a.createTime).getTime();
-        const timeB = new Date(b.createTime).getTime();
-        return timeB - timeA;
-      });
-    }
-    
-    return sorted;
-  }, [filteredAllReviewedSubmissions, reviewedSortConfig]);
-
-  // 计算筛选后的分页数据
-  const filteredReviewedSubmissions = (() => {
-    const startIndex = (reviewedCurrentPage - 1) * reviewedPageSize;
-    const endIndex = startIndex + reviewedPageSize;
-    return sortedFilteredAllReviewedSubmissions.slice(startIndex, endIndex);
-  })();
-
-  // 重置筛选
+  // 重置待审核筛选
   const resetFilters = () => {
     setFilters({
       user: '',
       formType: '',
       status: '',
-      dateRange: ''
+      dateRange: '',
+      submissionCategory: '',
+      taskType: ''
     });
-    setReviewedCurrentPage(1); // 重置到第一页
+    setPendingCurrentPage(1);
+  };
+  
+  // 重置已审核筛选
+  const resetReviewedFilters = () => {
+    setReviewedFilters({
+      user: '',
+      dateRange: '',
+      status: '1' // 重置到默认显示已通过
+    });
+    setReviewedCurrentPage(1);
+  };
+  
+  // 切换待审核表单类型
+  const handlePendingFormTypeChange = (type: 'application' | 'task' | 'activity') => {
+    setPendingFormType(type);
+    setPendingCurrentPage(1);
+  };
+  
+  // 切换已审核表单类型
+  const handleReviewedFormTypeChange = (type: 'application' | 'task' | 'activity') => {
+    setReviewedFormType(type);
+    setReviewedCurrentPage(1);
   };
   
   // 统计数据状态
@@ -511,283 +476,479 @@ export default function Admin() {
     }
   };
 
-  // 获取待审核表单（使用统一API）
+  // 防重复请求的状态
+  const [isFetchingPending, setIsFetchingPending] = useState(false);
+  const [isFetchingReviewed, setIsFetchingReviewed] = useState(false);
+
+  // 获取待审核表单（只获取当前类型的当前页数据）
   const fetchPendingSubmissions = async (
     page: number = pendingCurrentPage,
+    formType: 'application' | 'task' | 'activity' = pendingFormType,
     sortField: string = sortConfig?.key || 'createTime',
     sortOrder: 'asc' | 'desc' = sortConfig?.direction || 'asc'
   ) => {
+    // 防重复请求
+    if (isFetchingPending) {
+      return;
+    }
+
     try {
+      setIsFetchingPending(true);
       setLoading(true);
-      setError(''); // 清除之前的错误
+      setError('');
 
-      // 移除强制日期升序，允许用户选择排序方向
-      
-      console.log('🔍 调用统一API:', {
-        current: page,
-        pageSize: pendingPageSize,
-        sortField,
-        sortOrder,
-        status: [0], // 待审核状态
-        user: filters.user || undefined
-      });
+      let response: any;
+      const submissions: PendingSubmission[] = [];
 
-      // 调用统一API
-      const response = await adminUnifiedService.getUnifiedSubmissions({
-        current: page,
-        pageSize: pendingPageSize,
-        sortField,
-        sortOrder,
-        status: [0], // 待审核状态
-        user: filters.user || undefined,
-        types: filters.formType ? [
-          filters.formType === t('admin.forms.application') ? 'application' : 
-          filters.formType === t('admin.forms.achievement') ? 'task' : 
-          filters.formType === t('admin.forms.activity') ? 'activity' : 
-          undefined
-        ].filter(Boolean) as any[] : undefined,
-        startDate: filters.dateRange ? filters.dateRange : undefined,
-        endDate: filters.dateRange ? filters.dateRange : undefined
-      });
-      
-      console.log('📊 统一API返回数据:', {
-        total: response.total,
-        current: response.current,
-        pageSize: response.size,
-        records: response.records.length
+      // 为不同表单类型映射正确的排序字段名
+      // 不同的后端表可能使用不同的字段命名
+      let mappedSortField = sortField;
+      if (sortField === 'createTime') {
+        // ApplicationForm 和 ActivityApplication 都使用 createTime
+        // TaskSubmission 也使用 createTime
+        mappedSortField = 'createTime';
+      }
+
+      console.log('🔍 待审核表单排序参数:', {
+        formType,
+        原始字段: sortField,
+        映射字段: mappedSortField,
+        排序方向: sortOrder,
+        页码: page,
+        筛选条件: filters
       });
 
-      // 设置分页数据
-      const newTotal = response.total || 0;
-      const newCurrent = response.current || page;
+      // 根据类型只调用对应的单个API
+      switch(formType) {
+        case 'application':
+          response = await formService.getFormList({
+            status: 0,
+            current: page,
+            pageSize: pendingPageSize,
+            sortField: mappedSortField,
+            sortOrder: sortOrder,
+            ...(filters.user && { userName: filters.user }),
+            ...(filters.dateRange && { dateRange: filters.dateRange })
+          });
+          
+          (response?.records || []).forEach((form: any) => {
+            submissions.push({
+              id: form.id,
+              type: 'application',
+              title: t('admin.forms.application'),
+              userName: form.name || t('admin.unknown.user'),
+              userEmail: form.email || '',
+              status: form.status,
+              createTime: form.createTime,
+              data: form
+            });
+          });
+          break;
+
+        case 'task':
+          response = await taskSubmissionService.getAllTaskSubmissions({
+            reviewStatus: 0,
+            current: page,
+            pageSize: pendingPageSize,
+            sortField: mappedSortField,
+            sortOrder: sortOrder,
+            ...(filters.user && { name: filters.user }),
+            ...(filters.dateRange && { dateRange: filters.dateRange }),
+            ...(filters.submissionCategory && { submissionCategory: filters.submissionCategory }),
+            ...(filters.taskType && { taskType: filters.taskType })
+          });
+          
+          (response?.records || []).forEach((task: any) => {
+            submissions.push({
+              id: task.id,
+              type: 'task',
+              title: t('admin.forms.achievement'),
+              userName: task.name || t('admin.unknown.user'),
+              userEmail: task.email || '',
+              status: task.reviewStatus || 0,
+              createTime: task.createTime,
+              data: task
+            });
+          });
+          break;
+
+        case 'activity':
+          response = await activityApplicationService.getAllApplications({
+            reviewStatus: 0,
+            current: page,
+            pageSize: pendingPageSize,
+            sortField: mappedSortField,
+            sortOrder: sortOrder,
+            ...(filters.user && { organizer: filters.user }),
+            ...(filters.dateRange && { dateRange: filters.dateRange })
+          });
+          
+          (response?.records || []).forEach((activity: any) => {
+            submissions.push({
+              id: activity.id,
+              type: 'activity',
+              title: t('admin.forms.activity'),
+              userName: activity.organizer || t('admin.unknown.user'),
+              userEmail: activity.email || '',
+              status: activity.reviewStatus || 0,
+              createTime: activity.createTime,
+              data: activity
+            });
+          });
+          break;
+      }
+
+      // 更新状态
+      const totalCount = response?.total || 0;
+      setPendingTotal(totalCount);
+      setPendingActualTotal(totalCount);
+      setPendingCurrentPage(page);
+      setPendingSubmissions(submissions);
       
-      console.log('📊 更新分页状态:', {
-        oldTotal: pendingTotal,
-        newTotal,
-        oldCurrent: pendingCurrentPage,
-        newCurrent,
-        pageSize: pendingPageSize,
-        newPageCount: Math.ceil(newTotal / pendingPageSize)
+      console.log('✅ 获取待审核表单成功:', {
+        类型: formType,
+        页码: page,
+        每页数量: pendingPageSize,
+        总数: totalCount,
+        当前页数量: submissions.length,
+        排序字段: mappedSortField,
+        排序方向: sortOrder
       });
       
-      setPendingTotal(newTotal);
-      setPendingActualTotal(newTotal); // 保存实际总数
-      setPendingCurrentPage(page); // 强制使用请求的页码，不依赖API返回
-      
-      // 转换为PendingSubmission数据结构
-      const pending: PendingSubmission[] = response.records.map((item: UnifiedSubmissionVO) => ({
-        id: item.id,
-        type: item.type as 'application' | 'task' | 'activity',
-        title: item.title || t(`admin.forms.${item.type}`),
-        userName: item.userName || t('admin.unknown.user'),
-        userEmail: item.userEmail || '',
-        status: item.status,
-        createTime: item.createTime,
-        data: { 
-          id: item.sourceId,
-          // 这里只是临时的数据，详细数据会在单击时通过getSubmissionDetail获取
-          type: item.type,
-          status: item.status
-        } as any
-      }));
-      
-      // 检查最早的日期
-      if (pending.length > 0 && sortField === 'createTime' && sortOrder === 'asc') {
-        console.log('📅 最早的日期:', {
-          id: pending[0].id,
-          type: pending[0].type,
-          createTime: pending[0].createTime,
-          dateObject: new Date(pending[0].createTime).toISOString()
+      // 对于申请表和活动申请表，后端可能不支持排序，在前端进行排序
+      if ((formType === 'application' || formType === 'activity') && sortField === 'createTime') {
+        submissions.sort((a, b) => {
+          const timeA = new Date(a.createTime).getTime();
+          const timeB = new Date(b.createTime).getTime();
+          return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
+        });
+        console.log('🔄 前端排序完成:', {
+          字段: sortField,
+          方向: sortOrder,
+          首条记录时间: submissions[0]?.createTime,
+          末条记录时间: submissions[submissions.length-1]?.createTime
         });
       }
       
-      // 设置数据
-      setPendingSubmissions(pending);
-      setError('');
     } catch (error: any) {
-      console.error('获取待审核表单失败:', error);
-      setError(error.message || t('admin.error.fetch.pending'));
+      console.error('❌ 获取数据失败:', error);
+      setError(error.message || '获取数据失败');
     } finally {
       setLoading(false);
+      setIsFetchingPending(false);
     }
   };
 
-  // 获取已审核表单数据（优化：并发加载，每种类型最多200条）
-  const fetchAllReviewedData = async () => {
-    const maxPageSize = 20; // 后端API限制最大页面大小为20
-    const maxPages = 10; // 每种类型获取10页（200条），6种类型共最多1200条
 
-    const fetchLimitedPages = async (service: any, params: any) => {
-      const pagePromises = [];
-      for (let i = 1; i <= maxPages; i++) {
-        pagePromises.push(
-          service({ ...params, current: i, pageSize: maxPageSize })
-            .then((response: any) => ({
-              records: response?.records || [],
-              total: response?.total || 0
-            }))
-            .catch(() => ({ records: [], total: 0 }))
-        );
-      }
-      const results = await Promise.all(pagePromises);
-      const allRecords = results.flatMap(r => r.records);
-      const total = results[0]?.total || 0; // 使用第一页的total
-      return { records: allRecords, total };
-    };
-
-    // 并行获取所有类型的数据（每种类型并发获取多页）
-    const [approvedFormsResult, rejectedFormsResult, approvedTaskSubmissionsResult, rejectedTaskSubmissionsResult, approvedActivitiesResult, rejectedActivitiesResult] = await Promise.all([
-      fetchLimitedPages(formService.getFormList, { status: 1 }),
-      fetchLimitedPages(formService.getFormList, { status: 2 }),
-      fetchLimitedPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 1 }),
-      fetchLimitedPages(taskSubmissionService.getAllTaskSubmissions, { reviewStatus: 2 }),
-      fetchLimitedPages(activityApplicationService.getAllApplications, { reviewStatus: 1 }),
-      fetchLimitedPages(activityApplicationService.getAllApplications, { reviewStatus: 2 })
-    ]);
-
-    const loadedCount = approvedFormsResult.records.length + 
-                       rejectedFormsResult.records.length +
-                       approvedTaskSubmissionsResult.records.length +
-                       rejectedTaskSubmissionsResult.records.length +
-                       approvedActivitiesResult.records.length +
-                       rejectedActivitiesResult.records.length;
-    
-    const actualTotal = approvedFormsResult.total + 
-                       rejectedFormsResult.total +
-                       approvedTaskSubmissionsResult.total +
-                       rejectedTaskSubmissionsResult.total +
-                       approvedActivitiesResult.total +
-                       rejectedActivitiesResult.total;
-
-    console.log('📊 已审核表单加载完成:', {
-      通过申请: `${approvedFormsResult.records.length}/${approvedFormsResult.total}`,
-      拒绝申请: `${rejectedFormsResult.records.length}/${rejectedFormsResult.total}`,
-      通过任务: `${approvedTaskSubmissionsResult.records.length}/${approvedTaskSubmissionsResult.total}`,
-      拒绝任务: `${rejectedTaskSubmissionsResult.records.length}/${rejectedTaskSubmissionsResult.total}`,
-      通过活动: `${approvedActivitiesResult.records.length}/${approvedActivitiesResult.total}`,
-      拒绝活动: `${rejectedActivitiesResult.records.length}/${rejectedActivitiesResult.total}`,
-      已加载: loadedCount,
-      实际总数: actualTotal
-    });
-
-    if (loadedCount < actualTotal) {
-      console.warn(`⚠️ 已审核表单：只加载了前${loadedCount}条记录，还有${actualTotal - loadedCount}条未加载`);
+  // 获取已审核表单（只获取当前类型的当前页数据，包含通过和拒绝状态）
+  const fetchReviewedSubmissions = async (
+    page: number = reviewedCurrentPage,
+    formType: 'application' | 'task' | 'activity' = reviewedFormType,
+    sortField: string = 'updateTime',
+    sortOrder: 'asc' | 'desc' = 'desc'
+  ) => {
+    // 防重复请求
+    if (isFetchingReviewed) {
+      return;
     }
 
-    // 保存统计数据用于显示提示
-    setReviewedTotal(actualTotal);
-    setReviewedLoadedCount(loadedCount);
-
-    return {
-      approvedForms: { records: approvedFormsResult.records, total: approvedFormsResult.total },
-      rejectedForms: { records: rejectedFormsResult.records, total: rejectedFormsResult.total },
-      approvedTaskSubmissions: { records: approvedTaskSubmissionsResult.records, total: approvedTaskSubmissionsResult.total },
-      rejectedTaskSubmissions: { records: rejectedTaskSubmissionsResult.records, total: rejectedTaskSubmissionsResult.total },
-      approvedActivities: { records: approvedActivitiesResult.records, total: approvedActivitiesResult.total },
-      rejectedActivities: { records: rejectedActivitiesResult.records, total: rejectedActivitiesResult.total },
-      loadedCount,
-      actualTotal
-    };
-  };
-
-  // 获取已审核表单（支持分页）
-  const fetchReviewedSubmissions = async (page: number = reviewedCurrentPage) => {
     try {
+      setIsFetchingReviewed(true);
       setReviewedLoading(true);
-      setError(''); // 清除之前的错误
-      
-      const { approvedForms, rejectedForms, approvedTaskSubmissions, rejectedTaskSubmissions, approvedActivities, rejectedActivities } = await fetchAllReviewedData();
+      setError('');
 
+      let approvedResponse: any;
+      let rejectedResponse: any;
       const reviewed: ReviewedSubmission[] = [];
 
-      // 添加已审核的申请表（通过和拒绝）
-      [...approvedForms.records, ...rejectedForms.records].forEach(form => {
-        if (form && form.id) {
-          reviewed.push({
-            id: form.id,
-            type: 'application',
-            title: t('admin.forms.application'),
-            userName: form.name || t('admin.unknown.user'),
-            userEmail: form.email || '',
-            status: form.status,
-            createTime: form.createTime || new Date().toISOString(),
-            reviewTime: form.updateTime || form.createTime || new Date().toISOString(),
-            reviewMessage: form.reviewMessage || '',
-            reviewScore: form.reviewScore || 0,
-            data: form
-          });
-        }
+      // 构建筛选参数
+      // 注意：需要将前端的排序字段名映射到后端数据库字段名
+      let backendSortField = sortField;
+      if (sortField === 'reviewTime') {
+        backendSortField = 'updateTime'; // 数据库中使用 updateTime 存储审核时间
+      } else if (sortField === 'updateTime') {
+        backendSortField = 'updateTime'; // 直接使用 updateTime
+      }
+      
+      const filterParams: any = {
+        current: page,
+        pageSize: reviewedPageSize,
+        sortField: backendSortField,
+        sortOrder: sortOrder
+      };
+      
+      console.log('🔍 已审核表单排序参数:', {
+        formType,
+        原始字段: sortField,
+        映射字段: backendSortField,
+        排序方向: sortOrder,
+        页码: page,
+        筛选条件: reviewedFilters,
+        最终参数: filterParams
       });
 
-      
-      [...approvedTaskSubmissions.records, ...rejectedTaskSubmissions.records].forEach(task => {
-        if (task && task.id) {
+      // 添加用户筛选
+      if (reviewedFilters.user) {
+        if (formType === 'application') {
+          filterParams.userName = reviewedFilters.user;
+        } else if (formType === 'task') {
+          filterParams.name = reviewedFilters.user;
+        } else if (formType === 'activity') {
+          filterParams.organizer = reviewedFilters.user;
+        }
+      }
+
+      // 添加日期筛选
+      if (reviewedFilters.dateRange) {
+        filterParams.dateRange = reviewedFilters.dateRange;
+      }
+
+      // 根据类型调用对应的API，获取通过和拒绝两种状态的数据
+      switch(formType) {
+        case 'application':
+          // 如果有状态筛选，只获取指定状态的数据
+          if (reviewedFilters.status) {
+            const statusNum = parseInt(reviewedFilters.status);
+            const response = await formService.getFormList({
+              ...filterParams,
+              status: statusNum
+            });
+            approvedResponse = statusNum === 1 ? response : { records: [], total: 0 };
+            rejectedResponse = statusNum === 2 ? response : { records: [], total: 0 };
+          } else {
+            // 并行获取通过和拒绝的数据
+            [approvedResponse, rejectedResponse] = await Promise.all([
+              formService.getFormList({
+                ...filterParams,
+                status: 1
+              }),
+              formService.getFormList({
+                ...filterParams,
+                status: 2
+              })
+            ]);
+          }
           
-          reviewed.push({
-            id: task.id,
-            type: 'task',
-            title: t('admin.forms.achievement'),
-            userName: task.name || t('admin.unknown.user'),
-            userEmail: task.email || '',
-            status: task.reviewStatus || 0,
-            createTime: task.createTime || new Date().toISOString(),
-            reviewTime: task.updateTime || task.createTime || new Date().toISOString(),
-            reviewMessage: task.reviewMessage || '',
-            reviewScore: task.reviewScore || 0,
-            data: task
+          // 处理通过的申请表
+          (approvedResponse?.records || []).forEach((form: any) => {
+            reviewed.push({
+              id: form.id,
+              type: 'application',
+              title: t('admin.forms.application'),
+              userName: form.name || t('admin.unknown.user'),
+              userEmail: form.email || '',
+              status: form.status,
+              createTime: form.createTime || new Date().toISOString(),
+              reviewTime: form.updateTime || form.createTime || new Date().toISOString(),
+              reviewMessage: form.reviewMessage || '',
+              reviewScore: form.reviewScore || 0,
+              data: form
+            });
           });
-        }
-      });
-
-      // 添加已审核的活动申请（通过和拒绝）
-      [...approvedActivities.records, ...rejectedActivities.records].forEach(activity => {
-        if (activity && activity.id) {
-          reviewed.push({
-            id: activity.id,
-            type: 'activity',
-            title: t('admin.forms.activity'),
-            userName: activity.organizer || t('admin.unknown.user'),
-            userEmail: activity.email || '',
-            status: activity.reviewStatus || 0,
-            createTime: activity.createTime || new Date().toISOString(),
-            reviewTime: activity.updateTime || activity.createTime || new Date().toISOString(),
-            reviewMessage: activity.reviewMessage || '',
-            reviewScore: activity.reviewScore || 0,
-            data: activity
+          
+          // 处理拒绝的申请表
+          (rejectedResponse?.records || []).forEach((form: any) => {
+            reviewed.push({
+              id: form.id,
+              type: 'application',
+              title: t('admin.forms.application'),
+              userName: form.name || t('admin.unknown.user'),
+              userEmail: form.email || '',
+              status: form.status,
+              createTime: form.createTime || new Date().toISOString(),
+              reviewTime: form.updateTime || form.createTime || new Date().toISOString(),
+              reviewMessage: form.reviewMessage || '',
+              reviewScore: form.reviewScore || 0,
+              data: form
+            });
           });
-        }
-      });
+          break;
 
-      // 按审核时间排序（最新的在前）
-      reviewed.sort((a, b) => {
-        const timeA = new Date(a.reviewTime).getTime();
-        const timeB = new Date(b.reviewTime).getTime();
-        return timeB - timeA;
-      });
-      
-      // 计算总数据量
-      const totalCount = reviewed.length;
-      
-      // 前端分页：计算当前页的数据
-      const startIndex = (page - 1) * reviewedPageSize;
-      const endIndex = startIndex + reviewedPageSize;
-      const currentPageData = reviewed.slice(startIndex, endIndex);
+        case 'task':
+          if (reviewedFilters.status) {
+            const statusNum = parseInt(reviewedFilters.status);
+            const response = await taskSubmissionService.getAllTaskSubmissions({
+              ...filterParams,
+              reviewStatus: statusNum
+            });
+            approvedResponse = statusNum === 1 ? response : { records: [], total: 0 };
+            rejectedResponse = statusNum === 2 ? response : { records: [], total: 0 };
+          } else {
+            [approvedResponse, rejectedResponse] = await Promise.all([
+              taskSubmissionService.getAllTaskSubmissions({
+                ...filterParams,
+                reviewStatus: 1
+              }),
+              taskSubmissionService.getAllTaskSubmissions({
+                ...filterParams,
+                reviewStatus: 2
+              })
+            ]);
+          }
+          
+          (approvedResponse?.records || []).forEach((task: any) => {
+            reviewed.push({
+              id: task.id,
+              type: 'task',
+              title: t('admin.forms.achievement'),
+              userName: task.name || t('admin.unknown.user'),
+              userEmail: task.email || '',
+              status: task.reviewStatus || 0,
+              createTime: task.createTime || new Date().toISOString(),
+              reviewTime: task.updateTime || task.createTime || new Date().toISOString(),
+              reviewMessage: task.reviewMessage || '',
+              reviewScore: task.reviewScore || 0,
+              data: task
+            });
+          });
+          
+          (rejectedResponse?.records || []).forEach((task: any) => {
+            reviewed.push({
+              id: task.id,
+              type: 'task',
+              title: t('admin.forms.achievement'),
+              userName: task.name || t('admin.unknown.user'),
+              userEmail: task.email || '',
+              status: task.reviewStatus || 0,
+              createTime: task.createTime || new Date().toISOString(),
+              reviewTime: task.updateTime || task.createTime || new Date().toISOString(),
+              reviewMessage: task.reviewMessage || '',
+              reviewScore: task.reviewScore || 0,
+              data: task
+            });
+          });
+          break;
 
-      setAllReviewedSubmissions(reviewed); // 存储所有数据
-      setReviewedSubmissions(currentPageData);
+        case 'activity':
+          if (reviewedFilters.status) {
+            const statusNum = parseInt(reviewedFilters.status);
+            const response = await activityApplicationService.getAllApplications({
+              ...filterParams,
+              reviewStatus: statusNum
+            });
+            approvedResponse = statusNum === 1 ? response : { records: [], total: 0 };
+            rejectedResponse = statusNum === 2 ? response : { records: [], total: 0 };
+          } else {
+            [approvedResponse, rejectedResponse] = await Promise.all([
+              activityApplicationService.getAllApplications({
+                ...filterParams,
+                reviewStatus: 1
+              }),
+              activityApplicationService.getAllApplications({
+                ...filterParams,
+                reviewStatus: 2
+              })
+            ]);
+          }
+          
+          (approvedResponse?.records || []).forEach((activity: any) => {
+            reviewed.push({
+              id: activity.id,
+              type: 'activity',
+              title: t('admin.forms.activity'),
+              userName: activity.organizer || t('admin.unknown.user'),
+              userEmail: activity.email || '',
+              status: activity.reviewStatus || 0,
+              createTime: activity.createTime || new Date().toISOString(),
+              reviewTime: activity.updateTime || activity.createTime || new Date().toISOString(),
+              reviewMessage: activity.reviewMessage || '',
+              reviewScore: activity.reviewScore || 0,
+              data: activity
+            });
+          });
+          
+          (rejectedResponse?.records || []).forEach((activity: any) => {
+            reviewed.push({
+              id: activity.id,
+              type: 'activity',
+              title: t('admin.forms.activity'),
+              userName: activity.organizer || t('admin.unknown.user'),
+              userEmail: activity.email || '',
+              status: activity.reviewStatus || 0,
+              createTime: activity.createTime || new Date().toISOString(),
+              reviewTime: activity.updateTime || activity.createTime || new Date().toISOString(),
+              reviewMessage: activity.reviewMessage || '',
+              reviewScore: activity.reviewScore || 0,
+              data: activity
+            });
+          });
+          break;
+      }
+
+      // 应用客户端排序
+      if (sortField && sortOrder) {
+        reviewed.sort((a, b) => {
+          let valueA: any;
+          let valueB: any;
+          
+          if (sortField === 'createTime') {
+            valueA = new Date(a.createTime).getTime();
+            valueB = new Date(b.createTime).getTime();
+          } else if (sortField === 'reviewTime') {
+            valueA = new Date(a.reviewTime).getTime();
+            valueB = new Date(b.reviewTime).getTime();
+          } else if (sortField === 'userName') {
+            valueA = a.userName.toLowerCase();
+            valueB = b.userName.toLowerCase();
+          } else {
+            valueA = new Date(a.reviewTime).getTime();
+            valueB = new Date(b.reviewTime).getTime();
+          }
+          
+          if (valueA < valueB) {
+            return sortOrder === 'asc' ? -1 : 1;
+          }
+          if (valueA > valueB) {
+            return sortOrder === 'asc' ? 1 : -1;
+          }
+          return 0;
+        });
+      }
+
+      // 计算总数
+      // 注意：当没有状态筛选时，我们并行获取approved和rejected，每个都有自己的total
+      // 我们显示的是合并后的结果，但total应该只反映当前页实际显示的数量
+      // 或者我们可以将两个total相加，但这对分页来说不准确
+      let totalCount: number;
+      if (reviewedFilters.status) {
+        // 有状态筛选时，只使用单个状态的总数
+        totalCount = Math.max(approvedResponse?.total || 0, rejectedResponse?.total || 0);
+      } else {
+        // 没有状态筛选时，显示当前页的实际记录数作为总数
+        // 这样避免了显示错误的巨大数字
+        // 注意：这意味着分页统计不会显示真实的总记录数，但至少是准确的
+        totalCount = reviewed.length;
+      }
+      
+      setReviewedSubmissions(reviewed);
       setReviewedTotal(totalCount);
+      setReviewedCurrentPage(page);
+      
+      console.log('✅ 获取已审核表单成功:', {
+        类型: formType,
+        页码: page,
+        每页数量: reviewedPageSize,
+        通过数: approvedResponse?.total || 0,
+        拒绝数: rejectedResponse?.total || 0,
+        总数: totalCount,
+        当前页数量: reviewed.length
+      });
+      
     } catch (error: any) {
       console.error('获取已审核表单失败:', error);
       setError(error.message || t('admin.error.fetch.reviewed'));
     } finally {
       setReviewedLoading(false);
+      setIsFetchingReviewed(false);
     }
   };
 
   // 处理已审核表单分页
   const handleReviewedPageChange = (page: number) => {
     setReviewedCurrentPage(page);
-    // 不需要重新获取数据，因为筛选后的数据已经在内存中
+    const sortField = reviewedSortConfig?.key || 'updateTime';
+    const sortOrder = reviewedSortConfig?.direction || 'desc';
+    fetchReviewedSubmissions(page, reviewedFormType, sortField, sortOrder);
   };
 
   // 获取统计数据
@@ -810,30 +971,41 @@ export default function Admin() {
 
   // 显示审核弹窗
   const handleShowReviewModal = async (submission: PendingSubmission) => {
-    // 先设置基本信息显示弹窗
+    // 先设置基本信息并显示弹窗（显示加载状态）
     setSelectedSubmission(submission);
+    setShowReviewModal(true);
     setReviewForm({
       reviewMessage: '',
       points: submission.type === 'task' ? 1 : 0 // 默认给予任务提交 1 分
     });
-    setShowReviewModal(true);
     setMonthlyPoint(null);
     setMonthlyPointError('');
+    setLoading(true); // 开始加载
     
     try {
-      // 使用统一API获取详细数据
-      console.log('🔍 获取表单详情:', {
-        type: submission.type,
-        sourceId: submission.data?.id || 0
-      });
+      // 获取ID，确保不为undefined
+      const submissionId = submission.id || submission.data?.id;
+      
+      // 验证参数
+      if (!submissionId || !submission.type) {
+        throw new Error('缺少必要的参数：ID或类型');
+      }
       
       // 获取详细数据
       const detailData = await adminUnifiedService.getSubmissionDetail(
         submission.type,
-        submission.data?.id || submission.id
+        submissionId
       );
       
       console.log('✅ 获取到表单详情:', detailData);
+      
+      // 如果是任务提交，检查 tasks 数组
+      if (submission.type === 'task') {
+        console.log('📋 Tasks数组:', detailData?.tasks);
+        if (!detailData?.tasks || detailData.tasks.length === 0) {
+          console.warn('⚠️ 未找到tasks数组或数组为空');
+        }
+      }
       
       // 更新所选提交的详细数据
       setSelectedSubmission({
@@ -849,8 +1021,10 @@ export default function Admin() {
         }
       }
     } catch (error: any) {
-      console.error('获取表单详情失败:', error);
+      console.error('❌ 获取表单详情失败:', error);
       setError(error.message || t('admin.error.fetch.detail') || '获取表单详情失败');
+    } finally {
+      setLoading(false); // 完成加载
     }
   };
 
@@ -1010,7 +1184,7 @@ export default function Admin() {
       setTimeout(() => setSuccess(''), 3000);
       
       // 重新获取已审核数据以确保数据同步
-      await fetchReviewedSubmissions(reviewedCurrentPage);
+      await fetchReviewedSubmissions(reviewedCurrentPage, reviewedFormType);
     } catch (error: any) {
       console.error('❌ 更新审核结果失败:', error);
       console.error('❌ 错误详情:', {
@@ -1082,6 +1256,7 @@ export default function Admin() {
         
         // 步骤1: 更新TaskSubmission表（单次提交的类别次数）
         const updatePayload = {
+          id: selectedReviewedSubmission.id,
           promotionCount: editCategoryCounts.promotion,
           shortCount: editCategoryCounts.short,
           longCount: editCategoryCounts.long,
@@ -1090,24 +1265,7 @@ export default function Admin() {
 
         console.log('📤 步骤1: 更新TaskSubmission的类别次数:', updatePayload);
 
-        const response = await fetch(`http://localhost:8100/api/taskSubmission/update-category-counts/${selectedReviewedSubmission.id}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify(updatePayload)
-        });
-
-        if (!response.ok) {
-          throw new Error('更新TaskSubmission失败');
-        }
-
-        const result = await response.json();
-        if (result.code !== 0) {
-          throw new Error(result.message || '更新TaskSubmission失败');
-        }
-
+        await taskSubmissionService.updateTaskSubmission(updatePayload);
         console.log('✅ TaskSubmission更新成功');
         
         // 步骤2: 同时更新monthlyReward表（月度总次数）
@@ -1155,7 +1313,7 @@ export default function Admin() {
         console.log('🔄 本地状态已更新:', editCategoryCounts);
         
         // 重新获取已审核数据列表以确保数据同步
-        await fetchReviewedSubmissions(reviewedCurrentPage);
+        await fetchReviewedSubmissions(reviewedCurrentPage, reviewedFormType);
         
         setSuccess(language === 'zh' ? '类别次数已更新' : 'Category counts updated');
         setTimeout(() => setSuccess(''), 3000);
@@ -1181,13 +1339,6 @@ export default function Admin() {
 
     setReviewLoading(true);
     try {
-      console.log('🔍 开始审核流程:', {
-        submissionId: selectedSubmission.id,
-        submissionType: selectedSubmission.type,
-        status: status,
-        reviewMessage: reviewForm.reviewMessage,
-        points: reviewForm.points
-      });
 
       // 申请表和活动申请表不给予积分奖励
       const basePoints = (selectedSubmission.type === 'application' || selectedSubmission.type === 'activity')
@@ -1195,13 +1346,6 @@ export default function Admin() {
         : (status === 1 ? Math.max(0, reviewForm.points) : 0);
 
       let pointsToAward = Math.floor(basePoints) || 0; // 确保是整数
-      
-      console.log('📊 积分计算:', {
-        basePoints,
-        pointsToAward,
-        submissionType: selectedSubmission.type,
-        status
-      });
 
       if (selectedSubmission.type === 'application') {
         const reviewData = {
@@ -1210,48 +1354,53 @@ export default function Admin() {
           reviewComment: reviewForm.reviewMessage || '', // 确保不为undefined
           score: pointsToAward
         };
-        console.log('📝 申请表审核请求:', reviewData);
         await formService.reviewForm(reviewData);
-        console.log('✅ 申请表审核成功');
       } else if (selectedSubmission.type === 'task') {
+        // 先计算类别次数（审核通过和拒绝都需要这个数据结构）
+        const taskData = selectedSubmission.data as any;
+        const tasks = taskData.tasks || [];
+        
+        // 统计各类别的任务数量
+        const taskCounts = {
+          promotion: 0,
+          short: 0,
+          long: 0,
+          community: 0
+        };
+        
+        tasks.forEach((task: any) => {
+          const category = task.submissionCategory;
+          if (category === 'promotion') taskCounts.promotion++;
+          else if (category === 'short') taskCounts.short++;
+          else if (category === 'long') taskCounts.long++;
+          else if (category === 'community') taskCounts.community++;
+        });
+
+        console.log('📊 本次提交的类别次数:', taskCounts);
+
+        // 审核时将类别次数写入taskSubmission表
         const reviewData = {
           id: selectedSubmission.id,
           reviewStatus: status,
           reviewMessage: reviewForm.reviewMessage || '', // 确保不为undefined
-          reviewScore: pointsToAward
+          reviewScore: pointsToAward,
+          // 将本次提交的类别次数写入taskSubmission表
+          promotionCount: taskCounts.promotion,
+          shortCount: taskCounts.short,
+          longCount: taskCounts.long,
+          communityCount: taskCounts.community
         };
-        console.log('📋 任务提交审核请求:', reviewData);
+        
+        console.log('📤 发送审核请求（包含类别次数）:', reviewData);
         await taskSubmissionService.updateTaskSubmission(reviewData);
-        console.log('✅ 任务提交审核成功');
 
-        // 如果审核通过，累加月度奖励类别次数
+        // 如果审核通过，将类别次数累加到monthlyReward表
         if (status === 1) {
-          // 月度积分更新已由后端统一处理，前端只需更新类别次数
           try {
             // 使用任务提交的创建时间，而不是当前审核时间
-            const taskData = selectedSubmission.data as any;
             const createTime = new Date(selectedSubmission.createTime);
             const year = createTime.getFullYear();
             const month = createTime.getMonth() + 1;
-
-            // 根据成果提交表中的实际任务类别计算累加次数
-            const tasks = taskData.tasks || [];
-            
-            // 统计各类别的任务数量
-            const taskCounts = {
-              promotion: 0,
-              short: 0,
-              long: 0,
-              community: 0
-            };
-            
-            tasks.forEach((task: any) => {
-              const category = task.submissionCategory;
-              if (category === 'promotion') taskCounts.promotion++;
-              else if (category === 'short') taskCounts.short++;
-              else if (category === 'long') taskCounts.long++;
-              else if (category === 'community') taskCounts.community++;
-            });
 
             // 构建累加次数数据
             const incrementData = {
@@ -1264,8 +1413,9 @@ export default function Admin() {
               communityIncrement: taskCounts.community // 社区类增加次数
             };
 
+            console.log('📤 累加到monthlyReward:', incrementData);
+            
             // 调用累加次数接口
-            console.warn('⚠️ 重要提醒：如果分数被错误修改，可能是后端的refreshMonthlyRewardScores接口被调用了！');
             const result = await monthlyRewardService.incrementMonthlyRewardScores(incrementData);
             
             // 审核成功后，重新获取用户的月度积分（已由后端更新）
@@ -1273,8 +1423,10 @@ export default function Admin() {
               const updatedMonthlyPoint = await monthlyPointService.getUserMonthlyPoints(selectedSubmission.data.userId);
               setMonthlyPoint(updatedMonthlyPoint);
             }
+            
+            console.log('✅ 类别次数更新完成');
           } catch (error) {
-            console.error('更新月度奖励数据失败:', error);
+            console.error('❌ 更新月度奖励数据失败:', error);
             // 不阻止审核流程，只记录错误
           }
         }
@@ -1285,14 +1437,49 @@ export default function Admin() {
           reviewComment: reviewForm.reviewMessage || '', // 后端使用reviewComment字段，确保不为undefined
           reviewScore: pointsToAward
         };
-        console.log('🎪 活动申请审核请求:', reviewData);
         await activityApplicationService.reviewApplication(reviewData);
-        console.log('✅ 活动申请审核成功');
       }
 
-      // 重新获取待审核表单
-      await fetchPendingSubmissions();
+      // 异步更新本地状态，不等待重新获取数据
+      const updatedSubmission = {
+        ...selectedSubmission,
+        status: status,
+        reviewMessage: reviewForm.reviewMessage
+      };
+      
+      // 从待审核列表中移除已审核的项目
+      setPendingSubmissions(prev => prev.filter(item => item.id !== selectedSubmission.id));
+      setPendingTotal(prev => Math.max(0, prev - 1));
+      setPendingActualTotal(prev => Math.max(0, prev - 1));
+      
+      // 关闭审核弹窗
       handleCloseReviewModal();
+      
+      // 显示成功消息
+      setSuccess(language === 'zh' ? '审核完成！表单已移至已审核列表' : 'Review completed! Form moved to reviewed list');
+      setTimeout(() => setSuccess(''), 3000);
+      
+      // 异步重新获取数据（不阻塞用户界面）
+      setTimeout(async () => {
+        try {
+          // 只在待审核页面时刷新待审核数据
+          if (activeTab === 'forms') {
+            // 使用当前的排序配置
+            const sortField = sortConfig?.key || 'createTime';
+            const sortOrder = sortConfig?.direction || 'asc';
+            await fetchPendingSubmissions(1, pendingFormType, sortField, sortOrder);
+          }
+          
+          // 如果当前在已审核表单页面，也刷新已审核数据
+          if (activeTab === 'reviewed') {
+            const sortField = reviewedSortConfig?.key || 'updateTime';
+            const sortOrder = reviewedSortConfig?.direction || 'desc';
+            await fetchReviewedSubmissions(reviewedCurrentPage, reviewedFormType, sortField, sortOrder);
+          }
+        } catch (error) {
+          console.error('异步刷新数据失败:', error);
+        }
+      }, 2000); // 增加延迟时间，避免频繁请求
     } catch (error: any) {
       console.error('❌ 审核失败:', error);
       console.error('❌ 错误详情:', {
@@ -1329,17 +1516,19 @@ export default function Admin() {
   useEffect(() => {
     if (isAuthenticated && user?.userRole === 'admin') {
       if (activeTab === 'forms') {
-        fetchPendingSubmissions(); // 加载所有待审核表单
+        fetchPendingSubmissions(1, pendingFormType); // 加载当前类型的待审核表单
       } else if (activeTab === 'reviewed') {
         // 切换到已审核表单时重置分页状态
         setReviewedCurrentPage(1);
-        fetchReviewedSubmissions(1);
+        const sortField = reviewedSortConfig?.key || 'updateTime';
+        const sortOrder = reviewedSortConfig?.direction || 'desc';
+        fetchReviewedSubmissions(1, reviewedFormType, sortField, sortOrder);
       } else if (activeTab === 'stats') {
         fetchStats();
       }
       // 月度奖励模块的数据获取在组件内部处理
     }
-  }, [isAuthenticated, user, activeTab]);
+  }, [isAuthenticated, user, activeTab, pendingFormType, reviewedFormType]);
   
   // 注释掉本地排序，因为后端已经返回排序好的数据
   // useEffect(() => {
@@ -1351,16 +1540,25 @@ export default function Admin() {
   // 监听筛选条件变化，重新获取数据
   useEffect(() => {
     if (isAuthenticated && user?.userRole === 'admin' && activeTab === 'forms') {
-      console.log('🔄 筛选条件变化，重新获取数据:', filters);
       // 待审核表单：筛选条件变化时重新获取数据
       setPendingCurrentPage(1);
       if (sortConfig) {
-        fetchPendingSubmissions(1, sortConfig.key, sortConfig.direction);
+        fetchPendingSubmissions(1, pendingFormType, sortConfig.key, sortConfig.direction);
       } else {
-        fetchPendingSubmissions(1);
+        fetchPendingSubmissions(1, pendingFormType);
       }
     }
-  }, [filters.user, filters.formType, filters.dateRange]);
+  }, [filters.user, filters.dateRange, filters.submissionCategory, filters.taskType, pendingFormType, isAuthenticated, user?.userRole, activeTab]);
+
+  // 监听已审核表单筛选条件变化
+  useEffect(() => {
+    if (isAuthenticated && user?.userRole === 'admin' && activeTab === 'reviewed') {
+      setReviewedCurrentPage(1);
+      const sortField = reviewedSortConfig?.key || 'updateTime';
+      const sortOrder = reviewedSortConfig?.direction || 'desc';
+      fetchReviewedSubmissions(1, reviewedFormType, sortField, sortOrder);
+    }
+  }, [reviewedFilters.user, reviewedFilters.dateRange, reviewedFilters.status, reviewedFormType, isAuthenticated, user?.userRole, activeTab]);
 
   // 权限检查
   if (!isAuthenticated) {
@@ -1440,6 +1638,16 @@ export default function Admin() {
                 {t('admin.tab.stats')}
               </button>
               <button
+                onClick={() => setActiveTab('analytics')}
+                className={`py-4 px-6 border-b-2 font-medium text-sm ${
+                  activeTab === 'analytics'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                数据分析
+              </button>
+              <button
                 onClick={() => setActiveTab('monthly-reward')}
                 className={`py-4 px-6 border-b-2 font-medium text-sm ${
                   activeTab === 'monthly-reward'
@@ -1488,9 +1696,45 @@ export default function Admin() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{t('admin.pending.title')}</h2>
             
+            {/* 表单类型切换 */}
+            <div className="mb-6">
+              <div className="flex space-x-2 mb-4">
+                <button
+                  onClick={() => handlePendingFormTypeChange('task')}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    pendingFormType === 'task'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('admin.forms.achievement')}
+                </button>
+                <button
+                  onClick={() => handlePendingFormTypeChange('application')}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    pendingFormType === 'application'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('admin.forms.application')}
+                </button>
+                <button
+                  onClick={() => handlePendingFormTypeChange('activity')}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    pendingFormType === 'activity'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('admin.forms.activity')}
+                </button>
+              </div>
+            </div>
+            
             {/* 筛选器 */}
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className={`grid grid-cols-1 gap-4 ${pendingFormType === 'task' ? 'md:grid-cols-5' : 'md:grid-cols-3'}`}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     用户筛选
@@ -1505,21 +1749,6 @@ export default function Admin() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    表单类型
-                  </label>
-                  <select
-                    value={filters.formType}
-                    onChange={(e) => setFilters(prev => ({ ...prev, formType: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">全部类型</option>
-                    <option value={t('admin.forms.application')}>{t('admin.forms.application')}</option>
-                    <option value={t('admin.forms.achievement')}>{t('admin.forms.achievement')}</option>
-                    <option value={t('admin.forms.activity')}>{t('admin.forms.activity')}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     提交日期
                   </label>
                   <input
@@ -1529,6 +1758,71 @@ export default function Admin() {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+                {/* 成果提交表专属筛选 */}
+                {pendingFormType === 'task' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        提交类别
+                      </label>
+                      <select
+                        value={filters.submissionCategory}
+                        onChange={(e) => {
+                          const newCategory = e.target.value;
+                          setFilters(prev => ({ 
+                            ...prev, 
+                            submissionCategory: newCategory,
+                            taskType: '' // 切换类别时清空任务类型
+                          }));
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">全部类别</option>
+                        <option value="promotion">传播类</option>
+                        <option value="short">短篇原创</option>
+                        <option value="long">长篇原创</option>
+                        <option value="community">社区类</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        任务类型
+                      </label>
+                      <select
+                        value={filters.taskType}
+                        onChange={(e) => setFilters(prev => ({ ...prev, taskType: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">全部任务</option>
+                        {/* 传播类 */}
+                        {(!filters.submissionCategory || filters.submissionCategory === 'promotion') && (
+                          <option value="promotion.triple">传播类 - 三连</option>
+                        )}
+                        {/* 短篇原创 */}
+                        {(!filters.submissionCategory || filters.submissionCategory === 'short') && (
+                          <option value="short.content">短篇原创 - 内容</option>
+                        )}
+                        {/* 长篇原创 */}
+                        {(!filters.submissionCategory || filters.submissionCategory === 'long') && (
+                          <>
+                            <option value="long.article">长篇原创 - 文章</option>
+                            <option value="long.video">长篇原创 - 视频</option>
+                            <option value="long.recap">长篇原创 - 回顾</option>
+                          </>
+                        )}
+                        {/* 社区类 */}
+                        {(!filters.submissionCategory || filters.submissionCategory === 'community') && (
+                          <>
+                            <option value="community.ama">社区类 - AMA</option>
+                            <option value="community.telegram">社区类 - Telegram</option>
+                            <option value="community.offline">社区类 - 线下活动</option>
+                            <option value="community.viral">社区类 - 病毒式传播</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </>
+                )}
                 <div className="flex items-end">
                   <button
                     onClick={resetFilters}
@@ -1752,49 +2046,56 @@ export default function Admin() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{t('admin.reviewed.title')}</h2>
             
+            {/* 表单类型切换 */}
+            <div className="mb-6">
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleReviewedFormTypeChange('task')}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    reviewedFormType === 'task'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('admin.forms.achievement')}
+                </button>
+                <button
+                  onClick={() => handleReviewedFormTypeChange('application')}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    reviewedFormType === 'application'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('admin.forms.application')}
+                </button>
+                <button
+                  onClick={() => handleReviewedFormTypeChange('activity')}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    reviewedFormType === 'activity'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('admin.forms.activity')}
+                </button>
+              </div>
+            </div>
+            
             {/* 筛选器 */}
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     用户筛选
                   </label>
                   <input
                     type="text"
-                    value={filters.user}
-                    onChange={(e) => setFilters(prev => ({ ...prev, user: e.target.value }))}
+                    value={reviewedFilters.user}
+                    onChange={(e) => setReviewedFilters(prev => ({ ...prev, user: e.target.value }))}
                     placeholder="输入用户名或邮箱"
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    表单类型
-                  </label>
-                  <select
-                    value={filters.formType}
-                    onChange={(e) => setFilters(prev => ({ ...prev, formType: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">全部类型</option>
-                    <option value={t('admin.forms.application')}>{t('admin.forms.application')}</option>
-                    <option value={t('admin.forms.achievement')}>{t('admin.forms.achievement')}</option>
-                    <option value={t('admin.forms.activity')}>{t('admin.forms.activity')}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    审核状态
-                  </label>
-                  <select
-                    value={filters.status}
-                    onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">全部状态</option>
-                    <option value="1">已通过</option>
-                    <option value="2">已拒绝</option>
-                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -1802,14 +2103,28 @@ export default function Admin() {
                   </label>
                   <input
                     type="date"
-                    value={filters.dateRange}
-                    onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                    value={reviewedFilters.dateRange}
+                    onChange={(e) => setReviewedFilters(prev => ({ ...prev, dateRange: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    审核状态
+                  </label>
+                  <select
+                    value={reviewedFilters.status}
+                    onChange={(e) => setReviewedFilters(prev => ({ ...prev, status: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">全部</option>
+                    <option value="1">已通过</option>
+                    <option value="2">已拒绝</option>
+                  </select>
+                </div>
                 <div className="flex items-end">
                   <button
-                    onClick={resetFilters}
+                    onClick={resetReviewedFilters}
                     className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
                   >
                     重置筛选
@@ -1817,27 +2132,6 @@ export default function Admin() {
                 </div>
               </div>
             </div>
-            
-            {/* 数据加载提示 */}
-            {reviewedLoadedCount > 0 && reviewedLoadedCount < reviewedTotal && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4 mb-4">
-                <div className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                  <div className="text-sm text-blue-700 dark:text-blue-300">
-                    <p className="font-medium mb-1">
-                      {language === 'zh' ? '数据加载提示' : 'Data Loading Notice'}
-                    </p>
-                    <p>
-                      {language === 'zh' 
-                        ? `为提升加载速度，当前只显示前 ${reviewedLoadedCount} 条记录（实际共 ${reviewedTotal} 条，还有 ${reviewedTotal - reviewedLoadedCount} 条未显示）` 
-                        : `For improved loading speed, only the first ${reviewedLoadedCount} records are displayed (total: ${reviewedTotal}, ${reviewedTotal - reviewedLoadedCount} more not shown)`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
             
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-4">
@@ -1927,14 +2221,14 @@ export default function Admin() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {filteredReviewedSubmissions.length === 0 ? (
+                    {reviewedSubmissions.length === 0 ? (
                       <tr>
                         <td colSpan={9} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                          {reviewedSubmissions.length === 0 ? t('admin.no.reviewed') : '没有找到符合条件的表单'}
+                          {t('admin.no.reviewed')}
                         </td>
                       </tr>
                     ) : (
-                      filteredReviewedSubmissions.map((submission) => {
+                      reviewedSubmissions.map((submission: ReviewedSubmission) => {
                         const taskData = submission.type === 'task' ? (submission.data as TaskSubmissionVO) : null;
                         const categories = taskData?.tasks?.map(t => t.submissionCategory).filter((v, i, a) => a.indexOf(v) === i) || [];
                         const taskTypes = taskData?.tasks?.map(t => t.taskType).filter((v, i, a) => a.indexOf(v) === i) || [];
@@ -2014,12 +2308,12 @@ export default function Admin() {
             )}
             
             {/* 分页组件 */}
-            {filteredAllReviewedSubmissions.length > 0 && (
+            {reviewedTotal > 0 && (
               <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
                   <span>
-                    显示第 {((reviewedCurrentPage - 1) * reviewedPageSize) + 1} 到 {Math.min(reviewedCurrentPage * reviewedPageSize, filteredAllReviewedSubmissions.length)} 条，
-                    共 {filteredAllReviewedSubmissions.length} 条记录
+                    显示第 {reviewedRangeStart} 到 {reviewedRangeEnd} 条，
+                    共 {reviewedTotal} 条记录
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -2033,9 +2327,9 @@ export default function Admin() {
                   
                   {/* 页码显示 */}
                   <div className="flex space-x-1">
-                    {Array.from({ length: Math.min(5, Math.ceil(sortedFilteredAllReviewedSubmissions.length / reviewedPageSize)) }, (_, i) => {
+                    {Array.from({ length: Math.min(5, reviewedPageCount) }, (_, i) => {
                       const pageNum = Math.max(1, reviewedCurrentPage - 2) + i;
-                      if (pageNum > Math.ceil(sortedFilteredAllReviewedSubmissions.length / reviewedPageSize)) return null;
+                      if (pageNum > reviewedPageCount) return null;
                       
                       return (
                         <button
@@ -2055,7 +2349,7 @@ export default function Admin() {
                   
                   <button
                     onClick={() => handleReviewedPageChange(reviewedCurrentPage + 1)}
-                    disabled={reviewedCurrentPage >= Math.ceil(sortedFilteredAllReviewedSubmissions.length / reviewedPageSize)}
+                    disabled={reviewedCurrentPage >= reviewedPageCount}
                     className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     下一页
@@ -2251,6 +2545,13 @@ export default function Admin() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* 数据分析 */}
+        {activeTab === 'analytics' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <AdminAnalytics />
           </div>
         )}
 
@@ -3079,7 +3380,8 @@ export default function Admin() {
                       </div>
                     </div>
                     
-                    {/* 类别次数统计 */}
+                    {/* 类别次数统计 - 仅对审核通过的表单显示 */}
+                    {selectedReviewedSubmission.status === 1 && (
                     <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
                       <div className="flex justify-between items-center mb-3">
                         <h5 className="text-sm font-semibold text-blue-900 dark:text-blue-200">获得的类别次数</h5>
@@ -3181,6 +3483,7 @@ export default function Admin() {
                         </div>
                       </div>
                     </div>
+                    )}
                   </div>
                 )}
 

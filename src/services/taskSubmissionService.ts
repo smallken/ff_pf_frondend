@@ -49,7 +49,9 @@ export const taskSubmissionService = {
     current?: number;
     pageSize?: number;
     submissionCategory?: string;
+    taskType?: string;
     name?: string;
+    dateRange?: string;
     reviewStatus?: number;
     sortField?: string;
     sortOrder?: string;
@@ -63,8 +65,14 @@ export const taskSubmissionService = {
     if (params.submissionCategory !== undefined) {
       requestData.submissionCategory = params.submissionCategory;
     }
+    if (params.taskType !== undefined) {
+      requestData.taskType = params.taskType;
+    }
     if (params.name !== undefined) {
       requestData.name = params.name;
+    }
+    if (params.dateRange !== undefined) {
+      requestData.dateRange = params.dateRange;
     }
     if (params.reviewStatus !== undefined) {
       requestData.reviewStatus = params.reviewStatus;
