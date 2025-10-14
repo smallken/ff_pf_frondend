@@ -331,15 +331,6 @@ export default function CustomDateInput({
         value={inputValue}
         placeholder={placeholder}
         readOnly
-        onFocus={() => {
-          setIsOpen(true);
-        }}
-        onBlur={() => {
-          // Delay closing to allow click handler to run
-          setTimeout(() => {
-            setIsOpen(false);
-          }, 100);
-        }}
         onClick={handleInputInteraction}
         onTouchEnd={handleInputInteraction}
         onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
