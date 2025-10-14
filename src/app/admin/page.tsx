@@ -52,6 +52,163 @@ interface ReviewedSubmission {
   data: ApplicationForm | TaskSubmissionVO | ActivityApplication;
 }
 
+// 审核历史记录组件
+interface ReviewHistory {
+  id: number;
+  taskId: number;
+  taskSubmissionId: number;
+  reviewType: string; // 'manual' | 'auto'
+  reviewerId?: number;
+  reviewerName: string;
+  reviewResult: string; // 'approved' | 'rejected'
+  reviewScore: number;
+  reviewMessage: string;
+  confidence?: number;
+  ocrText?: string;
+  usernameMatch?: boolean;
+  createTime: string;
+}
+
+function ReviewHistorySection({ submissionId }: { submissionId: number }) {
+  const [histories, setHistories] = useState<ReviewHistory[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchReviewHistory();
+  }, [submissionId]);
+
+  const fetchReviewHistory = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}/reviewHistory/submission/${submissionId}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch review history');
+      }
+
+      const result = await response.json();
+      if (result.code === 0) {
+        setHistories(result.data || []);
+      }
+    } catch (error) {
+      console.error('获取审核历史失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">历史审查记录</h4>
+        <div className="text-center text-gray-500 dark:text-gray-400 py-4">加载中...</div>
+      </div>
+    );
+  }
+
+  if (histories.length === 0) {
+    return (
+      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">历史审查记录</h4>
+        <div className="text-center text-gray-500 dark:text-gray-400 py-4">暂无审核记录</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">历史审查记录</h4>
+      <div className="space-y-3">
+        {histories.map((history, index) => (
+          <div
+            key={history.id}
+            className="bg-white dark:bg-gray-600 rounded-lg p-4 border border-gray-200 dark:border-gray-500"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  history.reviewType === 'auto'
+                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                    : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                }`}>
+                  {history.reviewType === 'auto' ? '系统自动审核' : '人工审核'}
+                </span>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  history.reviewResult === 'approved'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                }`}>
+                  {history.reviewResult === 'approved' ? '✓ 通过' : '✗ 拒绝'}
+                </span>
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {new Date(history.createTime).toLocaleString('zh-CN')}
+              </span>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="font-medium text-gray-700 dark:text-gray-300">审核人：</span>
+                <span className="text-gray-900 dark:text-white ml-2">{history.reviewerName}</span>
+              </div>
+              
+              {history.reviewScore > 0 && (
+                <div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">得分：</span>
+                  <span className="text-green-600 dark:text-green-400 font-semibold ml-2">
+                    +{history.reviewScore}
+                  </span>
+                </div>
+              )}
+
+              {history.confidence !== null && history.confidence !== undefined && (
+                <div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">AI置信度：</span>
+                  <span className="text-gray-900 dark:text-white ml-2">{history.confidence}%</span>
+                </div>
+              )}
+
+              {history.usernameMatch !== null && history.usernameMatch !== undefined && (
+                <div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">用户名匹配：</span>
+                  <span className={`ml-2 ${history.usernameMatch ? 'text-green-600' : 'text-red-600'}`}>
+                    {history.usernameMatch ? '✓ 匹配' : '✗ 不匹配'}
+                  </span>
+                </div>
+              )}
+
+              <div>
+                <span className="font-medium text-gray-700 dark:text-gray-300">审核意见：</span>
+                <div className="mt-1 p-2 bg-gray-50 dark:bg-gray-700 rounded text-gray-900 dark:text-white">
+                  {history.reviewMessage || '无'}
+                </div>
+              </div>
+
+              {history.ocrText && (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
+                    查看OCR识别文字
+                  </summary>
+                  <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded text-xs text-gray-700 dark:text-gray-300 max-h-40 overflow-y-auto">
+                    {history.ocrText}
+                  </div>
+                </details>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const { t, formatDate, language } = useLanguage();
   const { isAuthenticated, user } = useAuth();
@@ -3759,6 +3916,9 @@ export default function Admin() {
                   </div>
                 )}
               </div>
+
+              {/* 历史审查记录 */}
+              <ReviewHistorySection submissionId={selectedReviewedSubmission.id} />
             </div>
 
             <div className="mt-6 flex justify-end">
