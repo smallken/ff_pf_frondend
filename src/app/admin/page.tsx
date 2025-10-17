@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, type ChangeEvent } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
@@ -52,6 +52,15 @@ interface ReviewedSubmission {
   data: ApplicationForm | TaskSubmissionVO | ActivityApplication;
 }
 
+interface ExportSubmission {
+  id: number;
+  type: 'application' | 'task' | 'activity';
+  userName: string;
+  userEmail: string;
+  status: number;
+  createTime: string;
+}
+
 export default function Admin() {
   const { t, formatDate, language } = useLanguage();
   const { isAuthenticated, user } = useAuth();
@@ -77,6 +86,540 @@ export default function Admin() {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8101/api'}${screenshot}`;
     return url;
   };
+
+  const [downloadLoading, setDownloadLoading] = useState(false);
+  const [pendingMonth, setPendingMonth] = useState('');
+  const [reviewedMonth, setReviewedMonth] = useState('');
+  const [pendingMonths, setPendingMonths] = useState<string[]>([]);
+  const [reviewedMonths, setReviewedMonths] = useState<string[]>([]);
+  const monthsPrefetchedRef = useRef({ pending: false, reviewed: false });
+
+  const renderExportControls = (
+    months: string[],
+    selectedMonth: string,
+    onMonthChange: (value: string) => void,
+    onDownloadMonth: () => void,
+    options: {
+      onDownloadPendingAll?: () => void;
+      onDownloadReviewedAll?: () => void;
+      onDownloadAll?: {
+        handler: () => void;
+        title?: string;
+        label: string;
+      };
+    } = {}
+  ) => {
+    return (
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <select
+          value={selectedMonth}
+          onChange={(e: ChangeEvent<HTMLSelectElement>) => onMonthChange(e.target.value)}
+          disabled={months.length === 0}
+          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">
+            {language === 'zh' ? '选择月份' : 'Select month'}
+          </option>
+          {months.map(month => (
+            <option key={month} value={month}>{month}</option>
+          ))}
+        </select>
+        <button
+          onClick={onDownloadMonth}
+          disabled={downloadLoading || !selectedMonth}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+        >
+          {downloadLoading ? (language === 'zh' ? '导出中...' : 'Exporting...') : (language === 'zh' ? '下载所选月份' : 'Download Month')}
+        </button>
+        {options.onDownloadPendingAll && (
+          <button
+            onClick={options.onDownloadPendingAll}
+            disabled={downloadLoading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+          >
+            {downloadLoading ? (language === 'zh' ? '导出中...' : 'Exporting...') : (language === 'zh' ? '下载待审核全量' : 'Download Pending All')}
+          </button>
+        )}
+        {options.onDownloadReviewedAll && (
+          <button
+            onClick={options.onDownloadReviewedAll}
+            disabled={downloadLoading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+          >
+            {downloadLoading ? (language === 'zh' ? '导出中...' : 'Exporting...') : (language === 'zh' ? '下载已审核全量' : 'Download Reviewed All')}
+          </button>
+        )}
+        {options.onDownloadAll && (
+          <button
+            onClick={options.onDownloadAll.handler}
+            disabled={downloadLoading}
+            title={options.onDownloadAll.title}
+            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
+          >
+            {downloadLoading ? (language === 'zh' ? '导出中...' : 'Exporting...') : options.onDownloadAll.label}
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  const updateMonths = (
+    target: 'pending' | 'reviewed',
+    items: { createTime: string | undefined; }[],
+    options: { reset?: boolean } = {}
+  ) => {
+    const setTarget = target === 'pending' ? setPendingMonths : setReviewedMonths;
+    setTarget(prev => {
+      const monthSet = options.reset ? new Set<string>() : new Set(prev);
+      items.forEach(item => {
+        if (!item.createTime) {
+          return;
+        }
+        const date = new Date(item.createTime);
+        if (Number.isNaN(date.getTime())) {
+          return;
+        }
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        monthSet.add(key);
+      });
+      return Array.from(monthSet).sort((a, b) => (a < b ? 1 : -1));
+    });
+  };
+
+  const collectPendingSubmissionsForDownload = async () => {
+    const pageSize = 20;
+
+    const monthItems: { createTime: string | undefined; }[] = [];
+
+    const collectApplications = async () => {
+      const items: PendingSubmission[] = [];
+      let current = 1;
+      while (true) {
+        const response = await formService.getFormList({
+          status: 0,
+          current,
+          pageSize
+        });
+        const records = response?.records || [];
+        const mapped = records.map((form: any) => ({
+            id: form.id,
+            type: 'application' as const,
+            title: t('admin.forms.application'),
+            userName: form.name || t('admin.unknown.user'),
+            userEmail: form.email || '',
+            status: Number(form.status ?? 0),
+            createTime: form.createTime,
+            data: form
+          }));
+        items.push(...mapped);
+        monthItems.push(...mapped);
+        const total = response?.total || 0;
+        if (records.length < pageSize || items.length >= total) {
+          break;
+        }
+        current += 1;
+      }
+      return items;
+    };
+
+    const collectTasks = async () => {
+      const items: PendingSubmission[] = [];
+      let current = 1;
+      while (true) {
+        const response = await taskSubmissionService.getAllTaskSubmissions({
+          reviewStatus: 0,
+          current,
+          pageSize
+        });
+        const records = response?.records || [];
+        const mapped = records.map((task: any) => ({
+            id: task.id,
+            type: 'task' as const,
+            title: t('admin.forms.achievement'),
+            userName: task.name || t('admin.unknown.user'),
+            userEmail: task.email || '',
+            status: Number(task.reviewStatus ?? 0),
+            createTime: task.createTime,
+            data: task
+          }));
+        items.push(...mapped);
+        monthItems.push(...mapped);
+        const total = response?.total || 0;
+        if (records.length < pageSize || items.length >= total) {
+          break;
+        }
+        current += 1;
+      }
+      return items;
+    };
+
+    const collectActivities = async () => {
+      const items: PendingSubmission[] = [];
+      let current = 1;
+      while (true) {
+        const response = await activityApplicationService.getAllApplications({
+          reviewStatus: 0,
+          current,
+          pageSize
+        });
+        const records = response?.records || [];
+        const mapped = records.map((activity: any) => ({
+            id: activity.id,
+            type: 'activity' as const,
+            title: t('admin.forms.activity'),
+            userName: activity.organizer || t('admin.unknown.user'),
+            userEmail: activity.email || '',
+            status: Number(activity.reviewStatus ?? 0),
+            createTime: activity.createTime,
+            data: activity
+          }));
+        items.push(...mapped);
+        monthItems.push(...mapped);
+        const total = response?.total || 0;
+        if (records.length < pageSize || items.length >= total) {
+          break;
+        }
+        current += 1;
+      }
+      return items;
+    };
+
+    const [applications, tasks, activities] = await Promise.all([
+      collectApplications(),
+      collectTasks(),
+      collectActivities()
+    ]);
+
+    const result = [...applications, ...tasks, ...activities];
+    updateMonths('pending', monthItems, { reset: true });
+    return result;
+  };
+
+  const collectReviewedSubmissionsForDownload = async () => {
+    const pageSize = 20;
+
+    const monthItems: { createTime: string | undefined; }[] = [];
+
+    const collectApplications = async () => {
+      const items: ReviewedSubmission[] = [];
+      let current = 1;
+      while (true) {
+        const response = await formService.getFormList({
+          statusList: '1,2',
+          current,
+          pageSize
+        });
+        const records = response?.records || [];
+        const mapped = records.map((form: any) => ({
+            id: form.id,
+            type: 'application' as const,
+            title: t('admin.forms.application'),
+            userName: form.name || t('admin.unknown.user'),
+            userEmail: form.email || '',
+            status: form.status,
+            createTime: form.createTime,
+            reviewTime: form.updateTime,
+            reviewMessage: form.reviewMessage || '',
+            reviewScore: form.reviewScore || 0,
+            data: form
+          }));
+        items.push(...mapped);
+        monthItems.push(...mapped);
+        const total = response?.total || 0;
+        if (records.length < pageSize || items.length >= total) {
+          break;
+        }
+        current += 1;
+      }
+      return items;
+    };
+
+    const collectTasks = async () => {
+      const items: ReviewedSubmission[] = [];
+      let current = 1;
+      while (true) {
+        const response = await taskSubmissionService.getAllTaskSubmissions({
+          reviewStatusList: [1, 2],
+          current,
+          pageSize
+        });
+        const records = response?.records || [];
+        const mapped = records.map((task: any) => ({
+            id: task.id,
+            type: 'task' as const,
+            title: t('admin.forms.achievement'),
+            userName: task.name || t('admin.unknown.user'),
+            userEmail: task.email || '',
+            status: task.reviewStatus || 0,
+            createTime: task.createTime,
+            reviewTime: task.updateTime,
+            reviewMessage: task.reviewMessage || '',
+            reviewScore: task.reviewScore || 0,
+            data: task
+          }));
+        items.push(...mapped);
+        monthItems.push(...mapped);
+        const total = response?.total || 0;
+        if (records.length < pageSize || items.length >= total) {
+          break;
+        }
+        current += 1;
+      }
+      return items;
+    };
+
+    const collectActivities = async () => {
+      const items: ReviewedSubmission[] = [];
+      let current = 1;
+      while (true) {
+        const response = await activityApplicationService.getAllApplications({
+          reviewStatusList: [1, 2],
+          current,
+          pageSize
+        });
+        const records = response?.records || [];
+        const mapped = records.map((activity: any) => ({
+            id: activity.id,
+            type: 'activity' as const,
+            title: t('admin.forms.activity'),
+            userName: activity.organizer || t('admin.unknown.user'),
+            userEmail: activity.email || '',
+            status: activity.reviewStatus || 0,
+            createTime: activity.createTime,
+            reviewTime: activity.updateTime,
+            reviewMessage: activity.reviewMessage || '',
+            reviewScore: activity.reviewScore || 0,
+            data: activity
+          }));
+        items.push(...mapped);
+        monthItems.push(...mapped);
+        const total = response?.total || 0;
+        if (records.length < pageSize || items.length >= total) {
+          break;
+        }
+        current += 1;
+      }
+      return items;
+    };
+
+    const [applications, tasks, activities] = await Promise.all([
+      collectApplications(),
+      collectTasks(),
+      collectActivities()
+    ]);
+
+    return [...applications, ...tasks, ...activities];
+  };
+
+  const collectAllSubmissionsForDownload = async () => {
+    const [pending, reviewed] = await Promise.all([
+      collectPendingSubmissionsForDownload(),
+      collectReviewedSubmissionsForDownload()
+    ]);
+
+    const convert = (item: PendingSubmission | ReviewedSubmission): ExportSubmission => ({
+      id: item.id,
+      type: item.type,
+      userName: item.userName,
+      userEmail: item.userEmail,
+      status: Number(item.status ?? 0),
+      createTime: item.createTime
+    });
+
+    return [...pending.map(convert), ...reviewed.map(convert)];
+  };
+
+  const downloadForms = async (options: { month?: string; scope: 'pending' | 'reviewed' | 'all' }) => {
+    try {
+      setDownloadLoading(true);
+      let items: ExportSubmission[] = [];
+
+      if (options.scope === 'pending') {
+        const pending = await collectPendingSubmissionsForDownload();
+        items = pending.map(item => ({
+          id: item.id,
+          type: item.type,
+          userName: item.userName,
+          userEmail: item.userEmail,
+          status: Number(item.status ?? 0),
+          createTime: item.createTime
+        }));
+      } else if (options.scope === 'reviewed') {
+        const reviewed = await collectReviewedSubmissionsForDownload();
+        items = reviewed.map(item => ({
+          id: item.id,
+          type: item.type,
+          userName: item.userName,
+          userEmail: item.userEmail,
+          status: Number(item.status ?? 0),
+          createTime: item.createTime
+        }));
+      } else {
+        const [pending, reviewed] = await Promise.all([
+          collectPendingSubmissionsForDownload(),
+          collectReviewedSubmissionsForDownload()
+        ]);
+        items = [
+          ...pending.map(item => ({
+            id: item.id,
+            type: item.type,
+            userName: item.userName,
+            userEmail: item.userEmail,
+            status: Number(item.status ?? 0),
+            createTime: item.createTime
+          })),
+          ...reviewed.map(item => ({
+            id: item.id,
+            type: item.type,
+            userName: item.userName,
+            userEmail: item.userEmail,
+            status: Number(item.status ?? 0),
+            createTime: item.createTime
+          }))
+        ];
+      }
+
+      let filtered = items;
+      if (options.scope === 'pending') {
+        filtered = filtered.filter(item => Number(item.status ?? 0) === 0);
+      } else if (options.scope === 'reviewed') {
+        filtered = filtered.filter(item => {
+          const statusValue = Number(item.status ?? 0);
+          return statusValue === 1 || statusValue === 2;
+        });
+      }
+      if (options.month) {
+        filtered = items.filter(item => {
+          if (!item.createTime) {
+            return false;
+          }
+          const date = new Date(item.createTime);
+          if (Number.isNaN(date.getTime())) {
+            return false;
+          }
+          const monthText = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          return monthText === options.month;
+        });
+      }
+
+      if (!filtered.length) {
+        const scopeText = options.scope === 'pending'
+          ? (language === 'zh' ? '待审核表单' : 'pending forms')
+          : options.scope === 'reviewed'
+            ? (language === 'zh' ? '已审核表单' : 'reviewed forms')
+            : (language === 'zh' ? '表单' : 'forms');
+        alert(language === 'zh' ? `${scopeText}暂无可下载的数据` : `No ${scopeText} to download`);
+        return;
+      }
+
+      const headers = language === 'zh'
+        ? ['ID', '表单类型', '用户', '邮箱', '状态', '提交时间']
+        : ['ID', 'Form Type', 'User', 'Email', 'Status', 'Submitted At'];
+
+      const typeMap = {
+        application: language === 'zh' ? '报名申请表' : 'Application',
+        task: language === 'zh' ? '成果提交表' : 'Task Submission',
+        activity: language === 'zh' ? '活动申请表' : 'Activity Application'
+      };
+
+      const statusMap: Record<number, string> = {
+        0: language === 'zh' ? '待审核' : 'Pending',
+        1: language === 'zh' ? '已通过' : 'Approved',
+        2: language === 'zh' ? '已拒绝' : 'Rejected'
+      };
+      const locale = language === 'zh' ? 'zh-CN' : undefined;
+
+      const rows = filtered.map(item => {
+        const statusValue = Number(item.status ?? 0);
+        const date = item.createTime ? new Date(item.createTime) : null;
+        const formattedDate = date && !Number.isNaN(date.getTime())
+          ? date.toLocaleString(locale)
+          : (item.createTime || '');
+        return [
+          item.id,
+          typeMap[item.type],
+          item.userName,
+          item.userEmail,
+          statusMap[statusValue] || statusMap[0],
+          formattedDate
+        ];
+      });
+
+      const csv = [
+        headers.join(','),
+        ...rows.map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      const suffix = options.month || new Date().toISOString().split('T')[0];
+      link.setAttribute('href', url);
+      let filename = '表单导出';
+      if (options.scope === 'pending') {
+        filename = options.month ? `待审核表单_${suffix}` : `待审核表单_全量_${suffix}`;
+      } else if (options.scope === 'reviewed') {
+        filename = options.month ? `已审核表单_${suffix}` : `已审核表单_全量_${suffix}`;
+      } else {
+        filename = options.month ? `全部表单_${suffix}` : `全部表单_全量_${suffix}`;
+      }
+      link.setAttribute('download', `${filename}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('下载失败:', error);
+      alert(language === 'zh' ? '下载失败，请重试' : 'Download failed, please try again');
+    } finally {
+      setDownloadLoading(false);
+    }
+  };
+
+  const handleDownloadAllPending = () => {
+    if (!downloadLoading) {
+      if (pendingMonth) {
+        setPendingMonth('');
+      }
+      downloadForms({ scope: 'pending' });
+    }
+  };
+
+  const handleDownloadMonthlyPending = () => {
+    if (!pendingMonth) {
+      alert(language === 'zh' ? '请选择月份' : 'Please select a month');
+      return;
+    }
+    if (!downloadLoading) {
+      downloadForms({ month: pendingMonth, scope: 'pending' });
+    }
+  };
+
+  const handleDownloadAllReviewed = () => {
+    if (!downloadLoading) {
+      if (reviewedMonth) {
+        setReviewedMonth('');
+      }
+      downloadForms({ scope: 'reviewed' });
+    }
+  };
+
+  const handleDownloadMonthlyReviewed = () => {
+    if (!reviewedMonth) {
+      alert(language === 'zh' ? '请选择月份' : 'Please select a month');
+      return;
+    }
+    if (!downloadLoading) {
+      downloadForms({ month: reviewedMonth, scope: 'reviewed' });
+    }
+  };
+
+  const handleDownloadAllForms = () => {
+    if (!downloadLoading) {
+      downloadForms({ scope: 'all' });
+    }
+  };
+
   const [activeTab, setActiveTab] = useState('forms');
   const [pendingFormType, setPendingFormType] = useState<'application' | 'task' | 'activity'>('task'); // 默认显示成果提交
   const [reviewedFormType, setReviewedFormType] = useState<'application' | 'task' | 'activity'>('task'); // 已审核表单类型
@@ -408,12 +951,22 @@ export default function Admin() {
   const handlePendingFormTypeChange = (type: 'application' | 'task' | 'activity') => {
     setPendingFormType(type);
     setPendingCurrentPage(1);
+    setPendingMonth('');
+    monthsPrefetchedRef.current.pending = false;
+    collectPendingSubmissionsForDownload().finally(() => {
+      monthsPrefetchedRef.current.pending = true;
+    });
   };
-  
+
   // 切换已审核表单类型
   const handleReviewedFormTypeChange = (type: 'application' | 'task' | 'activity') => {
     setReviewedFormType(type);
     setReviewedCurrentPage(1);
+    setReviewedMonth('');
+    monthsPrefetchedRef.current.reviewed = false;
+    collectReviewedSubmissionsForDownload().finally(() => {
+      monthsPrefetchedRef.current.reviewed = true;
+    });
   };
   
   // 统计数据状态
@@ -1493,6 +2046,36 @@ export default function Admin() {
     }
   }, [reviewedFilters.user, reviewedFilters.dateRange, reviewedFilters.status, reviewedFormType, isAuthenticated, user?.userRole, activeTab]);
 
+  useEffect(() => {
+    if (!monthsPrefetchedRef.current.pending) {
+      collectPendingSubmissionsForDownload().finally(() => {
+        monthsPrefetchedRef.current.pending = true;
+      });
+    }
+    if (!monthsPrefetchedRef.current.reviewed) {
+      collectReviewedSubmissionsForDownload().finally(() => {
+        monthsPrefetchedRef.current.reviewed = true;
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.userRole === 'admin') {
+      if (activeTab === 'forms') {
+        fetchPendingSubmissions(1, pendingFormType); // 加载当前类型的待审核表单
+      } else if (activeTab === 'reviewed') {
+        // 切换到已审核表单时重置分页状态
+        setReviewedCurrentPage(1);
+        const sortField = reviewedSortConfig?.key || 'updateTime';
+        const sortOrder = reviewedSortConfig?.direction || 'desc';
+        fetchReviewedSubmissions(1, reviewedFormType, sortField, sortOrder);
+      } else if (activeTab === 'stats') {
+        fetchStats();
+      }
+      // 月度奖励模块的数据获取在组件内部处理
+    }
+  }, [isAuthenticated, user, activeTab, pendingFormType, reviewedFormType, reviewedFilters.user, reviewedFilters.dateRange, reviewedFilters.status, reviewedSortConfig?.key, reviewedSortConfig?.direction]);
+
   // 权限检查
   if (!isAuthenticated) {
     return (
@@ -1628,7 +2211,27 @@ export default function Admin() {
         {activeTab === 'forms' && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{t('admin.pending.title')}</h2>
-            
+
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-6">
+              {renderExportControls(
+                pendingMonths,
+                pendingMonth,
+                setPendingMonth,
+                handleDownloadMonthlyPending,
+                {
+                  onDownloadPendingAll: handleDownloadAllPending,
+                  onDownloadReviewedAll: handleDownloadAllReviewed,
+                  onDownloadAll: {
+                    handler: handleDownloadAllForms,
+                    title: language === 'zh'
+                      ? '全量数据包括所有审核表单，包括待审核和已审核的三种表单'
+                      : 'Full export includes all forms (pending and reviewed across three types)',
+                    label: language === 'zh' ? '下载全量表单' : 'Download All Forms'
+                  }
+                }
+              )}
+            </div>
+
             {/* 表单类型切换 */}
             <div className="mb-6">
               <div className="flex space-x-2 mb-4">
