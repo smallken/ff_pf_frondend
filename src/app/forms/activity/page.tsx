@@ -7,10 +7,24 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { activityApplicationService } from '../../../services';
 import CustomDateInput from '../../components/CustomDateInput';
 
+const SUBMISSION_DEADLINE = new Date('2025-10-19T16:00:00Z');
+
+const submissionClosedContent = {
+  zh: {
+    message: '脚印计划于2025年10月20日00:00（UTC+8）起暂停表单提交，当前暂不接受新的活动申请。',
+    badge: '提交已关闭'
+  },
+  en: {
+    message: 'Footprint submissions are paused starting October 20, 2025 at 00:00 (UTC+8). Activity applications are currently unavailable.',
+    badge: 'Submission closed'
+  }
+};
+
 export default function ActivityForm() {
   const { t, language } = useLanguage();
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
+  const isSubmissionClosed = Date.now() >= SUBMISSION_DEADLINE.getTime();
   
   // Debug language state
   useEffect(() => {
@@ -58,7 +72,12 @@ export default function ActivityForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (isSubmissionClosed) {
+      setError(submissionClosedContent[language as 'zh' | 'en'].message);
+      return;
+    }
+
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -158,6 +177,18 @@ export default function ActivityForm() {
             </p>
           </div>
         </div>
+        {isSubmissionClosed && (
+          <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-800/60 dark:text-blue-200">
+                {submissionClosedContent[language as 'zh' | 'en'].badge}
+              </span>
+              <p className="text-sm text-gray-700 dark:text-gray-200">
+                {submissionClosedContent[language as 'zh' | 'en'].message}
+              </p>
+            </div>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-blue-100 dark:border-gray-700 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-200 to-indigo-300 dark:from-blue-800 dark:to-indigo-900 opacity-20 rounded-full -translate-y-16 translate-x-16"></div>
           <div className="relative z-10">

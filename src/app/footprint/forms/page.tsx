@@ -6,13 +6,35 @@ import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { formService } from '@/services';
 
+const SUBMISSION_DEADLINE = new Date('2025-10-19T16:00:00Z');
+
+const submissionClosedContent = {
+  zh: {
+    title: '脚印计划提交已暂停',
+    description: [
+      '自2025年10月20日00:00（UTC+8）起，脚印计划已暂停所有任务递交与系统功能。',
+      '当前暂不接受新的表单提交，请关注后续上线通知。'
+    ],
+    badge: '提交关闭'
+  },
+  en: {
+    title: 'Footprint submissions are paused',
+    description: [
+      'Starting October 20, 2025 at 00:00 (UTC+8), all Footprint tasks and features are temporarily suspended.',
+      'New form submissions are currently unavailable. Stay tuned for update announcements.'
+    ],
+    badge: 'Submission closed'
+  }
+};
+
 function FormsContent() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const searchParams = useSearchParams();
   const [successMessage, setSuccessMessage] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [hasApproved, setHasApproved] = useState<boolean>(false);
   const [hasSubmittedApplication, setHasSubmittedApplication] = useState<boolean>(false);
+  const isSubmissionClosed = Date.now() >= SUBMISSION_DEADLINE.getTime();
 
   useEffect(() => {
     const success = searchParams.get('success');
@@ -100,45 +122,92 @@ function FormsContent() {
           <p className="text-lg text-gray-600 dark:text-gray-300">{t('forms.page.customSubtitle')}</p>
         </div>
 
+        {isSubmissionClosed && (
+          <div className="mb-12 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  {submissionClosedContent[language as 'zh' | 'en'].title}
+                </h2>
+                <div className="space-y-1 text-sm text-gray-700 dark:text-gray-200">
+                  {submissionClosedContent[language as 'zh' | 'en'].description.map((line, index) => (
+                    <p key={index}>{line}</p>
+                  ))}
+                </div>
+              </div>
+              <span className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold self-start">
+                {submissionClosedContent[language as 'zh' | 'en'].badge}
+              </span>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {formTypes.map((form) => (
-            <Link
-              key={form.id}
-              href={form.link}
-              className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300 ${
-                (form.id !== 1 && !hasApproved) || (form.id === 1 && hasSubmittedApplication) ? 'pointer-events-none opacity-50' : ''
-              }`}
-            >
+          {formTypes.map((form) => {
+            const isLocked = (form.id !== 1 && !hasApproved) || (form.id === 1 && hasSubmittedApplication);
+            const isDisabled = isSubmissionClosed || isLocked;
+            const cardClasses = `bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-shadow duration-300 ${
+              isDisabled ? 'pointer-events-none opacity-50' : 'hover:shadow-lg'
+            }`;
+
+            const statusBadge = () => {
+              if (isSubmissionClosed) {
+                return (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-600">
+                    {submissionClosedContent[language as 'zh' | 'en'].badge}
+                  </span>
+                );
+              }
+              if (form.id === 1) {
+                return hasSubmittedApplication ? (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-500">
+                    已提交
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    {t('forms.start.fill')} →
+                  </span>
+                );
+              }
+              if (hasApproved) {
+                return (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    {t('forms.start.fill')} →
+                  </span>
+                );
+              }
+              return (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-500">
+                  {t('forms.disabled.need.approved')}
+                </span>
+              );
+            };
+
+            const content = (
               <div className="text-center">
                 <div className="text-4xl mb-4">{form.icon}</div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                   {t(form.titleKey)}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">{t(form.descriptionKey)}</p>
-                <div className="mt-4">
-                  {form.id === 1 ? (
-                    hasSubmittedApplication ? (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-500">
-                        已提交
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        {t('forms.start.fill')} →
-                      </span>
-                    )
-                  ) : hasApproved ? (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                      {t('forms.start.fill')} →
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-500">
-                      {t('forms.disabled.need.approved')}
-                    </span>
-                  )}
-                </div>
+                <div className="mt-4">{statusBadge()}</div>
               </div>
-            </Link>
-          ))}
+            );
+
+            if (isDisabled) {
+              return (
+                <div key={form.id} className={cardClasses}>
+                  {content}
+                </div>
+              );
+            }
+
+            return (
+              <Link key={form.id} href={form.link} className={cardClasses}>
+                {content}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="mt-12 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
