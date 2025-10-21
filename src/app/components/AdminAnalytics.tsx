@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
@@ -77,6 +77,29 @@ export default function AdminAnalytics() {
     setDatePreset(preset);
     setShowDatePicker(preset === 'custom');
   };
+
+  const currentMonthDailyTaskData = useMemo(() => {
+    if (!analyticsData) {
+      return [];
+    }
+
+    const now = new Date();
+    const targetYear = now.getFullYear();
+    const targetMonth = now.getMonth();
+
+    return analyticsData.timeSeriesData
+      .filter((item) => {
+        const itemDate = new Date(item.date);
+        return itemDate.getFullYear() === targetYear && itemDate.getMonth() === targetMonth;
+      })
+      .map((item) => ({
+        date: item.date,
+        taskSubmissions: item.taskSubmissions,
+        taskApproved: item.taskApproved,
+        taskRejected: item.taskRejected,
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [analyticsData]);
 
   if (loading) {
     return (
@@ -339,32 +362,33 @@ export default function AdminAnalytics() {
         ))}
       </div>
 
-      {/* 任务类型细分 */}
-      {analyticsData.taskCategoryStats && analyticsData.taskCategoryStats.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border">
-          <div className="mb-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">成果表任务类型统计（本月已通过）</h3>
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              ⚠️ 注意：以下仅显示本月已通过的任务数量，不包含待审核和已拒绝的数据
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {analyticsData.taskCategoryStats.map((category) => (
-              <div key={category.category} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">{category.categoryName}</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-500">本月已通过</span>
-                    <span className="text-lg font-bold text-green-600">{category.approved}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+      {/* 成果表每日审核统计（当月） */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">成果表每日审核统计（当月）</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">仅展示当前月份内成果表的提交与审核情况</p>
           </div>
         </div>
-      )}
+        {currentMonthDailyTaskData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={360}>
+            <BarChart data={currentMonthDailyTaskData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" tickFormatter={(value) => value.slice(5)} />
+              <YAxis />
+              <Tooltip formatter={(value: number) => value?.toLocaleString()} labelFormatter={(label) => `${label}`} />
+              <Legend />
+              <Bar dataKey="taskSubmissions" name="提交总数" fill={COLORS.primary} />
+              <Bar dataKey="taskApproved" name="已通过" fill={COLORS.success} />
+              <Bar dataKey="taskRejected" name="已拒绝" fill={COLORS.danger} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-12">
+            暂无当月成果表审核数据
+          </div>
+        )}
+      </div>
     </div>
   );
 }
