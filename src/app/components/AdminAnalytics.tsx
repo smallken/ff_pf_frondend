@@ -41,6 +41,41 @@ export default function AdminAnalytics() {
   const [currentMonthDailyLoading, setCurrentMonthDailyLoading] = useState(true);
   const [currentMonthDailyError, setCurrentMonthDailyError] = useState('');
 
+  const renderDailyTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || payload.length === 0) {
+      return null;
+    }
+
+    const dataPoint = payload[0]?.payload;
+    const auditTotal = (dataPoint?.taskApproved || 0) + (dataPoint?.taskRejected || 0);
+
+    return (
+      <div
+        style={{
+          backgroundColor: '#0f172a',
+          color: '#e2e8f0',
+          padding: '10px 12px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.35)'
+        }}
+      >
+        <div style={{ fontSize: '12px', fontWeight: 600, color: '#93c5fd', marginBottom: '6px' }}>{label}</div>
+        <div style={{ fontSize: '12px', marginBottom: '4px', color: COLORS.primary }}>
+          提交总数：{dataPoint?.taskSubmissions ?? 0}
+        </div>
+        <div style={{ fontSize: '12px', marginBottom: '4px', color: COLORS.success }}>
+          已通过：{dataPoint?.taskApproved ?? 0}
+        </div>
+        <div style={{ fontSize: '12px', marginBottom: '4px', color: COLORS.danger }}>
+          已拒绝：{dataPoint?.taskRejected ?? 0}
+        </div>
+        <div style={{ fontSize: '12px', color: '#facc15' }}>
+          审核总数：{auditTotal}
+        </div>
+      </div>
+    );
+  };
+
   const fetchAnalyticsData = async () => {
     setLoading(true);
     setError('');
@@ -412,16 +447,16 @@ export default function AdminAnalytics() {
           <div className="text-sm text-red-500 text-center py-12">{currentMonthDailyError}</div>
         ) : currentMonthDailyTaskData.length > 0 ? (
           <ResponsiveContainer width="100%" height={360}>
-            <LineChart data={currentMonthDailyTaskData}>
+            <BarChart data={currentMonthDailyTaskData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" tickFormatter={(value) => value.slice(5)} />
               <YAxis allowDecimals={false} />
-              <Tooltip formatter={(value: number) => value?.toLocaleString()} labelFormatter={(label) => `${label}`} />
+              <Tooltip content={renderDailyTooltip} cursor={{ fill: 'rgba(148, 163, 184, 0.18)' }} />
               <Legend />
-              <Line type="monotone" dataKey="taskSubmissions" name="提交总数" stroke={COLORS.primary} strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="taskApproved" name="已通过" stroke={COLORS.success} strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="taskRejected" name="已拒绝" stroke={COLORS.danger} strokeWidth={2} dot={false} />
-            </LineChart>
+              <Bar dataKey="taskSubmissions" name="提交总数" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="taskApproved" name="已通过" fill={COLORS.success} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="taskRejected" name="已拒绝" fill={COLORS.danger} radius={[4, 4, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
         ) : (
           <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-12">
