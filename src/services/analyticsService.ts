@@ -72,6 +72,86 @@ export interface DateRangeParams {
   preset?: '7D' | '2W' | '4W' | '3M' | '1Y'; // 快捷选项
 }
 
+/**
+ * 获取每日统计数据
+ */
+const getDailyStatsData = async (params: DateRangeParams): Promise<TimeSeriesDataPoint[]> => {
+  try {
+    // 计算日期范围
+    let startDate: string;
+    let endDate: string;
+    
+    if (params.startDate && params.endDate) {
+      startDate = params.startDate;
+      endDate = params.endDate;
+    } else {
+      // 根据preset计算日期范围
+      const end = new Date();
+      const start = new Date();
+      
+      switch (params.preset) {
+        case '7D':
+          start.setDate(end.getDate() - 6);
+          break;
+        case '2W':
+          start.setDate(end.getDate() - 13);
+          break;
+        case '4W':
+          start.setDate(end.getDate() - 27);
+          break;
+        case '3M':
+          start.setMonth(end.getMonth() - 3);
+          break;
+        case '1Y':
+          start.setFullYear(end.getFullYear() - 1);
+          break;
+        default:
+          start.setDate(end.getDate() - 6);
+      }
+      
+      startDate = start.toISOString().split('T')[0];
+      endDate = end.toISOString().split('T')[0];
+    }
+    
+    // 调用后端API
+    console.log('📊 请求每日统计数据:', { startDate, endDate });
+    const response = await request.get<any[]>('/user/admin/daily-stats', {
+      startDate,
+      endDate
+    });
+    
+    console.log('📊 后端返回数据:', response);
+    
+    // 转换后端数据格式为前端期望的格式
+    if (!response || !Array.isArray(response)) {
+      console.warn('后端返回数据格式异常:', response);
+      return [];
+    }
+    
+    const timeSeriesData: TimeSeriesDataPoint[] = response.map((item: any) => ({
+      date: item.date || '',
+      applicationSubmissions: Number(item.applicationSubmissions) || 0,
+      taskSubmissions: Number(item.taskSubmissions) || 0,
+      activitySubmissions: Number(item.activitySubmissions) || 0,
+      totalSubmissions: Number(item.totalSubmissions) || 0,
+      applicationApproved: Number(item.applicationApproved) || 0,
+      taskApproved: Number(item.taskApproved) || 0,
+      activityApproved: Number(item.activityApproved) || 0,
+      totalApproved: Number(item.totalApproved) || 0,
+      applicationRejected: Number(item.applicationRejected) || 0,
+      taskRejected: Number(item.taskRejected) || 0,
+      activityRejected: Number(item.activityRejected) || 0,
+      totalRejected: Number(item.totalRejected) || 0,
+    }));
+    
+    console.log('📊 转换后的时间序列数据:', timeSeriesData);
+    return timeSeriesData;
+  } catch (error) {
+    console.error('获取每日统计数据失败:', error);
+    return [];
+  }
+};
+
 export const analyticsService = {
   /**
    * 获取分析数据
@@ -187,9 +267,8 @@ export const analyticsService = {
           },
         ],
         
-        // 时间序列数据 - 暂时使用模拟数据，因为后端没有提供
-        // TODO: 后端需要实现按日期的统计API
-        timeSeriesData: generateMockAnalyticsData(params).timeSeriesData,
+        // 时间序列数据 - 从后端获取真实数据
+        timeSeriesData: await getDailyStatsData(params),
       };
       
       return analyticsData;

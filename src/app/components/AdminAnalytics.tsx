@@ -27,7 +27,7 @@ export default function AdminAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [datePreset, setDatePreset] = useState<DatePreset>('7D');
+  const [datePreset, setDatePreset] = useState<DatePreset>('custom');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -110,11 +110,44 @@ export default function AdminAnalytics() {
   };
 
   useEffect(() => {
-    // 只有选择快捷日期时才自动触发，自定义日期需要点击"应用"按钮
-    if (datePreset !== 'custom') {
-      fetchAnalyticsData();
-    }
-  }, [datePreset]);
+    // 初始化时加载当月数据
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const formatDateToYMD = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    setCustomStartDate(formatDateToYMD(start));
+    setCustomEndDate(formatDateToYMD(now));
+    
+    // 自动加载当月数据
+    const loadInitialData = async () => {
+      setLoading(true);
+      setError('');
+      
+      try {
+        const data = await analyticsService.getAnalyticsData({
+          startDate: formatDateToYMD(start),
+          endDate: formatDateToYMD(now)
+        });
+        console.log('✅ 初始数据已加载（当月）:', {
+          totalSubmissions: data.totalSubmissions,
+          dataPointsCount: data.timeSeriesData.length
+        });
+        setAnalyticsData(data);
+      } catch (err: any) {
+        console.error('获取分析数据失败:', err);
+        setError(err.message || '获取数据失败');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadInitialData();
+  }, []);
 
   useEffect(() => {
     const loadCurrentMonthDailyData = async () => {
@@ -372,10 +405,7 @@ export default function AdminAnalytics() {
       {/* 时间序列图表 */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">提交趋势</h3>
-          <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-            示例数据
-          </span>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">提交趋势（当月）</h3>
         </div>
         <ResponsiveContainer width="100%" height={400}>
           {chartType === 'bar' ? (
