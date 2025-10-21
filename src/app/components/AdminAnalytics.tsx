@@ -124,15 +124,25 @@ export default function AdminAnalytics() {
       try {
         const now = new Date();
         const start = new Date(now.getFullYear(), now.getMonth(), 1);
-        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        const formatDateToYMD = (date: Date) => date.toISOString().split('T')[0];
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const formatDateToYMD = (date: Date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
 
         const monthlyData = await analyticsService.getAnalyticsData({
           startDate: formatDateToYMD(start),
-          endDate: formatDateToYMD(end)
+          endDate: formatDateToYMD(today)
         });
 
-        const recordMap = new Map(monthlyData.timeSeriesData.map((item) => [item.date, item]));
+        const todayKey = formatDateToYMD(today);
+        const recordMap = new Map(
+          monthlyData.timeSeriesData
+            .filter((item) => item.date <= todayKey)
+            .map((item) => [item.date, item])
+        );
         const days: Array<{
           date: string;
           taskSubmissions: number;
@@ -140,7 +150,7 @@ export default function AdminAnalytics() {
           taskRejected: number;
         }> = [];
 
-        for (let cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
+        for (let cursor = new Date(start); cursor <= today; cursor.setDate(cursor.getDate() + 1)) {
           const key = formatDateToYMD(cursor);
           const record = recordMap.get(key);
 
