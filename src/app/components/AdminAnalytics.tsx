@@ -32,6 +32,14 @@ export default function AdminAnalytics() {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
+  const [currentMonthDailyTaskData, setCurrentMonthDailyTaskData] = useState<Array<{
+    date: string;
+    taskSubmissions: number;
+    taskApproved: number;
+    taskRejected: number;
+  }>>([]);
+  const [currentMonthDailyLoading, setCurrentMonthDailyLoading] = useState(true);
+  const [currentMonthDailyError, setCurrentMonthDailyError] = useState('');
 
   const fetchAnalyticsData = async () => {
     setLoading(true);
@@ -73,33 +81,59 @@ export default function AdminAnalytics() {
     }
   }, [datePreset]);
 
+  useEffect(() => {
+    const loadCurrentMonthDailyData = async () => {
+      setCurrentMonthDailyLoading(true);
+      setCurrentMonthDailyError('');
+
+      try {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const formatDateToYMD = (date: Date) => date.toISOString().split('T')[0];
+
+        const monthlyData = await analyticsService.getAnalyticsData({
+          startDate: formatDateToYMD(start),
+          endDate: formatDateToYMD(end)
+        });
+
+        const recordMap = new Map(monthlyData.timeSeriesData.map((item) => [item.date, item]));
+        const days: Array<{
+          date: string;
+          taskSubmissions: number;
+          taskApproved: number;
+          taskRejected: number;
+        }> = [];
+
+        for (let cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
+          const key = formatDateToYMD(cursor);
+          const record = recordMap.get(key);
+
+          days.push({
+            date: key,
+            taskSubmissions: record ? record.taskSubmissions : 0,
+            taskApproved: record ? record.taskApproved : 0,
+            taskRejected: record ? record.taskRejected : 0
+          });
+        }
+
+        setCurrentMonthDailyTaskData(days);
+      } catch (err: any) {
+        console.error('获取当月每日审核数据失败:', err);
+        setCurrentMonthDailyError(err.message || '获取当月每日审核数据失败');
+        setCurrentMonthDailyTaskData([]);
+      } finally {
+        setCurrentMonthDailyLoading(false);
+      }
+    };
+
+    loadCurrentMonthDailyData();
+  }, []);
+
   const handleDatePresetChange = (preset: DatePreset) => {
     setDatePreset(preset);
     setShowDatePicker(preset === 'custom');
   };
-
-  const currentMonthDailyTaskData = useMemo(() => {
-    if (!analyticsData) {
-      return [];
-    }
-
-    const now = new Date();
-    const targetYear = now.getFullYear();
-    const targetMonth = now.getMonth();
-
-    return analyticsData.timeSeriesData
-      .filter((item) => {
-        const itemDate = new Date(item.date);
-        return itemDate.getFullYear() === targetYear && itemDate.getMonth() === targetMonth;
-      })
-      .map((item) => ({
-        date: item.date,
-        taskSubmissions: item.taskSubmissions,
-        taskApproved: item.taskApproved,
-        taskRejected: item.taskRejected,
-      }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [analyticsData]);
 
   if (loading) {
     return (
@@ -370,18 +404,24 @@ export default function AdminAnalytics() {
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">仅展示当前月份内成果表的提交与审核情况</p>
           </div>
         </div>
-        {currentMonthDailyTaskData.length > 0 ? (
+        {currentMonthDailyLoading ? (
+          <div className="flex justify-center items-center py-12 text-sm text-gray-500 dark:text-gray-400">
+            加载中...
+          </div>
+        ) : currentMonthDailyError ? (
+          <div className="text-sm text-red-500 text-center py-12">{currentMonthDailyError}</div>
+        ) : currentMonthDailyTaskData.length > 0 ? (
           <ResponsiveContainer width="100%" height={360}>
-            <BarChart data={currentMonthDailyTaskData}>
+            <LineChart data={currentMonthDailyTaskData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" tickFormatter={(value) => value.slice(5)} />
-              <YAxis />
+              <YAxis allowDecimals={false} />
               <Tooltip formatter={(value: number) => value?.toLocaleString()} labelFormatter={(label) => `${label}`} />
               <Legend />
-              <Bar dataKey="taskSubmissions" name="提交总数" fill={COLORS.primary} />
-              <Bar dataKey="taskApproved" name="已通过" fill={COLORS.success} />
-              <Bar dataKey="taskRejected" name="已拒绝" fill={COLORS.danger} />
-            </BarChart>
+              <Line type="monotone" dataKey="taskSubmissions" name="提交总数" stroke={COLORS.primary} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="taskApproved" name="已通过" stroke={COLORS.success} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="taskRejected" name="已拒绝" stroke={COLORS.danger} strokeWidth={2} dot={false} />
+            </LineChart>
           </ResponsiveContainer>
         ) : (
           <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-12">
