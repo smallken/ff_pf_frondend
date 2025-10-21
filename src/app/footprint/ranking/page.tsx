@@ -93,7 +93,8 @@ export default function Ranking() {
           current: 1,
           pageSize: totalCount
         });
-        records = completeResponse.records;
+        // 兼容后端返回格式
+        records = Array.isArray(completeResponse) ? completeResponse : (completeResponse.records || []);
       }
 
       setFullRankingData(records);
@@ -129,21 +130,41 @@ export default function Ranking() {
         current: page,
         pageSize: pageSize
       });
+      
+      // 兼容后端返回格式：可能是数组或分页对象
+      let records: RankingUserVO[];
+      let totalCount: number;
+      let pages: number;
+      let current: number;
+      
+      if (Array.isArray(rankingResponse)) {
+        // 后端直接返回数组
+        records = rankingResponse;
+        totalCount = records.length;
+        pages = 1;
+        current = 1;
+      } else {
+        // 后端返回分页对象
+        records = rankingResponse.records || [];
+        totalCount = Number(rankingResponse.total ?? records.length);
+        pages = Number(rankingResponse.pages ?? 1);
+        current = Number(rankingResponse.current ?? 1);
+      }
+      
       // 过滤条件：必须有通过的报名申请（后端需保证），且分数>0
-      const filtered = rankingResponse.records.filter(u => (u.userPoints || 0) > 0);
+      const filtered = records.filter(u => (u.userPoints || 0) > 0);
 
       // 使用后端返回的原始分页信息，不重新计算
-      const totalCount = Number(rankingResponse.total ?? 0);
       setTotal(totalCount);
-      setTotalPages(parseInt(rankingResponse.pages.toString()));
-      setCurrentPage(parseInt(rankingResponse.current.toString()));
+      setTotalPages(pages);
+      setCurrentPage(current);
 
       // 直接使用过滤后的数据进行显示
       setRankings(filtered);
 
       // 如果当前页包含用户，则直接使用当前页结果；否则等待全量数据
       if (user) {
-        const userRanking = rankingResponse.records.find((item) => item.id === user.id);
+        const userRanking = records.find((item) => item.id === user.id);
         if (userRanking) {
           setCurrentUserRank(userRanking);
         } else if (!hasLoadedFullRanking) {
@@ -157,7 +178,7 @@ export default function Ranking() {
       }
 
       // 加载完整数据以便统计和固定“我的排名”
-      await loadFullRankingData(totalCount, rankingResponse.records);
+      await loadFullRankingData(totalCount, records);
     } catch (error: any) {
       console.error('❌ 获取排行榜数据失败:', error);
       setError(error.message || '获取排行榜数据失败');
