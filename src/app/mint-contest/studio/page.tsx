@@ -1,12 +1,14 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { mintContestService, MintContestRegistrationData } from '../../../services/mintContestService';
 import SuccessModal from '../../components/SuccessModal';
 
 export default function StudioPage() {
+  const router = useRouter();
   const { language } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -68,6 +70,19 @@ export default function StudioPage() {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (!showSuccessModal) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setShowSuccessModal(false);
+      router.push('/mint-contest');
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [showSuccessModal, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-black text-white py-20 px-4">
@@ -364,10 +379,10 @@ export default function StudioPage() {
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
         message={language === 'zh' ? '您的工作室组报名已成功提交！期待您的团队在打狗大赛中展现创意！' : 'Your studio registration has been submitted successfully! Looking forward to your team\'s creativity in the Mint Contest!'}
-        buttonText={language === 'zh' ? '返回Mint大赛' : 'Back to Mint Competition'}
+        buttonText={language === 'zh' ? '返回Mint大赛' : 'Back to Mint Contest'}
         onButtonClick={() => {
           setShowSuccessModal(false);
-          window.location.href = '/mint-contest';
+          router.push('/mint-contest');
         }}
       />
     </div>

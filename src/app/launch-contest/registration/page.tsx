@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { launchContestService, LaunchContestRegistrationData } from '../../../services/launchContestService';
 import SuccessModal from '../../components/SuccessModal';
 
 export default function LaunchRegistration() {
+  const router = useRouter();
   const { language } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -136,6 +138,19 @@ export default function LaunchRegistration() {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (!showSuccessModal) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setShowSuccessModal(false);
+      router.push('/launch-contest');
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [showSuccessModal, router]);
 
   const tracks = [
     { value: 'rwa', label: language === 'zh' ? 'RWA赛道' : 'RWA Track' },
@@ -546,7 +561,7 @@ export default function LaunchRegistration() {
         buttonText={language === 'zh' ? '返回首页' : 'Back to Home'}
         onButtonClick={() => {
           setShowSuccessModal(false);
-          window.location.href = '/launch-contest';
+          router.push('/launch-contest');
         }}
       />
     </div>

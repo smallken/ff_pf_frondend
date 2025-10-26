@@ -1,12 +1,14 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { ddQuestionnaireService, DDQuestionnaireData } from '../../../services/ddQuestionnaireService';
 import SuccessModal from '../../components/SuccessModal';
 
 export default function DDQuestionnaireTest() {
+  const router = useRouter();
   const { language } = useLanguage();
   const [selectedTrack, setSelectedTrack] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -300,6 +302,19 @@ export default function DDQuestionnaireTest() {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (!showSuccessModal) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setShowSuccessModal(false);
+      router.push('/launch-contest');
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [showSuccessModal, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-black text-white py-20 px-4">
@@ -1234,7 +1249,7 @@ export default function DDQuestionnaireTest() {
         buttonText={language === 'zh' ? '返回Launch大赛' : 'Back to Launch Contest'}
         onButtonClick={() => {
           setShowSuccessModal(false);
-          window.location.href = '/launch-contest';
+          router.push('/launch-contest');
         }}
       />
     </div>
