@@ -27,13 +27,34 @@ export const monthlyRewardService = {
     });
   },
 
-  // 管理员：刷新月度奖励分数（已禁用，避免与增量累加逻辑冲突）
+  // 管理员：刷新月度奖励分数
   async refreshMonthlyRewardScores(year?: number, month?: number): Promise<{
     success: boolean;
     message: string;
     processedUsers: number;
   }> {
-    throw new Error('此接口已禁用，请使用增量累加逻辑');
+    const params = new URLSearchParams();
+    if (typeof year === 'number') params.append('year', String(year));
+    if (typeof month === 'number') params.append('month', String(month));
+
+    const url = `${API_CONFIG.BASE_URL}/monthly-reward/admin/refresh${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`刷新失败: ${response.status} ${response.statusText}`);
+    }
+
+    const json = await response.json();
+    if (json?.code === 0 && json?.data) {
+      return json.data;
+    }
+    throw new Error(json?.message || '刷新失败');
   },
 
   // 管理员：获取待奖励用户列表（显式拼接查询参数，避免某些工具未正确序列化params）

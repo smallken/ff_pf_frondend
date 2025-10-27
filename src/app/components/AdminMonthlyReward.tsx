@@ -54,6 +54,31 @@ export default function AdminMonthlyReward() {
     }
   };
 
+  const handleRefreshScores = async () => {
+    if (!confirm(language === 'zh'
+      ? `确认刷新 ${currentYear} 年 ${currentMonth} 月的月度奖励数据？将重新计算该月所有通过成果的分数。`
+      : `Refresh monthly reward data for ${currentYear}-${String(currentMonth).padStart(2, '0')}? This will recalculate scores for all approved submissions in that month.`)) {
+      return;
+    }
+
+    try {
+      setRefreshing(true);
+      const result = await monthlyRewardService.refreshMonthlyRewardScores(currentYear, currentMonth);
+      alert(language === 'zh'
+        ? `刷新完成：${result.message || '已重新计算本月奖励数据'}` 
+        : `Refresh completed: ${result.message || 'Monthly rewards recalculated.'}`);
+      await fetchStats();
+      await fetchPendingUsers();
+      await fetchHistoricalRewards();
+      await fetchHistoricalPendingUsers();
+    } catch (err: any) {
+      console.error('刷新月度奖励失败:', err);
+      alert((language === 'zh' ? '刷新失败：' : 'Refresh failed: ') + (err?.message || (language === 'zh' ? '未知错误' : 'Unknown error')));
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const fetchPendingUsers = async () => {
     try {
       setPendingLoading(true);
@@ -131,11 +156,6 @@ export default function AdminMonthlyReward() {
       setHistoricalPendingLoading(false);
     }
   };
-
-  // 已禁用刷新功能，避免与增量累加逻辑冲突
-  // const handleRefreshScores = async () => {
-  //   // 此功能已禁用
-  // };
 
   const handleExportPendingUsers = async () => {
     try {
@@ -352,13 +372,30 @@ export default function AdminMonthlyReward() {
     <div className="space-y-6">
       {/* 时间选择器 */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             月度奖励管理 ({currentYear}年{currentMonth}月)
           </h2>
           
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            月度奖励分数通过成果提交表审核自动累加
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+            <span>
+              {language === 'zh'
+                ? '月度奖励分数通过成果提交表审核自动累加'
+                : 'Monthly reward scores accumulate automatically when submissions are approved.'}
+            </span>
+            <button
+              onClick={handleRefreshScores}
+              disabled={refreshing}
+              className={`inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                refreshing
+                  ? 'bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-300 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'
+              }`}
+            >
+              {refreshing
+                ? (language === 'zh' ? '刷新中...' : 'Refreshing...')
+                : (language === 'zh' ? '刷新本月数据' : 'Refresh Current Month')}
+            </button>
           </div>
         </div>
       </div>
