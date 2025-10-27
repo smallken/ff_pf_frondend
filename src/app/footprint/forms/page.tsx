@@ -12,18 +12,18 @@ const submissionClosedContent = {
   zh: {
     title: '脚印计划提交已暂停',
     description: [
-      '自2025年10月20日00:00（UTC+8）起，脚印计划已暂停所有任务递交与系统功能。',
-      '当前暂不接受新的表单提交，请关注后续上线通知。'
+      '自2025年10月20日00:00（UTC+8）起，脚印计划已暂停大部分任务递交与系统功能。',
+      '当前仅提供报名申请表提交，活动申请与成果提交暂缓开放。'
     ],
-    badge: '提交关闭'
+    badge: '仅限报名申请'
   },
   en: {
     title: 'Footprint submissions are paused',
     description: [
-      'Starting October 20, 2025 at 00:00 (UTC+8), all Footprint tasks and features are temporarily suspended.',
-      'New form submissions are currently unavailable. Stay tuned for update announcements.'
+      'Starting October 20, 2025 at 00:00 (UTC+8), most Footprint tasks and features are temporarily suspended.',
+      'Only the Application Form remains open; activity and achievement submissions are on hold.'
     ],
-    badge: 'Submission closed'
+    badge: 'Application Only'
   }
 };
 
@@ -144,14 +144,16 @@ function FormsContent() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {formTypes.map((form) => {
+            const isApplicationForm = form.id === 1;
             const isLocked = (form.id !== 1 && !hasApproved) || (form.id === 1 && hasSubmittedApplication);
-            const isDisabled = isSubmissionClosed || isLocked;
+            const isDisabledByPause = isSubmissionClosed && !isApplicationForm;
+            const isDisabled = isDisabledByPause || isLocked;
             const cardClasses = `bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-shadow duration-300 ${
               isDisabled ? 'pointer-events-none opacity-50' : 'hover:shadow-lg'
             }`;
 
             const statusBadge = () => {
-              if (isSubmissionClosed) {
+              if (isSubmissionClosed && !isApplicationForm) {
                 return (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-600">
                     {submissionClosedContent[language as 'zh' | 'en'].badge}
