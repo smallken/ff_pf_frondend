@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../contexts/LanguageContext';
 import { userService } from '../../services';
 import PasswordInput from '../components/PasswordInput';
+import SuccessModal from '../components/SuccessModal';
 
 export default function Register() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const [formData, setFormData] = useState({
     userEmail: '',
@@ -20,6 +21,107 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'form' | 'verify'>('form');
   const [verificationCode, setVerificationCode] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearSuccessTimer = () => {
+    if (successTimerRef.current) {
+      clearTimeout(successTimerRef.current);
+      successTimerRef.current = null;
+    }
+  };
+
+  const redirectToLogin = () => {
+    const loginMessage = encodeURIComponent(t('register.success.message'));
+    router.push(`/login?message=${loginMessage}`);
+  };
+
+  const handleSuccessModalClose = () => {
+    clearSuccessTimer();
+    setShowSuccessModal(false);
+    redirectToLogin();
+  };
+
+  useEffect(() => {
+    return () => {
+      clearSuccessTimer();
+    };
+  }, []);
+
+  const translateErrorMessage = (message?: string): string => {
+    if (!message) {
+      return t('register.errors.unknown');
+    }
+    const normalized = message.trim();
+    const lowerKey = normalized.toLowerCase();
+    const errorMap: Record<string, { zh: string; en: string }> = {
+      '验证码过期': {
+        zh: '验证码过期',
+        en: 'Verification code expired'
+      },
+      '验证码错误': {
+        zh: '验证码错误',
+        en: 'Incorrect verification code'
+      },
+      '验证码不存在': {
+        zh: '验证码不存在',
+        en: 'Verification code not found'
+      },
+      '验证码不一致': {
+        zh: '验证码不一致',
+        en: 'Verification code does not match'
+      },
+      '用户已存在': {
+        zh: '用户已存在',
+        en: 'User already exists'
+      },
+      '邮箱已被注册': {
+        zh: '邮箱已被注册',
+        en: 'Email has already been registered'
+      },
+      '用户名已被使用': {
+        zh: '用户名已被使用',
+        en: 'Username has already been taken'
+      },
+      '推特用户名已被使用': {
+        zh: '推特用户名已被使用',
+        en: 'Twitter username has already been taken'
+      },
+      KEY_DIFF: {
+        zh: '验证码不一致',
+        en: 'Verification code does not match'
+      }
+    };
+
+    const codeMap: Record<string, keyof typeof errorMap> = {
+      'key_diff': 'KEY_DIFF'
+    };
+
+    const matchedByMessage = errorMap[normalized];
+    if (matchedByMessage) {
+      return matchedByMessage[language];
+    }
+
+    const mappedKey = codeMap[lowerKey];
+    if (mappedKey && errorMap[mappedKey]) {
+      return errorMap[mappedKey][language];
+    }
+
+    if (errorMap[normalized.toUpperCase() as keyof typeof errorMap]) {
+      const mapped = errorMap[normalized.toUpperCase() as keyof typeof errorMap];
+      return mapped[language];
+    }
+
+    if (/验证码/.test(normalized)) {
+      return language === 'zh' ? normalized : 'Verification code error';
+    }
+
+    if (/code/i.test(normalized)) {
+      return language === 'zh' ? '验证码错误' : 'Verification code error';
+    }
+
+    return language === 'zh' ? normalized : t('register.errors.unknown');
+  };
 
   const validateTwitterHandle = (handle: string): boolean => {
     // Twitter username validation: 1-15 characters, alphanumeric and underscore only
@@ -28,7 +130,7 @@ export default function Register() {
   };
 
   // 发送邮箱验证码
-const sendVerificationCode = async () => {
+  const sendVerificationCode = async () => {
     setLoading(true);
     try {
       await userService.sendEmail({
@@ -37,7 +139,7 @@ const sendVerificationCode = async () => {
       });
       setStep('verify');
     } catch (error: any) {
-      setErrors({ general: error.message || '发送验证码失败' });
+      setErrors({ general: error.message || t('register.errors.sendCodeFailed') });
     } finally {
       setLoading(false);
     }
@@ -64,7 +166,7 @@ const sendVerificationCode = async () => {
       await sendVerificationCode();
     } catch (error: any) {
       console.error('检查重复性失败:', error);
-      setErrors({ general: error.message || '检查信息失败，请重试' });
+      setErrors({ general: translateErrorMessage(error.message) });
     } finally {
       setLoading(false);
     }
@@ -83,7 +185,7 @@ const sendVerificationCode = async () => {
     }
     
     if (formData.userPassword !== formData.checkPassword) {
-      newErrors.checkPassword = '密码不一致';
+      newErrors.checkPassword = t('register.errors.passwordMismatch');
     }
     
     setErrors(newErrors);
@@ -113,10 +215,14 @@ const sendVerificationCode = async () => {
       await userService.emailRegister(registrationData);
       
       // 注册成功，跳转到登录页
-      router.push('/login?message=注册成功，请登录');
+      setShowSuccessModal(true);
+      clearSuccessTimer();
+      successTimerRef.current = setTimeout(() => {
+        handleSuccessModalClose();
+      }, 2000);
     } catch (error: any) {
       console.log('❌ 注册失败:', error);
-      setErrors({ general: error.message || '注册失败' });
+      setErrors({ general: translateErrorMessage(error.message) });
     } finally {
       setLoading(false);
     }
@@ -149,93 +255,93 @@ const sendVerificationCode = async () => {
             )}
             
             <div className="space-y-4">
-            <div>
-              <label htmlFor="userName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('register.form.username')} <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="userName"
-                name="userName"
-                type="text"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder={t('register.form.username.placeholder')}
-                value={formData.userName}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="userEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('register.form.email')} <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="userEmail"
-                name="userEmail"
-                type="email"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder={t('register.form.email.placeholder')}
-                value={formData.userEmail}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="twitterHandle" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('register.form.twitter')}
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500 dark:text-gray-400">@</span>
-                </div>
+              <div>
+                <label htmlFor="userName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('register.form.username')} <span className="text-red-500">*</span>
+                </label>
                 <input
-                  id="twitterHandle"
-                  name="twitterHandle"
+                  id="userName"
+                  name="userName"
                   type="text"
-                  className={`block w-full pl-8 pr-3 py-2 border ${errors.twitterHandle ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-                  placeholder={t('register.form.twitter.placeholder')}
-                  value={formData.twitterHandle}
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={t('register.form.username.placeholder')}
+                  value={formData.userName}
                   onChange={handleChange}
                 />
               </div>
-              {errors.twitterHandle && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.twitterHandle}</p>
-              )}
+              <div>
+                <label htmlFor="userEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('register.form.email')} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="userEmail"
+                  name="userEmail"
+                  type="email"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={t('register.form.email.placeholder')}
+                  value={formData.userEmail}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="twitterHandle" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('register.form.twitter')}
+                </label>
+                <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400">@</span>
+                  </div>
+                  <input
+                    id="twitterHandle"
+                    name="twitterHandle"
+                    type="text"
+                    className={`block w-full pl-8 pr-3 py-2 border ${errors.twitterHandle ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                    placeholder={t('register.form.twitter.placeholder')}
+                    value={formData.twitterHandle}
+                    onChange={handleChange}
+                  />
+                </div>
+                {errors.twitterHandle && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.twitterHandle}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="userPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('register.form.password')} <span className="text-red-500">*</span>
+                </label>
+                <PasswordInput
+                  id="userPassword"
+                  name="userPassword"
+                  value={formData.userPassword}
+                  onChange={handleChange}
+                  placeholder={t('register.form.password.placeholder')}
+                  required
+                  error={!!errors.userPassword}
+                />
+                {errors.userPassword && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.userPassword}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="checkPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('register.form.confirm.password')} <span className="text-red-500">*</span>
+                </label>
+                <PasswordInput
+                  id="checkPassword"
+                  name="checkPassword"
+                  value={formData.checkPassword}
+                  onChange={handleChange}
+                  placeholder={t('register.form.confirm.password.placeholder')}
+                  required
+                  error={!!errors.checkPassword}
+                />
+                {errors.checkPassword && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.checkPassword}</p>
+                )}
+              </div>
             </div>
-            <div>
-              <label htmlFor="userPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('register.form.password')} <span className="text-red-500">*</span>
-              </label>
-              <PasswordInput
-                id="userPassword"
-                name="userPassword"
-                value={formData.userPassword}
-                onChange={handleChange}
-                placeholder={t('register.form.password.placeholder')}
-                required
-                error={!!errors.userPassword}
-              />
-              {errors.userPassword && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.userPassword}</p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="checkPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('register.form.confirm.password')} <span className="text-red-500">*</span>
-              </label>
-              <PasswordInput
-                id="checkPassword"
-                name="checkPassword"
-                value={formData.checkPassword}
-                onChange={handleChange}
-                placeholder={t('register.form.confirm.password.placeholder')}
-                required
-                error={!!errors.checkPassword}
-              />
-              {errors.checkPassword && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.checkPassword}</p>
-              )}
-            </div>
-          </div>
 
             <div>
               <button
@@ -246,7 +352,7 @@ const sendVerificationCode = async () => {
                 {loading ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    发送验证码中...
+                    {t('register.form.submit.loading')}
                   </div>
                 ) : (
                   t('register.form.submit')
@@ -270,13 +376,13 @@ const sendVerificationCode = async () => {
             
             <div className="text-center mb-6">
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                验证码已发送到 <strong>{formData.userEmail}</strong>
+                {t('register.verify.sent')} <strong>{formData.userEmail}</strong>
               </p>
             </div>
             
             <div>
               <label htmlFor="verificationCode" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                验证码
+                {t('register.verify.code.label')}
               </label>
               <input
                 id="verificationCode"
@@ -285,7 +391,7 @@ const sendVerificationCode = async () => {
                 required
                 disabled={loading}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="请输入验证码"
+                placeholder={t('register.verify.code.placeholder')}
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
               />
@@ -300,10 +406,10 @@ const sendVerificationCode = async () => {
                 {loading ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    注册中...
+                    {t('register.verify.submit.loading')}
                   </div>
                 ) : (
-                  '完成注册'
+                  t('register.verify.submit')
                 )}
               </button>
             </div>
@@ -314,12 +420,20 @@ const sendVerificationCode = async () => {
                 onClick={() => setStep('form')}
                 className="text-blue-600 hover:text-blue-500 text-sm"
               >
-                返回修改信息
+                {t('register.verify.back')}
               </button>
             </div>
           </form>
         )}
       </div>
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        title={t('register.success.modal.title')}
+        message={t('register.success.modal.message')}
+        buttonText={t('register.success.modal.button')}
+        onButtonClick={handleSuccessModalClose}
+      />
     </div>
   );
 }
