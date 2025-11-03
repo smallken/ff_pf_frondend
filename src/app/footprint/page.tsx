@@ -6,31 +6,6 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import LogoutConfirmModal from '../components/LogoutConfirmModal';
 
-const announcementContent = {
-  zh: {
-    title: '脚印计划测试阶段升级公告',
-    paragraphs: [
-      '自上线以来，脚印计划在测试阶段中收获了数百位共建者的热情参与与宝贵反馈。',
-      '随着测试阶段的成功告一段落，我们将于10月20日00:00（UTC+8）起暂停任务递交与系统功能，进入全面的内容与机制升级阶段。',
-      '为感谢所有建设者的贡献，我们将根据各用户的参与表现与内容贡献，陆续发放测试阶段的奖励回馈。',
-      '所有数据与积分记录将被完整保留，新版本将带来更完善的机制与更流畅的体验。',
-      '感谢每一位留下脚印的共建者，这不是结束，而是下一段旅程的起点。敬请期待脚印计划的全新篇章。',
-      '— Flipflop Footprint团队（2025年10月）'
-    ]
-  },
-  en: {
-    title: 'Footprint Program Upgrade Announcement',
-    paragraphs: [
-      'Since launch, the Footprint Program has welcomed hundreds of co-builders during the testing phase and gathered invaluable feedback.',
-      'With the successful wrap-up of testing, we will pause task submissions and system functions starting October 20 at 00:00 (UTC+8) to enter a comprehensive content and mechanism upgrade.',
-      'To thank every builder, rewards for the testing phase will be granted progressively based on each user’s participation and contributions.',
-      'All data and point records will be fully preserved, and the upcoming version will deliver improved mechanisms and a smoother experience.',
-      'Thank you to every co-builder who left their footprint—this is not an ending, but the starting point for our next journey. Please look forward to the new chapter of the Footprint Program.',
-      '— Flipflop Footprint Team (October 2025)'
-    ]
-  }
-};
-
 export default function Home() {
   const { t, language } = useLanguage();
   const { isAuthenticated } = useAuth();
@@ -53,27 +28,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <section className="px-4 sm:px-6 lg:px-8 pt-10">
-        <div className="max-w-5xl mx-auto rounded-3xl border border-blue-200/40 dark:border-blue-700/40 bg-white/80 dark:bg-gray-900/70 backdrop-blur-md shadow-xl p-8 sm:p-10">
-          <div className="flex items-start gap-4 mb-4">
-            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white text-xl">📢</span>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                {announcementContent[language as 'zh' | 'en'].title}
-              </h2>
-              <p className="text-sm text-blue-600 dark:text-blue-300 uppercase tracking-wide">
-                {language === 'zh' ? '脚印计划公告' : 'Footprint Program Notice'}
-              </p>
-            </div>
-          </div>
-          <div className="space-y-4 text-base text-gray-700 dark:text-gray-200 leading-relaxed">
-            {announcementContent[language as 'zh' | 'en'].paragraphs.map((line, index) => (
-              <p key={index}>{line}</p>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Hero Section */}
       <section className="relative min-h-[calc(100vh-4.5rem)] flex items-center overflow-hidden">
         {/* Dynamic Background Elements */}
