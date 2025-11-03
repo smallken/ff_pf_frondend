@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
 import DynamicLangHtml from "./components/DynamicLangHtml";
+import ProfileCompletionModal from "./components/ProfileCompletionModal";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "../contexts/AuthContext";
@@ -66,6 +67,7 @@ export default function RootLayout({
               <ModuleProvider>
                 <DynamicLangHtml />
                 <Header />
+                <ProfileCompletionModal />
                 <main className="min-h-screen">
                   {children}
                 </main>
