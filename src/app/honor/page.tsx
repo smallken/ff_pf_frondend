@@ -5,19 +5,19 @@ import { useLanguage } from '../contexts/LanguageContext';
 export default function Honor() {
   const { t } = useLanguage();
   const honorLevels = [
-    { 
-      level: 'L1 Explorer（探索者）', 
-      points: '👣0–30', 
+    {
+      level: 'L1 Explorer（探索者）',
+      points: '👣0–100',
       benefits: [
         t('honor.l1.benefit.1'),
-        t('honor.l1.benefit.2'), 
+        t('honor.l1.benefit.2'),
         t('honor.l1.benefit.3'),
         t('honor.l1.benefit.4')
       ]
     },
-    { 
-      level: 'L2 Pathfinder（探路者）', 
-      points: '👣31–100', 
+    {
+      level: 'L2 Pathfinder（探路者）',
+      points: '👣101–300',
       benefits: [
         t('honor.l2.benefit.1'),
         t('honor.l2.benefit.2'),
@@ -25,9 +25,9 @@ export default function Honor() {
         t('honor.l2.benefit.4')
       ]
     },
-    { 
-      level: 'L3 Trailblazer（开路者）', 
-      points: '👣101–300', 
+    {
+      level: 'L3 Trailblazer（开路者）',
+      points: '👣301–700',
       benefits: [
         t('honor.l3.benefit.1'),
         t('honor.l3.benefit.2'),
@@ -36,9 +36,9 @@ export default function Honor() {
         t('honor.l3.benefit.5')
       ]
     },
-    { 
-      level: 'L4 Pioneer（先驱者）', 
-      points: '👣300+', 
+    {
+      level: 'L4 Pioneer（先驱者）',
+      points: '👣700+',
       benefits: [
         t('honor.l4.benefit.1'),
         t('honor.l4.benefit.2'),
@@ -123,120 +123,193 @@ export default function Honor() {
           ))}
         </div>
 
-        {/* 月度激励 */}
+        {/* 任务类别与基础积分 */}
         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 mb-12 border border-violet-100 dark:border-gray-700 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-violet-200 to-purple-300 dark:from-violet-800 dark:to-purple-900 opacity-20 rounded-full -translate-y-16 translate-x-16"></div>
           <div className="relative z-10">
             <div className="flex items-center mb-6">
               <div className="w-12 h-12 bg-gradient-to-r from-violet-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
-                <span className="text-2xl">📅</span>
+                <span className="text-2xl">📋</span>
               </div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 dark:from-violet-400 dark:to-purple-400 bg-clip-text text-transparent">{t('honor.monthly.title')}</h2>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 dark:from-violet-400 dark:to-purple-400 bg-clip-text text-transparent">{t('honor.taskCategories.title')}</h2>
             </div>
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-              {t('honor.monthly.subtitle')}
-            </p>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b-2 border-violet-200 dark:border-violet-700">
-                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.table.completion')}</th>
-                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.table.reward')}</th>
-                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.table.requirements')}</th>
+                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.taskCategories.table.category')}</th>
+                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.taskCategories.table.taskDescription')}</th>
+                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.taskCategories.table.frequencyLimit')}</th>
+                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.taskCategories.table.pointsPerTask')}</th>
+                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.taskCategories.table.weeklyLimit')}</th>
+                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.taskCategories.table.uploadRequirements')}</th>
+                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.taskCategories.table.automaticActions')}</th>
                   </tr>
                 </thead>
                 <tbody className="text-gray-600 dark:text-gray-300">
+                  {/* 传播类 */}
                   <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-violet-50 dark:hover:bg-violet-900/10 transition-colors duration-200">
-                    <td className="py-4 font-medium">{t('honor.monthly.basic.completion')}</td>
-                    <td className="py-4">{t('honor.monthly.basic.reward')}</td>
-                    <td className="py-4" style={{whiteSpace: 'pre-line'}}>{t('honor.monthly.basic.requirements')}</td>
+                    <td className="py-4 font-medium whitespace-nowrap">{t('honor.taskCategories.promotion.category')}</td>
+                    <td className="py-4 whitespace-nowrap">{t('honor.taskCategories.promotion.description')}</td>
+                    <td className="py-4 whitespace-nowrap">{t('honor.taskCategories.promotion.frequency')}</td>
+                    <td className="py-4 whitespace-nowrap">{t('honor.taskCategories.promotion.points')}</td>
+                    <td className="py-4 whitespace-nowrap">{t('honor.taskCategories.promotion.weekly')}</td>
+                    <td className="py-4 whitespace-normal min-w-[280px] max-w-[320px]">{t('honor.taskCategories.promotion.upload')}</td>
+                    <td className="py-4 whitespace-normal">{t('honor.taskCategories.promotion.automatic')}</td>
                   </tr>
+                  {/* 社群类 */}
                   <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-violet-50 dark:hover:bg-violet-900/10 transition-colors duration-200">
-                    <td className="py-4 font-medium">{t('honor.monthly.advanced1.completion')}</td>
-                    <td className="py-4">{t('honor.monthly.advanced1.reward')}</td>
-                    <td className="py-4" style={{whiteSpace: 'pre-line'}}>{t('honor.monthly.advanced1.requirements')}</td>
+                    <td className="py-4 font-medium whitespace-nowrap">{t('honor.taskCategories.community.category')}</td>
+                    <td className="py-4 whitespace-nowrap">{t('honor.taskCategories.community.description')}</td>
+                    <td className="py-4 whitespace-nowrap">{t('honor.taskCategories.community.frequency')}</td>
+                    <td className="py-4 whitespace-nowrap">{t('honor.taskCategories.community.points')}</td>
+                    <td className="py-4 whitespace-nowrap">{t('honor.taskCategories.community.weekly')}</td>
+                    <td className="py-4 whitespace-normal min-w-[280px] max-w-[320px]">{t('honor.taskCategories.community.upload')}</td>
+                    <td className="py-4 whitespace-normal">{t('honor.taskCategories.community.automatic')}</td>
                   </tr>
-                  <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-violet-50 dark:hover:bg-violet-900/10 transition-colors duration-200">
-                    <td className="py-4 font-medium">{t('honor.monthly.advanced2.completion')}</td>
-                    <td className="py-4">{t('honor.monthly.advanced2.reward')}</td>
-                    <td className="py-4" style={{whiteSpace: 'pre-line'}}>{t('honor.monthly.advanced2.requirements')}</td>
-                  </tr>
-                  <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-violet-50 dark:hover:bg-violet-900/10 transition-colors duration-200">
-                    <td className="py-4 font-medium">{t('honor.monthly.advanced3.completion')}</td>
-                    <td className="py-4">{t('honor.monthly.advanced3.reward')}</td>
-                    <td className="py-4" style={{whiteSpace: 'pre-line'}}>{t('honor.monthly.advanced3.requirements')}</td>
-                  </tr>
+                  {/* 原创类 */}
                   <tr className="hover:bg-violet-50 dark:hover:bg-violet-900/10 transition-colors duration-200">
-                    <td className="py-4 font-medium">{t('honor.monthly.special.completion')}</td>
-                    <td className="py-4">{t('honor.monthly.special.reward')}</td>
-                    <td className="py-4" style={{whiteSpace: 'pre-line'}}>{t('honor.monthly.special.requirements')}</td>
+                    <td className="py-4 font-medium whitespace-nowrap">{t('honor.taskCategories.original.category')}</td>
+                    <td className="py-4 whitespace-nowrap">{t('honor.taskCategories.original.description')}</td>
+                    <td className="py-4 whitespace-nowrap">{t('honor.taskCategories.original.frequency')}</td>
+                    <td className="py-4 whitespace-nowrap">{t('honor.taskCategories.original.points')}</td>
+                    <td className="py-4 whitespace-nowrap">{t('honor.taskCategories.original.weekly')}</td>
+                    <td className="py-4 whitespace-normal min-w-[280px] max-w-[320px]">{t('honor.taskCategories.original.upload')}</td>
+                    <td className="py-4 whitespace-normal">{t('honor.taskCategories.original.automatic')}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            
-            <div className="mt-4 text-left">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {t('honor.monthly.special.note')}
-                <a 
-                  href="/forms/activity" 
-                  className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 underline ml-1 transition-colors duration-200"
-                >
-                  {t('honor.monthly.special.link')}
-                </a>
-              </p>
+
+            {/* 上传要求说明 */}
+            <div className="mt-8 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-2xl p-6 border border-violet-200 dark:border-violet-700">
+              <h4 className="font-bold text-violet-900 dark:text-violet-200 text-lg mb-4 flex items-center">
+                <span className="text-2xl mr-2">📤</span>
+                {t('honor.uploadRequirements.title')}
+              </h4>
+              <div className="space-y-4">
+                {/* 传播类上传要求 */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-violet-100 dark:border-violet-800">
+                  <h5 className="font-semibold text-violet-900 dark:text-violet-200 mb-2 flex items-center">
+                    <span className="text-xl mr-2">📣</span>
+                    {t('honor.uploadRequirements.promotion.title')}
+                  </h5>
+                  <div className="space-y-2 ml-8 text-gray-700 dark:text-gray-300 text-sm">
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-violet-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.uploadRequirements.promotion.1')}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-violet-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span className="font-medium text-violet-700 dark:text-violet-300">{t('honor.uploadRequirements.promotion.2')}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-violet-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.uploadRequirements.promotion.3')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 社群类上传要求 */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-violet-100 dark:border-violet-800">
+                  <h5 className="font-semibold text-violet-900 dark:text-violet-200 mb-2 flex items-center">
+                    <span className="text-xl mr-2">💬</span>
+                    {t('honor.uploadRequirements.community.title')}
+                  </h5>
+                  <div className="space-y-2 ml-8 text-gray-700 dark:text-gray-300 text-sm">
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-violet-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.uploadRequirements.community.1')}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-violet-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span className="font-medium text-violet-700 dark:text-violet-300">{t('honor.uploadRequirements.community.2')}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-violet-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.uploadRequirements.community.3')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 原创类上传要求 */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-violet-100 dark:border-violet-800">
+                  <h5 className="font-semibold text-violet-900 dark:text-violet-200 mb-2 flex items-center">
+                    <span className="text-xl mr-2">✍️</span>
+                    {t('honor.uploadRequirements.original.title')}
+                  </h5>
+                  <div className="space-y-2 ml-8 text-gray-700 dark:text-gray-300 text-sm">
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-violet-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.uploadRequirements.original.1')}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-violet-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span className="font-medium text-violet-700 dark:text-violet-300">{t('honor.uploadRequirements.original.2')}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-violet-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.uploadRequirements.original.3')}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            {/* Definitions Section */}
+
+            {/* 任务细节说明 */}
             <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-700">
-              <h4 className="font-bold text-blue-900 dark:text-blue-200 text-lg mb-4">{t('honor.monthly.definitions.title')}</h4>
+              <h4 className="font-bold text-blue-900 dark:text-blue-200 text-lg mb-4">{t('honor.taskCategories.details.title')}</h4>
               <div className="space-y-4 text-blue-700 dark:text-blue-300 text-sm">
-                {/* 传播类 */}
+                {/* 传播类细节 */}
                 <div>
-                  <h5 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('honor.monthly.definitions.promotion.title')}</h5>
+                  <h5 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('honor.taskCategories.details.promotion.title')}</h5>
                   <div className="space-y-2 ml-4">
                     <div className="flex items-start">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <span>{t('honor.monthly.definitions.promotion.1')}</span>
+                      <span>{t('honor.taskCategories.details.promotion.1')}</span>
                     </div>
                     <div className="flex items-start">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <span>{t('honor.monthly.definitions.promotion.2')}</span>
+                      <span>{t('honor.taskCategories.details.promotion.2')}</span>
                     </div>
                     <div className="flex items-start">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <span>{t('honor.monthly.definitions.promotion.3')}</span>
+                      <span>{t('honor.taskCategories.details.promotion.3')}</span>
                     </div>
                   </div>
                 </div>
-                
-                {/* 创作类 */}
+
+                {/* 原创类细节 */}
                 <div>
-                  <h5 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('honor.monthly.definitions.creation.title')}</h5>
+                  <h5 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('honor.taskCategories.details.original.title')}</h5>
                   <div className="space-y-2 ml-4">
                     <div className="flex items-start">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <span>{t('honor.monthly.definitions.creation.1')}</span>
+                      <span>{t('honor.taskCategories.details.original.1')}</span>
                     </div>
                     <div className="flex items-start">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <span>{t('honor.monthly.definitions.creation.2')}</span>
+                      <span>{t('honor.taskCategories.details.original.2')}</span>
                     </div>
                   </div>
                 </div>
-                
-                {/* 社区类 */}
+
+                {/* 社区类细节 */}
                 <div>
-                  <h5 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('honor.monthly.definitions.community.title')}</h5>
+                  <h5 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('honor.taskCategories.details.community.title')}</h5>
                   <div className="space-y-2 ml-4">
                     <div className="flex items-start">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <span>{t('honor.monthly.definitions.community.1')}</span>
+                      <span>{t('honor.taskCategories.details.community.1')}</span>
                     </div>
                     <div className="flex items-start">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <span>{t('honor.monthly.definitions.community.2')}</span>
+                      <span>{t('honor.taskCategories.details.community.2')}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                      <span>{t('honor.taskCategories.details.community.3')}</span>
                     </div>
                   </div>
                 </div>
@@ -245,153 +318,122 @@ export default function Honor() {
           </div>
         </div>
 
-        {/* Footprint贡献参考 */}
+        {/* 原创类任务加权机制 */}
         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-violet-100 dark:border-gray-700 relative overflow-hidden">
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-purple-200 to-fuchsia-300 dark:from-purple-800 dark:to-fuchsia-900 opacity-20 rounded-full -translate-y-20 -translate-x-20"></div>
           <div className="relative z-10">
             <div className="flex items-center mb-6">
               <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-fuchsia-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
-                <span className="text-2xl">💎</span>
+                <span className="text-2xl">📊</span>
               </div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-fuchsia-600 dark:from-purple-400 dark:to-fuchsia-400 bg-clip-text text-transparent">{t('honor.flipprints.title')}</h2>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-fuchsia-600 dark:from-purple-400 dark:to-fuchsia-400 bg-clip-text text-transparent">{t('honor.originalWeighting.title')}</h2>
             </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b-2 border-purple-200 dark:border-purple-700">
-                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.table.category')}</th>
-                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.table.task')}</th>
-                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.table.points')}</th>
-                    <th className="text-left py-4 text-gray-900 dark:text-white font-bold text-base">{t('honor.table.notes')}</th>
-                  </tr>
-                </thead>
-                <tbody className="text-gray-600 dark:text-gray-300">
-                  {/* 传播类 */}
-                  <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4 font-medium">{t('honor.flipprints.promotion.category')}</td>
-                    <td className="py-4">{t('honor.flipprints.promotion.task')}</td>
-                    <td className="py-4">{t('honor.flipprints.promotion.points')}</td>
-                    <td className="py-4">{t('honor.flipprints.promotion.notes')}</td>
-                  </tr>
-                  
-                  {/* 创作类（短） */}
-                  <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4 font-medium">{t('honor.flipprints.creation.category')}</td>
-                    <td className="py-4">{t('honor.flipprints.creation.task1')}</td>
-                    <td className="py-4">{t('honor.flipprints.creation.points1')}</td>
-                    <td className="py-4">{t('honor.flipprints.creation.notes1')}</td>
-                  </tr>
-                  
-                  {/* 创作类（长） */}
-                  <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4 font-medium">{t('honor.flipprints.creation.category2')}</td>
-                    <td className="py-4">{t('honor.flipprints.creation.task2')}</td>
-                    <td className="py-4">{t('honor.flipprints.creation.points2')}</td>
-                    <td className="py-4">{t('honor.flipprints.creation.notes2')}</td>
-                  </tr>
-                  <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4"></td>
-                    <td className="py-4">{t('honor.flipprints.creation.task3')}</td>
-                    <td className="py-4">{t('honor.flipprints.creation.points3')}</td>
-                    <td className="py-4">{t('honor.flipprints.creation.notes3')}</td>
-                  </tr>
-                  <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4"></td>
-                    <td className="py-4">{t('honor.flipprints.creation.task4')}</td>
-                    <td className="py-4">{t('honor.flipprints.creation.points4')}</td>
-                    <td className="py-4">{t('honor.flipprints.creation.notes4')}</td>
-                  </tr>
-                  
-                  {/* 社区类 */}
-                  <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4 font-medium">{t('honor.flipprints.community.category')}</td>
-                    <td className="py-4">{t('honor.flipprints.community.task1')}</td>
-                    <td className="py-4">{t('honor.flipprints.community.points1')}</td>
-                    <td className="py-4">{t('honor.flipprints.community.notes1')}</td>
-                  </tr>
-                  <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4"></td>
-                    <td className="py-4">{t('honor.flipprints.community.task2')}</td>
-                    <td className="py-4">{t('honor.flipprints.community.points2')}</td>
-                    <td className="py-4">{t('honor.flipprints.community.notes2')}</td>
-                  </tr>
-                  <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4"></td>
-                    <td className="py-4">{t('honor.flipprints.community.task3')}</td>
-                    <td className="py-4">{t('honor.flipprints.community.points3')}</td>
-                    <td className="py-4">{t('honor.flipprints.community.notes3')}</td>
-                  </tr>
-                  
-                  {/* 爆款内容 */}
-                  <tr className="hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200">
-                    <td className="py-4 font-medium">{t('honor.flipprints.viral.category')}</td>
-                    <td className="py-4">{t('honor.flipprints.viral.task')}</td>
-                    <td className="py-4">{t('honor.flipprints.viral.points')}</td>
-                    <td className="py-4">{t('honor.flipprints.viral.notes')}</td>
-                  </tr>
-                </tbody>
-              </table>
+
+            {/* 提交要求 */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t('honor.originalWeighting.submission.title')}</h3>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-700">
+                <ul className="space-y-3 text-blue-700 dark:text-blue-300">
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span>{t('honor.originalWeighting.submission.1')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span>{t('honor.originalWeighting.submission.2')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span>{t('honor.originalWeighting.submission.3')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span>{t('honor.originalWeighting.submission.4')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span>{t('honor.originalWeighting.submission.5')}</span>
+                  </li>
+                </ul>
+              </div>
             </div>
-            
-            <div className="mt-4 text-left">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {t('honor.flipprints.submit.note')}
-                <a 
-                  href="/forms/achievement" 
-                  className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 underline mx-1 transition-colors duration-200"
-                >
-                  {t('honor.flipprints.submit.link')}
-                </a>
-                {t('honor.flipprints.submit.text')}
-              </p>
+
+            {/* 加权计算规则 */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t('honor.originalWeighting.calculation.title')}</h3>
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-700">
+                <p className="text-green-700 dark:text-green-300 mb-4">
+                  <strong>{t('honor.originalWeighting.calculation.formula')}</strong>
+                </p>
+                <h4 className="font-semibold text-green-900 dark:text-green-200 mb-3">{t('honor.originalWeighting.calculation.reviewLogic')}</h4>
+                <div className="space-y-3">
+                  <div className="flex items-start">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold mr-3 mt-0.5">✅</span>
+                    <span className="text-green-700 dark:text-green-300">{t('honor.originalWeighting.calculation.valid')}</span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-500 text-white text-xs font-bold mr-3 mt-0.5">❌</span>
+                    <span className="text-yellow-700 dark:text-yellow-300">{t('honor.originalWeighting.calculation.invalid')}</span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-xs font-bold mr-3 mt-0.5">🚫</span>
+                    <span className="text-red-700 dark:text-red-300">{t('honor.originalWeighting.calculation.disqualified')}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 奖励与发放 */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t('honor.originalWeighting.rewards.title')}</h3>
+              <div className="bg-gradient-to-r from-purple-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-700">
+                <p className="text-purple-700 dark:text-purple-300 mb-4">
+                  <strong>{t('honor.originalWeighting.rewards.formula')}</strong>
+                </p>
+                <ul className="space-y-3 text-purple-700 dark:text-purple-300">
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span>{t('honor.originalWeighting.rewards.1')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span>{t('honor.originalWeighting.rewards.2')}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 重要说明 */}
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t('honor.originalWeighting.important.title')}</h3>
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl p-6 border border-amber-200 dark:border-amber-700">
+                <ul className="space-y-3 text-amber-700 dark:text-amber-300">
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span>{t('honor.originalWeighting.important.1')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span>{t('honor.originalWeighting.important.2')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span>{t('honor.originalWeighting.important.3')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span>{t('honor.originalWeighting.important.4')}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span>{t('honor.originalWeighting.important.5')}</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Important Notes Section */}
-        <div className="mt-8 bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-yellow-100 dark:border-gray-700 relative overflow-hidden">
-          <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-yellow-200 to-amber-300 dark:from-yellow-800 dark:to-amber-900 opacity-20 rounded-full translate-y-20 translate-x-20"></div>
-          <div className="relative z-10">
-            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-2xl p-6 border border-yellow-200 dark:border-yellow-700">
-              <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-lg flex items-center justify-center mr-3">
-                  <span className="text-lg">⚠️</span>
-                </div>
-                <h4 className="font-bold text-yellow-900 dark:text-yellow-200 text-lg">{t('honor.notice.title')}</h4>
-              </div>
-              <p className="text-yellow-800 dark:text-yellow-200 font-medium mb-4 text-sm">
-                {t('honor.notice.subtitle')}
-              </p>
-              <ul className="text-yellow-700 dark:text-yellow-300 space-y-2 text-sm">
-                <li className="flex items-start">
-                  <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>{t('honor.notice.1')}</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>{t('honor.notice.2')}</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>{t('honor.notice.3')}</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>{t('honor.notice.4')}</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>{t('honor.notice.5')}</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>{t('honor.notice.6')}</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
         
         {/* Warning Section */}
         <div className="mt-8 bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-red-100 dark:border-gray-700 relative overflow-hidden">

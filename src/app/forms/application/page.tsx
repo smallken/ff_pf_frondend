@@ -30,6 +30,8 @@ export default function ApplicationForm() {
     twitterUsername: '',
     telegramUsername: '',
     walletAddress: '',
+    country: '',
+    twitterFollowers: '',
     web3Role: [] as string[],
     expertise: [] as string[],
     portfolioLink: '',
@@ -43,6 +45,10 @@ export default function ApplicationForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [userInfo, setUserInfo] = useState<any>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [missingFields, setMissingFields] = useState<{country: boolean, twitterFollowers: boolean}>({country: false, twitterFollowers: false});
+  const [profileForm, setProfileForm] = useState({country: '', twitterFollowers: ''});
+  const [profileSaving, setProfileSaving] = useState(false);
 
   // 检查登录状态并获取用户信息
   useEffect(() => {
@@ -61,6 +67,29 @@ export default function ApplicationForm() {
           name: user.userName || '',
           email: user.userEmail || ''
         }));
+        
+        // 检查country和twitterFollowers是否填写
+        console.log('🔍 检查用户字段 - country:', user.country, 'twitterFollowers:', user.twitterFollowers);
+        
+        const needCountry = !user.country || (typeof user.country === 'string' && user.country.trim() === '');
+        const needTwitterFollowers = user.twitterFollowers === null || user.twitterFollowers === undefined;
+        
+        console.log('🔍 需要填写字段 - needCountry:', needCountry, 'needTwitterFollowers:', needTwitterFollowers);
+        
+        if (needCountry || needTwitterFollowers) {
+          console.log('✅ 显示弹窗要求用户填写');
+          setMissingFields({
+            country: needCountry,
+            twitterFollowers: needTwitterFollowers
+          });
+          setProfileForm({
+            country: user.country || '',
+            twitterFollowers: user.twitterFollowers?.toString() || ''
+          });
+          setShowProfileModal(true);
+        } else {
+          console.log('❌ 字段已填写，不显示弹窗');
+        }
       } catch (error) {
         console.error('获取用户信息失败:', error);
         // 如果获取用户信息失败，可能是登录状态有问题，重定向到登录页
@@ -206,6 +235,46 @@ export default function ApplicationForm() {
     router.push('/forms');
   };
 
+  // 保存个人资料信息
+  const handleSaveProfile = async () => {
+    setProfileSaving(true);
+    try {
+      const updateData: any = {};
+      
+      if (missingFields.country) {
+        if (!profileForm.country || profileForm.country.trim() === '') {
+          alert(language === 'zh' ? '请填写所在国家地区' : 'Please fill in your country/region');
+          setProfileSaving(false);
+          return;
+        }
+        updateData.country = profileForm.country.trim();
+      }
+      
+      if (missingFields.twitterFollowers) {
+        if (!profileForm.twitterFollowers || profileForm.twitterFollowers.trim() === '') {
+          alert(language === 'zh' ? '请填写Twitter粉丝数' : 'Please fill in your Twitter followers count');
+          setProfileSaving(false);
+          return;
+        }
+        updateData.twitterFollowers = parseInt(profileForm.twitterFollowers);
+      }
+      
+      await userService.updateMyInfo(updateData);
+      
+      // 重新获取用户信息
+      const updatedUser = await userService.getLoginUser();
+      setUserInfo(updatedUser);
+      
+      setShowProfileModal(false);
+      alert(language === 'zh' ? '信息保存成功！' : 'Information saved successfully!');
+    } catch (error: any) {
+      console.error('保存个人信息失败:', error);
+      alert(error.message || (language === 'zh' ? '保存失败，请重试' : 'Failed to save, please try again'));
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12" lang={language === 'zh' ? 'zh-CN' : 'en-US'}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -307,6 +376,39 @@ export default function ApplicationForm() {
                 placeholder={t('forms.field.telegram')}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                 value={formData.telegramUsername}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                所在国家地区 <span className="text-red-500">{t('forms.required')}</span>
+              </label>
+              <input
+                type="text"
+                id="country"
+                name="country"
+                required
+                placeholder="例如：中国、美国、日本等"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                value={formData.country}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="twitterFollowers" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Twitter 粉丝数 <span className="text-red-500">{t('forms.required')}</span>
+              </label>
+              <input
+                type="number"
+                id="twitterFollowers"
+                name="twitterFollowers"
+                required
+                placeholder="例如：1000"
+                min="0"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                value={formData.twitterFollowers}
                 onChange={handleChange}
               />
             </div>
@@ -520,6 +622,81 @@ export default function ApplicationForm() {
           </div>
         </form>
       </div>
+
+      {/* 个人资料填写提示弹窗 */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
+            <div className="mb-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="ml-3 text-xl font-bold text-gray-900 dark:text-white">
+                  {language === 'zh' ? '完善个人资料' : 'Complete Your Profile'}
+                </h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300">
+                {language === 'zh' 
+                  ? '为了更好地为您服务，请先完善以下信息：' 
+                  : 'To better serve you, please complete the following information:'}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {missingFields.country && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {language === 'zh' ? '所在国家地区' : 'Country/Region'} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={profileForm.country}
+                    onChange={(e) => setProfileForm({...profileForm, country: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    placeholder={language === 'zh' ? '例如：中国、美国、日本等' : 'e.g., China, USA, Japan'}
+                  />
+                </div>
+              )}
+
+              {missingFields.twitterFollowers && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {language === 'zh' ? 'Twitter 粉丝数' : 'Twitter Followers'} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={profileForm.twitterFollowers}
+                    onChange={(e) => setProfileForm({...profileForm, twitterFollowers: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    placeholder={language === 'zh' ? '例如：1000' : 'e.g., 1000'}
+                    min="0"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={handleSaveProfile}
+                disabled={profileSaving}
+                className="px-6 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-md hover:from-violet-700 hover:to-purple-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {profileSaving ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {language === 'zh' ? '保存中...' : 'Saving...'}
+                  </div>
+                ) : (
+                  language === 'zh' ? '保存' : 'Save'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 成功提示模态框 */}
       {success && (

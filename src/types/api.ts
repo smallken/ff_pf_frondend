@@ -47,10 +47,13 @@ export interface LoginUserVO {
   userProfile?: string;
   userRole: string;
   userPoints?: number;
+  totalPoints?: number; // 总积分（从totalPoint表获取）
   userLevel?: number; // 用户等级：1-探索者，2-探路者，3-开路者，4-先驱者
   twitterUsername?: string;
   telegramUsername?: string;
   walletAddress?: string;
+  country?: string; // 所在国家地区
+  twitterFollowers?: number; // Twitter粉丝数
   createTime: string;
   updateTime: string;
 }
@@ -70,12 +73,14 @@ export interface UserVO {
 
 // 排行榜用户类型
 export interface RankingUserVO {
-  rank: number;
+  rank?: number;
   id: number;
   userName: string;
   userEmail: string;
   twitterUsername?: string;
   userPoints: number;
+  weeklyPoints?: number;
+  totalPoints?: number;
   userLevel: number;
   walletAddress?: string;
 }
@@ -145,6 +150,8 @@ export interface UserUpdateMyRequest {
   twitterUsername?: string;
   telegramUsername?: string;
   walletAddress?: string;
+  country?: string; // 所在国家地区
+  twitterFollowers?: number; // Twitter粉丝数
   emailVerificationCode?: string;
 }
 
@@ -363,4 +370,74 @@ export interface UnifiedSubmissionVO {
   createTime: string;
   sourceId: number;
   sourceTable: string;
+}
+
+// 周挑战相关类型
+export interface CommunicationTaskVO {
+  id: number;
+  contentLink: string;
+  screenshot: string;
+  reviewStatus: number;
+  reviewMessage?: string;
+  weekCount: number;
+  dateRange: string;
+  createTime: string;
+}
+
+export interface CommunityTaskVO {
+  id: number;
+  screenshot: string;
+  reviewStatus: number;
+  reviewMessage?: string;
+  weekCount: number;
+  dateRange: string;
+  createTime: string;
+}
+
+export interface OriginalTaskVO {
+  id: number;
+  contentLink: string;
+  screenshot: string;
+  browseNum: number;
+  reviewStatus: number;
+  reviewMessage?: string;
+  weekCount: number;
+  dateRange: string;
+  createTime: string;
+}
+
+export interface WeeklyTaskOverview {
+  communicationSubmitted: number;
+  communicationLimit: number;
+  communitySubmitted: number;
+  communityLimit: number;
+  originalSubmitted: number;
+  originalLimit: number;
+  weeklyPoints: number;
+  communicationTasks: CommunicationTaskVO[];
+  communityTasks: CommunityTaskVO[];
+  originalTasks: OriginalTaskVO[];
+}
+
+export interface WeeklyTaskSubmitRequest {
+  contentLink: string;
+  screenshotUrl: string;
+}
+
+export interface OriginalTaskSubmitRequest {
+  contentLink: string;
+  screenshotUrl: string;
+  browseNum: number;
+}
+
+export interface OriginalTaskUpdateRequest {
+  id: number;
+  screenshotUrl?: string;
+  browseNum?: number;
+  contentLink?: string;
+}
+
+export interface WeeklyTaskSubmitResponse {
+  taskId: number;
+  reviewStatus: number;
 }

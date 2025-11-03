@@ -36,8 +36,8 @@ const moduleCards = [
   {
     id: 'footprint',
     title: { zh: 'Footprint 脚印计划', en: 'Footprint Program' },
-    subtitle: { zh: '每一枚脚印，都是共同的印记', en: 'Every footprint is a shared mark' },
-    description: { zh: '这里是内容创作者的舞台，你的声音与作品，将与伙伴们一起留下足迹，共建属于大家的社区。', en: 'This is the stage for creators — where your voice and your work join others to co-build a community that belongs to all.' },
+    subtitle: { zh: '完成每周限时任务，赢取积分与荣耀！', en: 'Complete weekly timed tasks to earn points and glory!' },
+    description: { zh: '参与挑战，登上排行榜，瓜分奖金池。最出色的创作者将获得高额奖励与官方曝光机会。', en: 'Join challenges, climb the leaderboard, and share the prize pool. Top creators will receive generous rewards and official exposure opportunities.' },
     icon: '👣',
     gradient: 'from-pink-300 via-pink-400 to-pink-500',
     href: '/footprint'

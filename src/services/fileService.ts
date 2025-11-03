@@ -23,6 +23,6 @@ export const fileService = {
 
   // 上传任务提交文件
   uploadTaskFile: (file: File): Promise<FileUploadResponse> => {
-    return uploadFile(API_ENDPOINTS.FILE.UPLOAD, file, 'task_file');
+    return uploadFile(API_ENDPOINTS.FILE.UPLOAD, file, 'task_screenshot');
   },
 };

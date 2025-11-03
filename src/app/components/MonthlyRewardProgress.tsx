@@ -184,7 +184,21 @@ export default function MonthlyRewardProgress() {
   }
 
   if (!progress) {
-    return null;
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          {t('monthly.progress.title')}
+        </h2>
+        <div className="text-center py-8">
+          <div className="text-gray-500 dark:text-gray-400 mb-2">
+            <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+          </div>
+          <p className="text-gray-500 dark:text-gray-400">{t('monthly.progress.no.data') || '暂无月度激励进度数据'}</p>
+        </div>
+      </div>
+    );
   }
 
   const clampPercentage = (value: number) => Math.min(Math.max(value, 0), 100);
