@@ -14,6 +14,7 @@ export default function WeeklyChallenge() {
   const { language, t } = useLanguage();
   const router = useRouter();
   const [hasSubmittedApplication, setHasSubmittedApplication] = useState<boolean>(false);
+  const [hasApproved, setHasApproved] = useState<boolean>(false);
   const [isCheckingApplication, setIsCheckingApplication] = useState<boolean>(true);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [activeTask, setActiveTask] = useState<'spread' | 'community' | 'original' | null>(null);
@@ -138,6 +139,16 @@ export default function WeeklyChallenge() {
   }, []);
 
   useEffect(() => {
+    // 检查是否有通过审核的申请表
+    formService.hasApprovedApplication()
+      .then(approved => {
+        setHasApproved(approved);
+      })
+      .catch(() => {
+        setHasApproved(false);
+      });
+    
+    // 检查是否提交过申请表（无论审核状态）
     formService
       .getMyForms({ status: undefined, current: 1, pageSize: 1 })
       .then(response => {
@@ -553,7 +564,7 @@ export default function WeeklyChallenge() {
           >
             {language === 'zh' ? '报名申请' : 'Apply Now'}
           </Button>
-          {hasSubmittedApplication && (
+          {hasSubmittedApplication && !hasApproved && (
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               {language === 'zh' ? '您已提交报名申请表，耐心等待审核结果。' : 'You have already submitted the application form. Please wait for the review result.'}
             </p>

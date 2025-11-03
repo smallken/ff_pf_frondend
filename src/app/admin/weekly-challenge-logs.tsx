@@ -64,6 +64,16 @@ export default function WeeklyChallengeLogsTab() {
   // 详情弹窗
   const [selectedLog, setSelectedLog] = useState<AutoReviewLog | null>(null);
   const [showDetail, setShowDetail] = useState(false);
+  
+  // 修改审核弹窗
+  const [showEditReview, setShowEditReview] = useState(false);
+  const [editingLog, setEditingLog] = useState<AutoReviewLog | null>(null);
+  const [editReviewStatus, setEditReviewStatus] = useState<number>(1);
+  const [editReviewMessage, setEditReviewMessage] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+  const [originalReviewStatus, setOriginalReviewStatus] = useState<number>(1);
+  const [originalReviewMessage, setOriginalReviewMessage] = useState('');
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   const fetchLogs = async (page: number = current) => {
     setLoading(true);
@@ -83,6 +93,7 @@ export default function WeeklyChallengeLogsTab() {
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8100/api';
       const response = await fetch(`${apiBaseUrl}/auto-review-log/list?${params.toString()}`, {
         credentials: 'include',
+        cache: 'no-store', // 禁用缓存
       });
       
       if (!response.ok) {
@@ -95,7 +106,18 @@ export default function WeeklyChallengeLogsTab() {
         const pageData: PageData = result.data;
         setLogs(pageData.records);
         setTotal(pageData.total);
-        setCurrent(pageData.current);
+        
+        // 计算实际的最大页数
+        const maxPages = Math.ceil(pageData.total / pageSize);
+        // 如果当前页超出范围，调整到最后一页或第一页
+        const validCurrent = pageData.current > maxPages ? Math.max(1, maxPages) : pageData.current;
+        setCurrent(validCurrent);
+        
+        // 如果页码被调整了，重新获取正确的页数据
+        if (validCurrent !== pageData.current && validCurrent !== page) {
+          fetchLogs(validCurrent);
+          return;
+        }
       } else {
         throw new Error(result.message || '获取数据失败');
       }
@@ -108,6 +130,7 @@ export default function WeeklyChallengeLogsTab() {
   };
 
   useEffect(() => {
+    setCurrent(1); // 重置页码为第1页
     fetchLogs(1);
   }, [taskType, weekCount, reviewStatus, userId]);
 
@@ -136,6 +159,72 @@ export default function WeeklyChallengeLogsTab() {
     } catch (err: any) {
       console.error('获取详情失败:', err);
       alert(err.message || '获取详情失败');
+    }
+  };
+
+  const handleEditReview = (log: AutoReviewLog) => {
+    setEditingLog(log);
+    setEditReviewStatus(log.reviewStatus);
+    setEditReviewMessage(log.reviewMessage || '');
+    setOriginalReviewStatus(log.reviewStatus);
+    setOriginalReviewMessage(log.reviewMessage || '');
+    setShowEditReview(true);
+  };
+
+  // 检查是否有更改
+  const hasChanges = () => {
+    return editReviewStatus !== originalReviewStatus || 
+           editReviewMessage.trim() !== originalReviewMessage.trim();
+  };
+
+  const handleSubmitReview = async () => {
+    if (!editingLog) return;
+
+    setEditLoading(true);
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8100/api';
+      const endpoint = editingLog.taskType === 'communication' 
+        ? '/admin/weekly-challenge/review/communication'
+        : '/admin/weekly-challenge/review/community';
+      
+      const response = await fetch(`${apiBaseUrl}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          taskId: editingLog.taskId,
+          reviewStatus: editReviewStatus,
+          reviewMessage: editReviewMessage || null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('修改审核状态失败');
+      }
+
+      const result = await response.json();
+
+      if (result.code === 0) {
+        // 显示成功提示
+        setShowSuccessToast(true);
+        // 1秒后关闭弹窗和提示
+        setTimeout(() => {
+          setShowSuccessToast(false);
+          setShowEditReview(false);
+          // 刷新列表，如果当前页可能超出范围，则返回第一页
+          const currentPage = Math.min(current, Math.ceil(total / pageSize));
+          fetchLogs(currentPage > 0 ? currentPage : 1);
+        }, 1000);
+      } else {
+        throw new Error(result.message || '修改审核状态失败');
+      }
+    } catch (err: any) {
+      console.error('修改审核状态失败:', err);
+      alert(err.message || '修改审核状态失败');
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -291,12 +380,22 @@ export default function WeeklyChallengeLogsTab() {
                       })}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => handleViewDetail(log.id)}
-                        className="text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        详情
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleViewDetail(log.id)}
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          详情
+                        </button>
+                        {log.reviewStatus !== 0 && (
+                          <button
+                            onClick={() => handleEditReview(log)}
+                            className="text-green-600 dark:text-green-400 hover:underline"
+                          >
+                            修改
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -483,6 +582,101 @@ export default function WeeklyChallengeLogsTab() {
                   className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
                 >
                   关闭
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 修改审核弹窗 */}
+      {showEditReview && editingLog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  修改审核结果 - 任务 #{editingLog.taskId}
+                </h3>
+                <button
+                  onClick={() => setShowEditReview(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* 任务信息 */}
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div><span className="text-gray-500">任务类型：</span>{editingLog.taskTypeName}</div>
+                    <div><span className="text-gray-500">用户：</span>{editingLog.username} (ID: {editingLog.userId})</div>
+                    <div><span className="text-gray-500">周数：</span>第{editingLog.weekCount}周</div>
+                    <div><span className="text-gray-500">当前状态：</span>{editingLog.reviewStatusName}</div>
+                  </div>
+                  {editingLog.reviewMessage && (
+                    <div className="mt-2 text-sm">
+                      <div className="text-gray-500">原审核消息：</div>
+                      <div className="mt-1 text-gray-900 dark:text-gray-100">{editingLog.reviewMessage}</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 审核状态 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    审核状态 <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={editReviewStatus}
+                    onChange={(e) => setEditReviewStatus(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value={1}>通过</option>
+                    <option value={2}>拒绝</option>
+                  </select>
+                </div>
+
+                {/* 审核意见 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    审核意见（选填）
+                  </label>
+                  <textarea
+                    value={editReviewMessage}
+                    onChange={(e) => setEditReviewMessage(e.target.value)}
+                    rows={3}
+                    placeholder="请输入审核意见..."
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* 成功提示 */}
+              {showSuccessToast && (
+                <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-md flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span>修改审核状态成功</span>
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowEditReview(false)}
+                  disabled={editLoading || showSuccessToast}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleSubmitReview}
+                  disabled={editLoading || showSuccessToast || !hasChanges()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {editLoading ? '提交中...' : '确认修改'}
                 </button>
               </div>
             </div>
