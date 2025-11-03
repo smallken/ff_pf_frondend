@@ -10,6 +10,22 @@ export default function ApplicationForm() {
   const { t, language } = useLanguage();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+
+  // 翻译后端返回的错误消息
+  const translateErrorMessage = (message: string): string => {
+    if (language === 'en') {
+      const errorMap: Record<string, string> = {
+        '推特用户名已被其他用户使用': 'Twitter username is already used by another user',
+        'Telegram用户名已被其他用户使用': 'Telegram username is already used by another user',
+        '钱包地址已被其他用户使用': 'Wallet address is already used by another user',
+        '邮箱已被其他用户使用': 'Email is already used by another user',
+        '用户名已被其他用户使用': 'Username is already used by another user',
+        '该字段已被其他用户使用': 'This field is already used by another user'
+      };
+      return errorMap[message] || message;
+    }
+    return message;
+  };
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -115,7 +131,7 @@ export default function ApplicationForm() {
         console.log('🔍 推特用户名检查结果:', twitterResult);
         if (!twitterResult.isUnique && twitterResult.errorMessage) {
           console.log('🔍 推特用户名重复错误:', twitterResult.errorMessage);
-          duplicateErrors.push(twitterResult.errorMessage);
+          duplicateErrors.push(translateErrorMessage(twitterResult.errorMessage));
         }
       } catch (error: any) {
         console.error('❌ 推特用户名检查失败:', error);
@@ -131,7 +147,7 @@ export default function ApplicationForm() {
         console.log('🔍 Telegram用户名检查结果:', telegramResult);
         if (!telegramResult.isUnique && telegramResult.errorMessage) {
           console.log('🔍 Telegram用户名重复错误:', telegramResult.errorMessage);
-          duplicateErrors.push(telegramResult.errorMessage);
+          duplicateErrors.push(translateErrorMessage(telegramResult.errorMessage));
         }
       } catch (error: any) {
         console.error('❌ Telegram用户名检查失败:', error);
@@ -145,7 +161,7 @@ export default function ApplicationForm() {
         const walletResult = await userService.checkFieldUniqueWithError('walletAddress', formData.walletAddress.trim());
         console.log('🔍 钱包地址检查结果:', walletResult);
         if (!walletResult.isUnique && walletResult.errorMessage) {
-          duplicateErrors.push(walletResult.errorMessage);
+          duplicateErrors.push(translateErrorMessage(walletResult.errorMessage));
         }
       } catch (error: any) {
         console.error('❌ 钱包地址检查失败:', error);
@@ -155,7 +171,8 @@ export default function ApplicationForm() {
     
     // 如果有重复字段，显示具体的重复错误信息
     if (duplicateErrors.length > 0) {
-      const combinedError = duplicateErrors.join('；');
+      const separator = language === 'en' ? '; ' : '；';
+      const combinedError = duplicateErrors.join(separator);
       setError(combinedError);
       setLoading(false);
       return;

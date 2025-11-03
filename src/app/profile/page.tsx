@@ -16,6 +16,22 @@ export default function Profile() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   
+  // 翻译后端返回的错误消息
+  const translateErrorMessage = (message: string): string => {
+    if (language === 'en') {
+      const errorMap: Record<string, string> = {
+        '推特用户名已被其他用户使用': 'Twitter username is already used by another user',
+        'Telegram用户名已被其他用户使用': 'Telegram username is already used by another user',
+        '钱包地址已被其他用户使用': 'Wallet address is already used by another user',
+        '邮箱已被其他用户使用': 'Email is already used by another user',
+        '用户名已被其他用户使用': 'Username is already used by another user',
+        '该字段已被其他用户使用': 'This field is already used by another user'
+      };
+      return errorMap[message] || message;
+    }
+    return message;
+  };
+  
   // 构建图片URL的辅助函数
   const buildImageUrl = (screenshot: string) => {
     if (screenshot.startsWith('http')) {
@@ -351,7 +367,8 @@ export default function Profile() {
       }, 3000);
     } catch (error: any) {
       console.error('更新用户信息失败:', error);
-      setError(error.message || t('profile.error.update.user.info'));
+      const errorMessage = error.message || t('profile.error.update.user.info');
+      setError(translateErrorMessage(errorMessage));
     } finally {
       setEditLoading(false);
     }
