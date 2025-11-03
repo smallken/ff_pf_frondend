@@ -6,24 +6,10 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { formService, userService } from '../../../services';
 
-const SUBMISSION_DEADLINE = new Date('2025-10-19T16:00:00Z');
-
-const submissionClosedContent = {
-  zh: {
-    message: '脚印计划于2025年10月20日00:00（UTC+8）起暂停表单提交，当前暂不接受新的报名申请。',
-    badge: '提交已关闭'
-  },
-  en: {
-    message: 'Footprint submissions are paused starting October 20, 2025 at 00:00 (UTC+8). New applications are currently unavailable.',
-    badge: 'Submission closed'
-  }
-};
-
 export default function ApplicationForm() {
   const { t, language } = useLanguage();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
-  const isSubmissionClosed = Date.now() >= SUBMISSION_DEADLINE.getTime();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -102,11 +88,6 @@ export default function ApplicationForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (isSubmissionClosed) {
-      setError(submissionClosedContent[language as 'zh' | 'en'].message);
-      return;
-    }
 
     // 验证多选字段
     if (formData.web3Role.length === 0) {
@@ -283,19 +264,6 @@ export default function ApplicationForm() {
             {language === 'zh' ? '报名申请表' : 'Enrollment Application Form'}
           </h1>
         </div>
-
-        {isSubmissionClosed && (
-          <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-800/60 dark:text-blue-200">
-                {submissionClosedContent[language as 'zh' | 'en'].badge}
-              </span>
-              <p className="text-sm text-gray-700 dark:text-gray-200">
-                {submissionClosedContent[language as 'zh' | 'en'].message}
-              </p>
-            </div>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           {error && (
@@ -596,11 +564,11 @@ export default function ApplicationForm() {
               onClick={handleCancel}
               className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
             >
-              {t('forms.cancel.button')}
+              {t('forms.cancel')}
             </button>
             <button
               type="submit"
-              disabled={loading || !isAuthenticated || !!success || isSubmissionClosed}
+              disabled={loading || !isAuthenticated || !!success}
               className="px-6 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-md hover:from-violet-700 hover:to-purple-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
