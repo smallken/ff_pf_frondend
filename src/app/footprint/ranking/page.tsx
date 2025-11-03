@@ -60,101 +60,6 @@ export default function Ranking() {
   // 获取周排行榜数据
   const fetchWeeklyRankings = async (page: number = 1) => {
     try {
-<<<<<<< HEAD
-      let records = initialRecords;
-
-      if (totalCount > 0 && records.length < totalCount) {
-        const completeResponse = await userService.getRanking({
-          current: 1,
-          pageSize: totalCount
-        });
-        // 兼容后端返回格式
-        records = Array.isArray(completeResponse) ? completeResponse : (completeResponse.records || []);
-      }
-
-      setFullRankingData(records);
-
-      const totalPoints = records.reduce((sum, item) => sum + (item.userPoints || 0), 0);
-      setAllUsersTotalPoints(totalPoints);
-
-      if (user) {
-        const userRanking = records.find((item) => item.id === user.id);
-        if (userRanking) {
-          setCurrentUserRank(userRanking);
-        } else {
-          const fallback = buildFallbackRanking(totalCount);
-          if (fallback) {
-            setCurrentUserRank(fallback);
-          }
-        }
-      } else {
-        setCurrentUserRank(null);
-      }
-    } catch (err) {
-      console.error('❌ 获取完整排行榜失败:', err);
-    } finally {
-      setHasLoadedFullRanking(true);
-    }
-  };
-
-  // 获取排行榜数据
-  const fetchRankings = async (page: number = currentPage) => {
-    try {
-      // 调用后端API获取排行榜数据（分页）
-      const rankingResponse = await userService.getRanking({
-        current: page,
-        pageSize: pageSize
-      });
-      
-      // 兼容后端返回格式：可能是数组或分页对象
-      let records: RankingUserVO[];
-      let totalCount: number;
-      let pages: number;
-      let current: number;
-      
-      if (Array.isArray(rankingResponse)) {
-        // 后端直接返回数组
-        records = rankingResponse;
-        totalCount = records.length;
-        pages = 1;
-        current = 1;
-      } else {
-        // 后端返回分页对象
-        records = rankingResponse.records || [];
-        totalCount = Number(rankingResponse.total ?? records.length);
-        pages = Number(rankingResponse.pages ?? 1);
-        current = Number(rankingResponse.current ?? 1);
-      }
-      
-      // 过滤条件：必须有通过的报名申请（后端需保证），且分数>0
-      const filtered = records.filter(u => (u.userPoints || 0) > 0);
-
-      // 使用后端返回的原始分页信息，不重新计算
-      setTotal(totalCount);
-      setTotalPages(pages);
-      setCurrentPage(current);
-
-      // 直接使用过滤后的数据进行显示
-      setRankings(filtered);
-
-      // 如果当前页包含用户，则直接使用当前页结果；否则等待全量数据
-      if (user) {
-        const userRanking = records.find((item) => item.id === user.id);
-        if (userRanking) {
-          setCurrentUserRank(userRanking);
-        } else if (!hasLoadedFullRanking) {
-          const fallback = buildFallbackRanking(totalCount);
-          if (fallback) {
-            setCurrentUserRank((prev) => prev ?? fallback);
-          }
-        }
-      } else {
-        setCurrentUserRank(null);
-      }
-
-      // 加载完整数据以便统计和固定“我的排名”
-      await loadFullRankingData(totalCount, records);
-=======
       setLoading(true);
       const response = await userService.getWeeklyRanking({
         current: page,
@@ -162,7 +67,6 @@ export default function Ranking() {
       });
       setWeeklyRankings(response.records || []);
       setWeeklyTotal(response.total || 0);
->>>>>>> newAutoReiw
     } catch (error: any) {
       console.error('❌ 获取周排行榜失败:', error);
       setError(error.message || '获取周排行榜失败');

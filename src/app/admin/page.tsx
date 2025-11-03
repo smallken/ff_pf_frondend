@@ -54,7 +54,6 @@ interface ReviewedSubmission {
   data: ApplicationForm | TaskSubmissionVO | ActivityApplication;
 }
 
-<<<<<<< HEAD
 interface ExportSubmission {
   id: number;
   type: 'application' | 'task' | 'activity';
@@ -64,7 +63,6 @@ interface ExportSubmission {
   createTime: string;
 }
 
-=======
 // 审核历史记录组件
 interface ReviewHistory {
   id: number;
@@ -222,7 +220,6 @@ function ReviewHistorySection({ submissionId }: { submissionId: number }) {
   );
 }
 
->>>>>>> newAutoReiw
 export default function Admin() {
   const { t, formatDate, language } = useLanguage();
   const { isAuthenticated, user } = useAuth();
@@ -248,7 +245,6 @@ export default function Admin() {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8101/api'}${screenshot}`;
     return url;
   };
-<<<<<<< HEAD
 
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [pendingMonth, setPendingMonth] = useState('');
@@ -783,10 +779,7 @@ export default function Admin() {
     }
   };
 
-  const [activeTab, setActiveTab] = useState('forms');
-=======
   const [activeTab, setActiveTab] = useState('weekly-challenge-logs');
->>>>>>> newAutoReiw
   const [pendingFormType, setPendingFormType] = useState<'application' | 'task' | 'activity'>('task'); // 默认显示成果提交
   const [reviewedFormType, setReviewedFormType] = useState<'application' | 'task' | 'activity'>('task'); // 已审核表单类型
   const [pendingSubmissions, setPendingSubmissions] = useState<PendingSubmission[]>([]);
@@ -1117,34 +1110,28 @@ export default function Admin() {
   const handlePendingFormTypeChange = (type: 'application' | 'task' | 'activity') => {
     setPendingFormType(type);
     setPendingCurrentPage(1);
-<<<<<<< HEAD
     setPendingMonth('');
     monthsPrefetchedRef.current.pending = false;
+    // 立即加载新类型的数据
+    fetchPendingSubmissions(1, type);
     collectPendingSubmissionsForDownload().finally(() => {
       monthsPrefetchedRef.current.pending = true;
     });
-=======
-    // 立即加载新类型的数据
-    fetchPendingSubmissions(1, type);
->>>>>>> newAutoReiw
   };
 
   // 切换已审核表单类型
   const handleReviewedFormTypeChange = (type: 'application' | 'task' | 'activity') => {
     setReviewedFormType(type);
     setReviewedCurrentPage(1);
-<<<<<<< HEAD
     setReviewedMonth('');
     monthsPrefetchedRef.current.reviewed = false;
-    collectReviewedSubmissionsForDownload().finally(() => {
-      monthsPrefetchedRef.current.reviewed = true;
-    });
-=======
     // 立即加载新类型的数据
     const sortField = reviewedSortConfig?.key || 'updateTime';
     const sortOrder = reviewedSortConfig?.direction || 'desc';
     fetchReviewedSubmissions(1, type, sortField, sortOrder);
->>>>>>> newAutoReiw
+    collectReviewedSubmissionsForDownload().finally(() => {
+      monthsPrefetchedRef.current.reviewed = true;
+    });
   };
   
   // 统计数据状态
