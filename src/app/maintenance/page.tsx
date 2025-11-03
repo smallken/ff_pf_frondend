@@ -49,7 +49,7 @@ export default function MaintenancePage() {
             <circle cx="30" cy="50" r="3" fill="currentColor"/>
           </svg>
         </div>
-        
+
         <div style={{
           position: 'absolute',
           top: '80px',
@@ -70,7 +70,7 @@ export default function MaintenancePage() {
             <circle cx="30" cy="50" r="3" fill="currentColor"/>
           </svg>
         </div>
-        
+
         {/* 简化的动态光效 */}
         <div style={{
           position: 'absolute',
@@ -83,7 +83,7 @@ export default function MaintenancePage() {
           opacity: 0.2,
           animation: 'pulse 3s ease-in-out infinite'
         }}></div>
-        
+
         <div style={{
           position: 'absolute',
           bottom: '33%',
@@ -96,7 +96,7 @@ export default function MaintenancePage() {
           animation: 'pulse 3s ease-in-out infinite 1s'
         }}></div>
       </div>
-      
+
       {/* 主要内容 */}
       <div style={{
         position: 'relative',
@@ -157,7 +157,7 @@ export default function MaintenancePage() {
               </h1>
             </div>
           </div>
-          
+
           {/* 中文内容 */}
           <div style={{ marginBottom: '32px' }}>
             <h2 style={{
@@ -182,7 +182,7 @@ export default function MaintenancePage() {
               维护期间系统将暂停服务，预计11月3日下午(UTC+8)能恢复，给您带来的不便敬请谅解
             </p>
           </div>
-          
+
           {/* 分隔线 */}
           <div style={{
             width: '96px',
@@ -191,7 +191,7 @@ export default function MaintenancePage() {
             margin: '0 auto 32px',
             borderRadius: '2px'
           }}></div>
-          
+
           {/* 英文版本 */}
           <div style={{ marginBottom: '32px' }}>
             <h3 style={{
@@ -212,10 +212,10 @@ export default function MaintenancePage() {
               fontSize: '16px',
               color: '#6b7280'
             }}>
-              During the maintenance period, the system will be temporarily suspended. It is expected to be restored on the afternoon of November 3rd (UTC+8). We apologize for any inconvenience caused.
+              The system will be temporarily unavailable during maintenance. It is expected to be restored on the afternoon of November 3rd (UTC+8). We apologize for any inconvenience.
             </p>
           </div>
-          
+
           {/* 底部签名 */}
           <div style={{
             paddingTop: '24px',
