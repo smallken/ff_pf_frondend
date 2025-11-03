@@ -4,23 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { formService, userService, taskSubmissionService, activityApplicationService } from '../../services';
+import { formService, userService } from '../../services';
 import { launchContestService } from '../../services/launchContestService';
 import { mintContestService } from '../../services/mintContestService';
-import type { ApplicationForm, LoginUserVO, UserUpdateMyRequest, TaskSubmissionVO, ActivityApplication } from '../../types/api';
+import type { LoginUserVO, UserUpdateMyRequest } from '../../types/api';
 import MonthlyRewardProgress from '../components/MonthlyRewardProgress';
 import MonthlyRewardHistory from '../components/MonthlyRewardHistory';
-
-// 统一的提交历史类型
-interface SubmissionHistoryItem {
-  id: number;
-  type: 'application' | 'task' | 'activity';
-  title: string;
-  status: number;
-  reviewMessage?: string;
-  createTime: string;
-  data: ApplicationForm | TaskSubmissionVO | ActivityApplication;
-}
 
 export default function Profile() {
   const { t, language } = useLanguage();
@@ -48,12 +37,6 @@ export default function Profile() {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8101/api'}${screenshot}`;
     return url;
   };
-  const [submissions, setSubmissions] = useState<ApplicationForm[]>([]);
-  const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistoryItem[]>([]);
-  const [selectedSubmission, setSelectedSubmission] = useState<SubmissionHistoryItem | null>(null);
-  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
-  const [showReviewMessageModal, setShowReviewMessageModal] = useState(false);
-  const [selectedReviewMessage, setSelectedReviewMessage] = useState('');
   const [userInfo, setUserInfo] = useState<LoginUserVO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -67,16 +50,12 @@ export default function Profile() {
     twitterUsername: '',
     telegramUsername: '',
     walletAddress: '',
+    country: '',
+    twitterFollowers: '',
     emailVerificationCode: ''
   });
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [emailVerificationLoading, setEmailVerificationLoading] = useState(false);
-
-  // 分页相关状态
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10); // 每页显示10条
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [allSubmissionHistory, setAllSubmissionHistory] = useState<SubmissionHistoryItem[]>([]);
 
   // Launch和Mint大赛表单状态
   const [launchRegistrations, setLaunchRegistrations] = useState<any[]>([]);
@@ -226,6 +205,8 @@ export default function Profile() {
         twitterUsername: response.twitterUsername || '',
         telegramUsername: response.telegramUsername || '',
         walletAddress: response.walletAddress || '',
+        country: response.country || '',
+        twitterFollowers: response.twitterFollowers?.toString() || '',
         emailVerificationCode: ''
       });
     } catch (error: any) {
@@ -250,6 +231,8 @@ export default function Profile() {
         twitterUsername: userInfo.twitterUsername || '',
         telegramUsername: userInfo.telegramUsername || '',
         walletAddress: userInfo.walletAddress || '',
+        country: userInfo.country || '',
+        twitterFollowers: userInfo.twitterFollowers?.toString() || '',
         emailVerificationCode: ''
       });
     }
@@ -346,7 +329,9 @@ export default function Profile() {
         userEmail: editForm.userEmail,
         twitterUsername: editForm.twitterUsername,
         telegramUsername: editForm.telegramUsername,
-        walletAddress: editForm.walletAddress
+        walletAddress: editForm.walletAddress,
+        country: editForm.country,
+        twitterFollowers: editForm.twitterFollowers ? parseInt(editForm.twitterFollowers) : undefined
       };
 
       console.log('🔍 发送更新请求:', updateData);
@@ -401,23 +386,6 @@ export default function Profile() {
     }
   };
 
-  // 获取用户的表单提交记录
-  const fetchUserSubmissions = async () => {
-    if (!isAuthenticated) return;
-    
-    try {
-      const response = await formService.getMyForms({
-        current: 1,
-        pageSize: 10
-      });
-      setSubmissions(response.records);
-    } catch (error: any) {
-      setError(error.message || t('profile.error.fetch.submissions'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // 检查是否已有通过的报名申请表
   const fetchHasApproved = async () => {
     try {
@@ -465,121 +433,38 @@ export default function Profile() {
     }
   };
 
-  // 获取所有提交历史
-  const fetchAllSubmissionHistory = async () => {
-    if (!isAuthenticated) return;
-    
-    try {
-      
-      const [applicationForms, taskSubmissions, activityApplications] = await Promise.all([
-        formService.getMyForms({ current: 1, pageSize: 20 }),
-        taskSubmissionService.getMyTaskSubmissions({ current: 1, pageSize: 20 }),
-        activityApplicationService.getMyApplications({ current: 1, pageSize: 20 })
-      ]);
-
-      const history: SubmissionHistoryItem[] = [];
-
-      // 添加申请表
-      applicationForms.records.forEach(form => {
-        history.push({
-          id: form.id,
-          type: 'application',
-          title: t('profile.submission.application'),
-          status: form.status,
-          reviewMessage: form.reviewMessage,
-          createTime: form.createTime,
-          data: form
-        });
-      });
-      // 添加任务提交
-      taskSubmissions.records.forEach(task => {
-        
-        history.push({
-          id: task.id,
-          type: 'task',
-          title: t('profile.submission.achievement'),
-          status: task.reviewStatus || 0,
-          reviewMessage: task.reviewMessage, // 使用任务提交的审核信息
-          createTime: task.createTime,
-          data: task
-        });
-      });
-
-      // 添加活动申请
-      activityApplications.records.forEach(activity => {
-        history.push({
-          id: activity.id,
-          type: 'activity',
-          title: t('profile.submission.activity'),
-          status: activity.reviewStatus || 0,
-          reviewMessage: activity.reviewMessage,
-          createTime: activity.createTime,
-          data: activity
-        });
-      });
-
-      // 按创建时间排序（最新的在前）
-      history.sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime());
-      
-      // 存储所有历史记录
-      setAllSubmissionHistory(history);
-      setTotalRecords(history.length);
-      
-      // 计算当前页显示的数据
-      updateCurrentPageData(history, 1);
-    } catch (error: any) {
-      console.error('获取提交历史失败:', error);
-      setError(error.message || t('profile.submission.fetch.error'));
-    }
-  };
-
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('/login');
       return;
     }
     
-    // 并行获取用户信息和提交记录
+    // 并行获取用户信息及其他数据
+    setLoading(true);
     Promise.all([
       fetchUserInfo(),
-      fetchUserSubmissions(),
-      fetchAllSubmissionHistory(),
       fetchHasApproved(),
       fetchContestForms()
-    ]).catch(error => {
-      console.error('获取数据失败:', error);
-    });
+    ])
+      .catch(error => {
+        console.error('获取数据失败:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [isAuthenticated, router]);
 
-  // 显示提交详情弹窗
-  const handleShowSubmissionDetail = (submission: SubmissionHistoryItem) => {
-    setSelectedSubmission(submission);
-    setShowSubmissionModal(true);
+  // 根据积分计算等级
+  // L1 Explorer（探索者）：0-100
+  // L2 Pathfinder（探路者）：101-300
+  // L3 Trailblazer（开路者）：301-700
+  // L4 Pioneer（先驱者）：700+
+  const calculateLevel = (points: number) => {
+    if (points >= 700) return 4;
+    if (points >= 301) return 3;
+    if (points >= 101) return 2;
+    return 1;
   };
-
-  // 关闭提交详情弹窗
-  const handleCloseSubmissionModal = () => {
-    setShowSubmissionModal(false);
-    setSelectedSubmission(null);
-  };
-
-  // 更新当前页显示的数据
-  const updateCurrentPageData = (allData: SubmissionHistoryItem[], page: number) => {
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const currentPageData = allData.slice(startIndex, endIndex);
-    setSubmissionHistory(currentPageData);
-  };
-
-  // 处理分页变化
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    updateCurrentPageData(allSubmissionHistory, page);
-  };
-
-  // 计算总页数
-  const totalPages = Math.ceil(totalRecords / pageSize);
-
 
   // 根据userLevel获取称号
   const getTitleByLevel = (userLevel?: number) => {
@@ -600,33 +485,6 @@ export default function Profile() {
       case 3: return 'text-yellow-600 dark:text-yellow-400'; // 开路者 - 黄色
       case 4: return 'text-purple-600 dark:text-purple-400'; // 先驱者 - 紫色
       default: return 'text-blue-600 dark:text-blue-400'; // 默认为探索者 - 蓝色
-    }
-  };
-
-  const getFormTypeText = (formType: number) => {
-    switch(formType) {
-      case 1: return t('profile.submission.application');
-      case 2: return t('profile.submission.activity');
-      case 3: return t('profile.submission.achievement');
-      default: return t('profile.submission.unknown.type');
-    }
-  };
-
-  const getStatusText = (status: number) => {
-    switch(status) {
-      case 0: return t('admin.status.pending');
-      case 1: return t('admin.status.approved');
-      case 2: return t('admin.status.rejected');
-      default: return t('profile.submission.unknown.status');
-    }
-  };
-
-  const getStatusColor = (status: number) => {
-    switch(status) {
-      case 0: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100';
-      case 1: return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100';
-      case 2: return 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
     }
   };
 
@@ -738,13 +596,19 @@ export default function Profile() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile.user.title')}</label>
-              <p className={`mt-1 font-semibold ${hasApproved ? getTitleColorByLevel(1) : 'text-gray-500 dark:text-gray-400'}`}>
-                {hasApproved ? t('profile.title.explorer') : t('profile.title.none')}
+              <p className={`mt-1 font-semibold ${getTitleColorByLevel(calculateLevel(userInfo?.totalPoints || 0))}`}>
+                {getTitleByLevel(calculateLevel(userInfo?.totalPoints || 0))}
               </p>
+              {/* 调试信息 */}
+              {process.env.NODE_ENV === 'development' && (
+                <p className="mt-1 text-xs text-gray-500">
+                  (积分: {userInfo?.totalPoints || 0}, 等级: {calculateLevel(userInfo?.totalPoints || 0)}, 已通过申请: {hasApproved ? '是' : '否'})
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{language === 'zh' ? 'Footprint' : 'Footprint'}</label>
-              <p className="mt-1 text-blue-600 dark:text-blue-400 font-bold">{userInfo?.userPoints || 0}</p>
+              <p className="mt-1 text-blue-600 dark:text-blue-400 font-bold">{userInfo?.totalPoints || 0}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{language === 'zh' ? 'Twitter' : 'Twitter'}</label>
@@ -786,6 +650,35 @@ export default function Profile() {
                 />
               ) : (
                 <p className="mt-1 text-gray-900 dark:text-white font-mono text-sm">{userInfo?.walletAddress || t('profile.not.set')}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{language === 'zh' ? '所在国家地区' : 'Country/Region'}</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editForm.country}
+                  onChange={(e) => handleInputChange('country', e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={language === 'zh' ? '例如：中国、美国、日本等' : 'e.g., China, USA, Japan'}
+                />
+              ) : (
+                <p className="mt-1 text-gray-900 dark:text-white">{userInfo?.country || t('profile.not.set')}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{language === 'zh' ? 'Twitter 粉丝数' : 'Twitter Followers'}</label>
+              {isEditing ? (
+                <input
+                  type="number"
+                  value={editForm.twitterFollowers}
+                  onChange={(e) => handleInputChange('twitterFollowers', e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={language === 'zh' ? '例如：1000' : 'e.g., 1000'}
+                  min="0"
+                />
+              ) : (
+                <p className="mt-1 text-gray-900 dark:text-white">{userInfo?.twitterFollowers?.toLocaleString() || t('profile.not.set')}</p>
               )}
             </div>
           </div>
@@ -832,201 +725,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* 月度奖励进度 */}
-        <MonthlyRewardProgress />
-
-        {/* 历史奖励记录 */}
-        <MonthlyRewardHistory />
-
-        {/* 提交历史 */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{t('profile.submission.history')}</h2>
-          
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-4">
-              <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
-            </div>
-          )}
-          
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600 dark:text-gray-300">{t('profile.loading.submissions')}</span>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      {t('profile.submission.formtype')}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      {t('profile.submission.status.label')}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      {t('profile.submission.reviewinfo')}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      {t('profile.submission.points')}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      {t('profile.submission.submitdate')}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[100px]">
-                      {t('profile.submission.operation')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {submissionHistory.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                        {t('profile.submission.no.records')}
-                      </td>
-                    </tr>
-                  ) : (
-                    submissionHistory.map((submission) => {
-                      // 获取积分
-                      let score = 0;
-                      if (submission.type === 'task' && (submission.data as TaskSubmissionVO).reviewScore) {
-                        score = (submission.data as TaskSubmissionVO).reviewScore!;
-                      } else if (submission.type === 'activity' && (submission.data as ActivityApplication).reviewScore) {
-                        score = (submission.data as ActivityApplication).reviewScore!;
-                      } else if (submission.type === 'application' && (submission.data as ApplicationForm).reviewScore) {
-                        score = (submission.data as ApplicationForm).reviewScore!;
-                      }
-
-                      return (
-                        <tr key={`${submission.type}-${submission.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {submission.type === 'application' ? t('profile.submission.application') :
-                             submission.type === 'activity' ? t('profile.submission.activity') :
-                             submission.type === 'task' ? t('profile.submission.achievement') :
-                             submission.title}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(submission.status)}`}>
-                              {getStatusText(submission.status)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white max-w-xs">
-                            {submission.reviewMessage ? (
-                              <div className="relative">
-                                <div className="truncate">
-                                  {submission.reviewMessage.length > 50 
-                                    ? `${submission.reviewMessage.substring(0, 50)}...` 
-                                    : submission.reviewMessage
-                                  }
-                                </div>
-                                {submission.reviewMessage.length > 50 && (
-                                  <button
-                                    onClick={() => {
-                                      setSelectedReviewMessage(submission.reviewMessage || '');
-                                      setShowReviewMessageModal(true);
-                                    }}
-                                    className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 text-xs ml-1"
-                                    title={submission.reviewMessage}
-                                  >
-                                    {language === 'zh' ? '查看全部' : 'View All'}
-                                  </button>
-                                )}
-                              </div>
-                            ) : (
-                              '-'
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {score > 0 ? (
-                              <span className="text-green-600 dark:text-green-400 font-semibold">+{score}</span>
-                            ) : score === 0 ? (
-                              <span className="text-gray-600 dark:text-gray-400">0</span>
-                            ) : (
-                              '-'
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {new Date(submission.createTime).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 text-sm font-medium min-w-[100px]">
-                            <button
-                              onClick={() => handleShowSubmissionDetail(submission)}
-                              className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 whitespace-nowrap"
-                            >
-                              {t('profile.submission.view.details')}
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* 分页组件 */}
-          {totalRecords > pageSize && (
-            <div className="mt-6 flex items-center justify-between">
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                {language === 'zh' ? `显示第 ${(currentPage - 1) * pageSize + 1} - ${Math.min(currentPage * pageSize, totalRecords)} 条，共 ${totalRecords} 条记录` : `Showing ${(currentPage - 1) * pageSize + 1} - ${Math.min(currentPage * pageSize, totalRecords)} of ${totalRecords} records`}
-              </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                >
-                  {language === 'zh' ? '上一页' : 'Previous'}
-                </button>
-                
-                {/* 页码按钮 */}
-                <div className="flex space-x-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`px-3 py-2 text-sm font-medium rounded-md ${
-                          currentPage === pageNum
-                            ? 'bg-blue-600 text-white'
-                            : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                </div>
-                
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                >
-                  {language === 'zh' ? '下一页' : 'Next'}
-                </button>
-              </div>
-            </div>
-          )}
-          
-          <div className="mt-6">
-            <a href="/forms" className="text-blue-600 hover:text-blue-500 font-medium">
-              {t('profile.continue.submit')}
-            </a>
-          </div>
-        </div>
           </div>
 
           {/* 右侧Launch和Mint大赛表单区域 */}
@@ -1190,296 +888,6 @@ export default function Profile() {
           </div>
         </div>
       </div>
-
-      {/* 提交详情弹窗 */}
-      {showSubmissionModal && selectedSubmission && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-5xl w-full max-h-[95vh] overflow-y-auto shadow-2xl transform transition-all duration-300 ease-out scale-100 opacity-100 border border-gray-200 dark:border-gray-700">
-            <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">📋</span>
-                </div>
-                <div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {selectedSubmission.title}
-              </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    {t('profile.submission.details')}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleCloseSubmissionModal}
-                className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors duration-200 group"
-              >
-                <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-8">
-              {/* 基本信息 */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-6 border border-blue-100 dark:border-gray-600">
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs">ℹ️</span>
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{t('profile.submission.basic.info')}</h4>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.time')}：</span>
-                    <span className="text-sm text-gray-900 dark:text-white ml-2">
-                      {new Date(selectedSubmission.createTime).toLocaleString()}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.status.label')}：</span>
-                    <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(selectedSubmission.status)}`}>
-                      {getStatusText(selectedSubmission.status)}
-                    </span>
-                  </div>
-                  {selectedSubmission.reviewMessage && (
-                    <div className="md:col-span-2">
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.reviewinfo.label')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {selectedSubmission.reviewMessage}
-                      </span>
-                    </div>
-                  )}
-                  {selectedSubmission.type === 'task' && (selectedSubmission.data as TaskSubmissionVO).reviewScore !== undefined && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.points.earned')}：</span>
-                      <span className="text-sm ml-2 font-semibold">
-                        {(selectedSubmission.data as TaskSubmissionVO).reviewScore! > 0 ? (
-                          <span className="text-green-600 dark:text-green-400">+{(selectedSubmission.data as TaskSubmissionVO).reviewScore}</span>
-                        ) : (
-                          <span className="text-gray-600 dark:text-gray-400">{(selectedSubmission.data as TaskSubmissionVO).reviewScore}</span>
-                        )}
-                      </span>
-                    </div>
-                  )}
-                  {selectedSubmission.type === 'activity' && (selectedSubmission.data as ActivityApplication).reviewScore !== undefined && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.points.earned')}：</span>
-                      <span className="text-sm ml-2 font-semibold">
-                        {(selectedSubmission.data as ActivityApplication).reviewScore! > 0 ? (
-                          <span className="text-green-600 dark:text-green-400">+{(selectedSubmission.data as ActivityApplication).reviewScore}</span>
-                        ) : (
-                          <span className="text-gray-600 dark:text-gray-400">{(selectedSubmission.data as ActivityApplication).reviewScore}</span>
-                        )}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* 表单详情 */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">{t('profile.submission.form.details')}</h4>
-                {selectedSubmission.type === 'application' && (
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.name')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ApplicationForm).name}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.email')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ApplicationForm).email}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Twitter：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ApplicationForm).twitterUsername}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Telegram：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ApplicationForm).telegramUsername || t('admin.review.not.filled')}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.wallet')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ApplicationForm).walletAddress || t('admin.review.not.filled')}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.web3role')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ApplicationForm).web3Role || t('admin.review.not.filled')}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.expertise')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ApplicationForm).expertise || t('admin.review.not.filled')}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.motivation')}：</span>
-                      <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
-                        {(selectedSubmission.data as ApplicationForm).motivation || t('admin.review.not.filled')}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {selectedSubmission.type === 'task' && (
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.name')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as TaskSubmissionVO).name}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.email')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as TaskSubmissionVO).email}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Twitter：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as TaskSubmissionVO).twitterUsername}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.category')}：</span>
-                      <div className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as TaskSubmissionVO).tasks?.map((task, index) => (
-                          <span key={index} className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded text-xs mr-1 mb-1">
-                            {task.submissionCategory}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.task.details')}：</span>
-                      <div className="mt-2 space-y-2">
-                        {(selectedSubmission.data as TaskSubmissionVO).tasks?.map((task, index) => (
-                          <div key={index} className="p-3 bg-white dark:bg-gray-600 rounded border">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                              {t('profile.submission.task')} {index + 1}: {task.taskType}
-                            </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-300 space-y-1">
-                              <div>{t('profile.submission.completion.date')}: {new Date(task.completionDate).toLocaleDateString()}</div>
-                              {task.contentLink && <div>{t('profile.submission.content.link')}: <a href={task.contentLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{task.contentLink}</a></div>}
-                              {task.description && <div>{t('profile.submission.description')}: {task.description}</div>}
-                              {task.screenshot && task.screenshot.trim() && (
-                                <div className="mt-2">
-                                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('profile.submission.screenshot')}：</div>
-                                  <div className="relative inline-block">
-                                    <img 
-                                      src={buildImageUrl(task.screenshot)}
-                                      alt={t('profile.submission.task.screenshot')}
-                                      className="max-w-xs max-h-48 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
-                                      onClick={() => {
-                                        if (task.screenshot) {
-                                          const url = buildImageUrl(task.screenshot);
-                                          window.open(url, '_blank');
-                                        }
-                                      }}
-                                      onError={(e) => {
-                                        console.error('图片加载失败:', {
-                                          originalPath: task.screenshot,
-                                          builtUrl: task.screenshot ? buildImageUrl(task.screenshot) : 'undefined',
-                                          apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
-                                          error: e,
-                                          timestamp: new Date().toISOString()
-                                        });
-                                        e.currentTarget.style.display = 'none';
-                                      }}
-                                      onLoad={() => {
-                                        console.log('图片加载成功:', task.screenshot ? buildImageUrl(task.screenshot) : 'undefined');
-                                      }}
-                                    />
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('profile.submission.click.view.image')}</div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {selectedSubmission.type === 'activity' && (
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.theme')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ActivityApplication).activityTheme}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.organizer')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ActivityApplication).organizer}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.type')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ActivityApplication).activityType}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.time')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ActivityApplication).activityTime}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.location')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ActivityApplication).activityLocation}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.scale')}：</span>
-                      <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ActivityApplication).activityScale}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.introduction')}：</span>
-                      <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
-                        {(selectedSubmission.data as ActivityApplication).briefIntroduction}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.activity.goals')}：</span>
-                      <div className="text-sm text-gray-900 dark:text-white mt-1 p-3 bg-white dark:bg-gray-600 rounded border">
-                        {(selectedSubmission.data as ActivityApplication).activityGoals}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-end">
-              <button
-                onClick={handleCloseSubmissionModal}
-                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
-              >
-                {language === 'zh' ? '关闭' : 'Close'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 大赛表单详情弹窗 */}
       {showFormModal && selectedForm && (
@@ -2028,45 +1436,6 @@ export default function Profile() {
         </div>
       )}
 
-      {/* 审核信息弹窗 */}
-      {showReviewMessageModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {language === 'zh' ? '审核信息' : 'Review Information'}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowReviewMessageModal(false);
-                  setSelectedReviewMessage('');
-                }}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-              <div className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap leading-relaxed">
-                {selectedReviewMessage}
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => {
-                  setShowReviewMessageModal(false);
-                  setSelectedReviewMessage('');
-                }}
-                className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-              >
-                {language === 'zh' ? '关闭' : 'Close'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

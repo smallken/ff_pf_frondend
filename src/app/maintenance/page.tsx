@@ -179,7 +179,7 @@ export default function MaintenancePage() {
               color: '#6b7280',
               marginBottom: '24px'
             }}>
-              维护期间系统将暂停服务，给您带来的不便敬请谅解
+              维护期间系统将暂停服务，预计11月3日下午(UTC+8)能恢复，给您带来的不便敬请谅解
             </p>
           </div>
           
@@ -212,7 +212,7 @@ export default function MaintenancePage() {
               fontSize: '16px',
               color: '#6b7280'
             }}>
-              The system will be temporarily unavailable during maintenance. We apologize for any inconvenience.
+              During the maintenance period, the system will be temporarily suspended. It is expected to be restored on the afternoon of November 3rd (UTC+8). We apologize for any inconvenience caused.
             </p>
           </div>
           

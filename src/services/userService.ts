@@ -79,6 +79,36 @@ export const userService = {
     return request.get<PageData<RankingUserVO>>(url);
   },
 
+  // 获取周排行榜
+  getWeeklyRanking: (params: {
+    current?: number;
+    pageSize?: number;
+  } = {}): Promise<PageData<RankingUserVO>> => {
+    const queryParams = new URLSearchParams();
+    if (params.current) queryParams.append('current', params.current.toString());
+    if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+    
+    const queryString = queryParams.toString();
+    const url = queryString ? `/user/weeklyRanking?${queryString}` : '/user/weeklyRanking';
+    
+    return request.get<PageData<RankingUserVO>>(url);
+  },
+
+  // 获取总排行榜
+  getTotalRanking: (params: {
+    current?: number;
+    pageSize?: number;
+  } = {}): Promise<PageData<RankingUserVO>> => {
+    const queryParams = new URLSearchParams();
+    if (params.current) queryParams.append('current', params.current.toString());
+    if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+    
+    const queryString = queryParams.toString();
+    const url = queryString ? `/user/totalRanking?${queryString}` : '/user/totalRanking';
+    
+    return request.get<PageData<RankingUserVO>>(url);
+  },
+
   // 获取管理员统计数据
   getAdminStats: (): Promise<AdminStatsVO> => {
     return request.get<AdminStatsVO>(API_ENDPOINTS.USER.ADMIN_STATS);

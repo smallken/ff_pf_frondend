@@ -1,16 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import LogoutConfirmModal from '../../components/LogoutConfirmModal';
+import { formService } from '@/services';
 
 export default function Process() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [hasSubmittedApplication, setHasSubmittedApplication] = useState<boolean>(false);
+  const [isCheckingApplication, setIsCheckingApplication] = useState<boolean>(true);
 
   const handleRegisterClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -25,6 +29,22 @@ export default function Process() {
     setShowLogoutModal(false);
     router.push('/register');
   };
+
+  // 检查用户是否已提交申请表
+  useEffect(() => {
+    formService
+      .getMyForms({ status: undefined, current: 1, pageSize: 1 })
+      .then((response: any) => {
+        const hasSubmitted = Boolean(response?.records && response.records.length > 0);
+        setHasSubmittedApplication(hasSubmitted);
+      })
+      .catch(() => {
+        setHasSubmittedApplication(false);
+      })
+      .finally(() => {
+        setIsCheckingApplication(false);
+      });
+  }, []);
   const steps = [
     {
       step: 1,
@@ -34,8 +54,7 @@ export default function Process() {
       details: [
         t('process.step1.detail1'),
         t('process.step1.detail2'),
-        t('process.step1.detail3'),
-        t('process.step1.detail4')
+        t('process.step1.detail3')
       ]
     },
     {
@@ -94,6 +113,18 @@ export default function Process() {
         t('process.step6.detail2'),
         t('process.step6.detail3'),
         t('process.step6.detail4')
+      ]
+    },
+    {
+      step: 7,
+      title: t('process.step7.title'),
+      description: t('process.step7.description'),
+      icon: '🤝',
+      details: [
+        t('process.step7.detail1'),
+        t('process.step7.detail2'),
+        t('process.step7.detail3'),
+        t('process.step7.detail4')
       ]
     }
   ];
@@ -180,22 +211,9 @@ export default function Process() {
                           {t('process.step1.custom')}
                         </p>
                       ) : step.step === 3 ? (
-                        <p>
-                          {t('process.step3.fill.form')}
-                          <a href="/forms/achievement" className="mx-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium underline transition-colors duration-200">
-                            {t('process.step3.achievement.form')}
-                          </a>
-                        </p>
+                        <p>{step.description}</p>
                       ) : step.step === 2 ? (
-                        <div>
-                          <p className="mb-2">{step.description}</p>
-                          <p>
-                            {t('process.organize.activity')}
-                            <a href="/forms/activity" className="mx-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium underline transition-colors duration-200">
-                              {t('process.activity.form')}
-                            </a>
-                          </p>
-                        </div>
+                        <p>{step.description}</p>
                       ) : (
                         <p>{step.description}</p>
                       )}
@@ -208,17 +226,56 @@ export default function Process() {
                         ? 'bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-900/20 dark:to-sky-900/20 border border-blue-200 dark:border-blue-700'
                         : 'bg-gradient-to-r from-sky-50 to-cyan-50 dark:from-sky-900/20 dark:to-cyan-900/20 border border-sky-200 dark:border-sky-700'
                     }`}>
-                      <h4 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-                        <span className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></span>
-                        {t('process.details.title')}
-                      </h4>
                       <ul className="text-gray-600 dark:text-gray-300 space-y-2">
-                        {step.details.map((detail, i) => (
-                          <li key={i} className="flex items-start">
-                            <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full mt-2.5 mr-3 flex-shrink-0"></span>
-                            <span>{detail}</span>
-                          </li>
-                        ))}
+                        {step.details.map((detail, i) => {
+                          const isApplicationStepDetail = step.step === 1 && i === 0;
+                          return (
+                            <li key={i} className="flex items-start">
+                              <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full mt-2.5 mr-3 flex-shrink-0"></span>
+                              <span>
+                                {isApplicationStepDetail ? (
+                                  language === 'zh' ? (
+                                    <>
+                                      填写
+                                      {hasSubmittedApplication ? (
+                                        <span className="text-gray-500 dark:text-gray-400 font-semibold mx-1 cursor-not-allowed">
+                                          报名申请表（已提交）
+                                        </span>
+                                      ) : (
+                                        <Link
+                                          href="/forms/application"
+                                          className="text-blue-600 hover:text-blue-500 font-semibold underline decoration-dotted underline-offset-4 mx-1"
+                                        >
+                                          报名申请表
+                                        </Link>
+                                      )}
+                                      ，通过审核后即可解锁参与资格。
+                                    </>
+                                  ) : (
+                                    <>
+                                      Fill out the
+                                      {hasSubmittedApplication ? (
+                                        <span className="text-gray-500 dark:text-gray-400 font-semibold mx-1 cursor-not-allowed">
+                                          enrollment application form (submitted)
+                                        </span>
+                                      ) : (
+                                        <Link
+                                          href="/forms/application"
+                                          className="text-blue-600 hover:text-blue-500 font-semibold underline decoration-dotted underline-offset-4 mx-1"
+                                        >
+                                          enrollment application form
+                                        </Link>
+                                      )}
+                                      to unlock participation after approval.
+                                    </>
+                                  )
+                                ) : (
+                                  detail
+                                )}
+                              </span>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                     
@@ -228,6 +285,20 @@ export default function Process() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* 结尾标语 */}
+        <div className="mt-16 text-center">
+          <div className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-full text-2xl font-bold shadow-xl">
+            <span>Complete</span>
+            <span className="mx-4">→</span>
+            <span>Claim</span>
+            <span className="mx-4">→</span>
+            <span>Climb</span>
+          </div>
+          <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
+            {t('process.footer.slogan')}
+          </p>
         </div>
 
         {/* 社交媒体链接 */}

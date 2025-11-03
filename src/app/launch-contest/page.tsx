@@ -128,16 +128,6 @@ export default function LaunchContestHome() {
               </a>
               
               <motion.button
-                onClick={() => router.push('/launch-contest/forms')}
-                className="relative px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="relative z-10">📋 {language === 'zh' ? '表格申请' : 'Form Applications'}</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-xl opacity-0 hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
-              </motion.button>
-              
-              <motion.button
                 onClick={() => router.push('/launch-contest/rules')}
                 className="px-8 py-4 border-2 border-cyan-400 text-cyan-400 rounded-xl hover:bg-cyan-400 hover:text-black transition-all duration-300 font-bold neon-border"
                 whileHover={{ scale: 1.05 }}

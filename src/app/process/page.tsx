@@ -28,72 +28,86 @@ export default function Process() {
   const steps = [
     {
       step: 1,
-      title: t('process.step1.title'),
-      description: t('process.step1.description'),
+      title: '加入脚印计划',
+      description: '填写报名申请表，通过审核后即可解锁参与资格。通过后，你将获得个人任务面板与积分记录页。只有通过审核的用户，才能累积积分与领取奖励。',
       icon: '📝',
       details: [
-        t('process.step1.detail1'),
-        t('process.step1.detail2'),
-        t('process.step1.detail3'),
-        t('process.step1.detail4')
+        '填写报名申请表',
+        '等待审核通过',
+        '解锁个人任务面板',
+        '获得积分记录页'
       ]
     },
     {
       step: 2,
-      title: t('process.step2.title'),
-      description: t('process.step2.description'),
-      icon: '📄',
+      title: '查看每周任务',
+      description: '每周一（UTC+8）发布全新 Weekly Challenge，包含三大任务类别：传播类、社群类、原创类。任务卡将展示积分上限、截止时间与奖池信息。活动截止：周六 24:00（UTC+8）。',
+      icon: '📅',
       details: [
-        t('process.step2.detail1'),
-        t('process.step2.detail2'),
-        t('process.step2.detail3'),
-        t('process.step2.detail4')
+        '每周一发布新任务',
+        '三大任务类别：传播类、社群类、原创类',
+        '查看积分上限与奖池信息',
+        '活动截止：周六 24:00（UTC+8）'
       ]
     },
     {
       step: 3,
-      title: t('process.step3.title'),
-      description: t('process.step3.description'),
-      icon: '📋',
+      title: '完成任务 & 领取积分',
+      description: '传播类与社群类任务上传后，系统自动发放积分；原创类任务上传时需填写当前浏览量，立即领取 5 分基础分；浏览量将在活动结束后复核并加权。',
+      icon: '✅',
       details: [
-        t('process.step3.detail1'),
-        t('process.step3.detail2')
+        '传播类与社群类：上传后自动发放积分',
+        '原创类：上传时填写当前浏览量',
+        '立即领取 5 分基础分',
+        '浏览量活动结束后复核加权'
       ]
     },
     {
       step: 4,
-      title: t('process.step4.title'),
-      description: t('process.step4.description'),
-      icon: '⏳',
+      title: '浏览量加权 & 审核验证',
+      description: '活动截止后，审核员将进入「验证模式」：实际浏览量 ≥ 提交值 → 有效并获得加权积分；浏览量 < 提交值 → 无效，仅保留基础分；删除或私密内容 → 无效；严重违规行为将被取消参与资格。',
+      icon: '🔍',
       details: [
-        t('process.step4.detail1'),
-        t('process.step4.detail2'),
-        t('process.step4.detail3'),
-        t('process.step4.detail4')
+        '实际浏览量 ≥ 提交值 → 有效并获得加权积分',
+        '浏览量 < 提交值 → 无效，仅保留基础分',
+        '删除或私密内容 → 无效',
+        '严重违规行为将被取消参与资格'
       ]
     },
     {
       step: 5,
-      title: t('process.step5.title'),
-      description: t('process.step5.description'),
-      icon: '🎁',
+      title: '冲击排行榜 & 赢取奖励',
+      description: '每周一公布最终排行榜与奖励名单；仅周榜 Top 50 用户获得奖励。奖金分配：Top 1–3 固定大奖、Top 4–10 梯度奖金、Top 11–30 均分奖池、Top 31–50 基础激励。',
+      icon: '🏆',
       details: [
-        t('process.step5.detail1'),
-        t('process.step5.detail2'),
-        t('process.step5.detail3'),
-        t('process.step5.detail4')
+        '每周一公布最终排行榜',
+        '仅周榜 Top 50 用户获得奖励',
+        '奖金按排名梯度分配',
+        'Top 1–3 固定大奖、Top 4–10 梯度奖金'
       ]
     },
     {
       step: 6,
-      title: t('process.step6.title'),
-      description: t('process.step6.description'),
-      icon: '🌟',
+      title: '累积 Footprint，解锁荣誉等级',
+      description: '你的周积分不仅带来即时奖励，还会被计入长期 Footprint，用于解锁 L1–L4 荣誉等级，让你的每一步努力，都永远留在 Flipflop 生态的足迹中。',
+      icon: '👣',
       details: [
-        t('process.step6.detail1'),
-        t('process.step6.detail2'),
-        t('process.step6.detail3'),
-        t('process.step6.detail4')
+        '周积分计入长期 Footprint',
+        '解锁 L1–L4 荣誉等级',
+        '每一步努力都留下足迹',
+        '长期参与获得更多权益'
+      ]
+    },
+    {
+      step: 7,
+      title: '公平与信任',
+      description: '为保证公平竞争：严禁虚报浏览量、P 图、买量等行为；一经发现，当周积分作废，严重者取消资格；鼓励实名举报违规，核实后可获感谢奖励。',
+      icon: '⚖️',
+      details: [
+        '严禁虚报浏览量、P 图、买量',
+        '违规者当周积分作废',
+        '严重违规取消参与资格',
+        '鼓励实名举报违规行为'
       ]
     }
   ];
@@ -114,10 +128,14 @@ export default function Process() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-500 to-blue-600 text-white rounded-full text-sm font-medium mb-8 shadow-lg">
             <span className="mr-2">🚀</span>
-            Process Guide
+            Weekly Challenge Guide
           </div>
-          <h1 className="text-5xl lg:text-6xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 dark:from-indigo-400 dark:to-blue-400 bg-clip-text text-transparent mb-6">{t('process.page.title')}</h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">{t('process.page.subtitle')}</p>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 dark:from-indigo-400 dark:to-blue-400 bg-clip-text text-transparent mb-6 whitespace-nowrap text-center overflow-hidden flex items-center justify-center">
+            {t('process.page.title')}
+          </h1>
+          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 whitespace-nowrap text-center overflow-hidden flex items-center justify-center min-w-full">
+            {t('process.page.subtitle')}
+          </p>
         </div>
 
         {/* 流程步骤 */}
@@ -175,30 +193,7 @@ export default function Process() {
                     </div>
                     
                     <div className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-                      {step.step === 1 ? (
-                        <p>
-                          {t('process.step1.custom')}
-                        </p>
-                      ) : step.step === 3 ? (
-                        <p>
-                          {t('process.step3.fill.form')}
-                          <a href="/forms/achievement" className="mx-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium underline transition-colors duration-200">
-                            {t('process.step3.achievement.form')}
-                          </a>
-                        </p>
-                      ) : step.step === 2 ? (
-                        <div>
-                          <p className="mb-2">{step.description}</p>
-                          <p>
-                            {t('process.organize.activity')}
-                            <a href="/forms/activity" className="mx-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium underline transition-colors duration-200">
-                              {t('process.activity.form')}
-                            </a>
-                          </p>
-                        </div>
-                      ) : (
-                        <p>{step.description}</p>
-                      )}
+                      <p>{step.description}</p>
                     </div>
                     
                     <div className={`rounded-2xl p-6 ${
@@ -208,15 +203,15 @@ export default function Process() {
                         ? 'bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-900/20 dark:to-sky-900/20 border border-blue-200 dark:border-blue-700'
                         : 'bg-gradient-to-r from-sky-50 to-cyan-50 dark:from-sky-900/20 dark:to-cyan-900/20 border border-sky-200 dark:border-sky-700'
                     }`}>
-                      <h4 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-                        <span className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></span>
-                        {t('process.details.title')}
-                      </h4>
                       <ul className="text-gray-600 dark:text-gray-300 space-y-2">
                         {step.details.map((detail, i) => (
                           <li key={i} className="flex items-start">
                             <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full mt-2.5 mr-3 flex-shrink-0"></span>
-                            <span>{detail}</span>
+                            {step.step === 1 && i === 0 ? (
+                              <a href="/forms/application" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">{detail}</a>
+                            ) : (
+                              <span>{detail}</span>
+                            )}
                           </li>
                         ))}
                       </ul>

@@ -134,6 +134,15 @@ export const API_ENDPOINTS = {
       DELETE: '/mint-contest/vote/delete',
     },
   },
+  WEEKLY: {
+    TASK: {
+      COMMUNICATION: '/weekly/task/communication',
+      COMMUNITY: '/weekly/task/community',
+      ORIGINAL: '/weekly/task/original',
+      ORIGINAL_UPDATE: (id: number | string) => `/weekly/task/original/${id}`,
+      MY_OVERVIEW: '/weekly/task/my-overview',
+    },
+  },
 };
 
 // 请求状态码

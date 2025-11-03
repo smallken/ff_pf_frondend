@@ -10,15 +10,17 @@ export default function Ranking() {
   const { t } = useLanguage();
   const { user, isAuthenticated } = useAuth();
   const [rankings, setRankings] = useState<RankingUserVO[]>([]);
+  const [totalRankings, setTotalRankings] = useState<RankingUserVO[]>([]);
   const [currentUser, setCurrentUser] = useState<RankingUserVO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState<'weekly' | 'total'>('weekly');
 
   // 根据脚印数量计算等级
   const calculateLevel = (userPoints: number) => {
-    if (userPoints >= 300) return 4; // Pioneer（先驱者）
-    if (userPoints >= 101) return 3; // Trailblazer（开路者）
-    if (userPoints >= 31) return 2;  // Pathfinder（探路者）
+    if (userPoints >= 700) return 4; // Pioneer（先驱者）
+    if (userPoints >= 301) return 3; // Trailblazer（开路者）
+    if (userPoints >= 101) return 2;  // Pathfinder（探路者）
     return 1; // Explorer（探索者）
   };
 
@@ -46,32 +48,54 @@ export default function Ranking() {
     }
   };
 
-  // 获取排行榜数据
-  const fetchRankings = async () => {
+  // 获取周排行榜数据
+  const fetchWeeklyRankings = async () => {
     try {
-      
-      // 调用后端API获取排行榜数据（分页）
-      const rankingResponse = await userService.getRanking({
+      setLoading(true);
+      // 调用后端API获取周排行榜数据
+      const rankingResponse = await userService.getWeeklyRanking({
         current: 1,
         pageSize: 20
       });
       
-      // 过滤条件：必须有通过的报名申请（后端需保证），且分数>0
+      // 过滤条件：周积分>0
       const filtered = rankingResponse.records.filter(u => (u.userPoints || 0) > 0);
       setRankings(filtered);
 
-      // 如果有当前用户，设置当前用户信息
+      // 设置当前用户信息（周排行）
       if (user) {
         const currentUserRanking = filtered.find(u => u.id === user.id);
-        if (currentUserRanking) {
-          setCurrentUser(currentUserRanking);
-        } else {
-          // 不在榜单中且分数为0或未申请通过，则不显示个人临时记录
-          setCurrentUser(null);
-        }
+        setCurrentUser(currentUserRanking || null);
       }
     } catch (error: any) {
-      console.error('❌ 获取排行榜数据失败:', error);
+      console.error('❌ 获取周排行榜数据失败:', error);
+      setError(error.message || '获取排行榜数据失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 获取总排行榜数据
+  const fetchTotalRankings = async () => {
+    try {
+      setLoading(true);
+      // 调用后端API获取总排行榜数据
+      const rankingResponse = await userService.getTotalRanking({
+        current: 1,
+        pageSize: 20
+      });
+      
+      // 过滤条件：总积分>0
+      const filtered = rankingResponse.records.filter(u => (u.totalPoints || 0) > 0);
+      setTotalRankings(filtered);
+
+      // 设置当前用户信息（总排行）
+      if (user) {
+        const currentUserRanking = filtered.find(u => u.id === user.id);
+        setCurrentUser(currentUserRanking || null);
+      }
+    } catch (error: any) {
+      console.error('❌ 获取总排行榜数据失败:', error);
       setError(error.message || '获取排行榜数据失败');
     } finally {
       setLoading(false);
@@ -79,8 +103,12 @@ export default function Ranking() {
   };
 
   useEffect(() => {
-    fetchRankings();
-  }, [user]);
+    if (activeTab === 'weekly') {
+      fetchWeeklyRankings();
+    } else {
+      fetchTotalRankings();
+    }
+  }, [user, activeTab]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-emerald-900/20 dark:to-gray-800 relative overflow-hidden">
@@ -103,36 +131,55 @@ export default function Ranking() {
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">{t('ranking.page.subtitle')}</p>
         </div>
 
-        {/* 排行榜 */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 mb-12 border border-emerald-100 dark:border-gray-700 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-emerald-200 to-teal-300 dark:from-emerald-800 dark:to-teal-900 opacity-20 rounded-full -translate-y-16 translate-x-16"></div>
-          <div className="relative z-10">
-            <div className="flex items-center mb-8">
-              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
-                <span className="text-2xl">🏅</span>
-              </div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">{t('ranking.top10.title')}</h2>
-            </div>
-            
-            {/* 总Footprint和参考说明 */}
-            <div className="mb-8 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-700">
-              <div className="flex justify-between items-center">
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {t('ranking.total.points')}: <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                    {rankings.reduce((total, user) => total + user.userPoints, 0)}{t('ranking.points.unit')}
-                  </span>
+        {/* 排行榜切换 */}
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex p-1 bg-white/50 dark:bg-gray-800/50 rounded-full border border-white/40 dark:border-gray-700/40 backdrop-blur-sm">
+            <button
+              onClick={() => setActiveTab('weekly')}
+              className={`px-6 py-3 rounded-full font-semibold text-sm md:text-base transition-all duration-300 ${
+                activeTab === 'weekly'
+                  ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-lg'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400'
+              }`}
+            >
+              周排行榜
+            </button>
+            <button
+              onClick={() => setActiveTab('total')}
+              className={`px-6 py-3 rounded-full font-semibold text-sm md:text-base transition-all duration-300 ${
+                activeTab === 'total'
+                  ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-white shadow-lg'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400'
+              }`}
+            >
+              总排行榜
+            </button>
+          </div>
+        </div>
+
+        {/* 周排行榜 */}
+        {activeTab === 'weekly' && (
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 mb-12 border border-emerald-100 dark:border-gray-700 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-emerald-200 to-teal-300 dark:from-emerald-800 dark:to-teal-900 opacity-20 rounded-full -translate-y-16 translate-x-16"></div>
+            <div className="relative z-10">
+              <div className="flex items-center mb-8">
+                <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
+                  <span className="text-2xl">📅</span>
                 </div>
-                <div className="text-sm font-normal text-gray-600 dark:text-gray-300">
-                  {t('ranking.reference.note')}
-                  <a 
-                    href="/honor" 
-                    className="ml-1 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-normal underline transition-colors duration-200"
-                  >
-                    {t('ranking.reference.link')}
-                  </a>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">周排行榜</h2>
+              </div>
+
+              {/* 周排行榜说明 */}
+              <div className="mb-8 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-700">
+                <div className="flex justify-between items-center">
+                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                    本周奖池: <span className="text-emerald-600 dark:text-emerald-400 font-bold">1000U</span>
+                  </div>
+                  <div className="text-sm font-normal text-gray-600 dark:text-gray-300">
+                    周排行榜前50名将获得奖励
+                  </div>
                 </div>
               </div>
-            </div>
             {loading ? (
               <div className="flex justify-center items-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
@@ -166,8 +213,8 @@ export default function Ranking() {
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {rankings.map((user) => (
-                      <tr key={user.rank} className={`hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-colors duration-200 ${
-                        user.rank <= 3 ? 'bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20' : ''
+                      <tr key={user.rank ?? user.id} className={`hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-colors duration-200 ${
+                        (user.rank ?? 999) <= 3 ? 'bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20' : ''
                       }`}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
@@ -177,9 +224,9 @@ export default function Ranking() {
                               user.rank === 3 ? 'bg-gradient-to-r from-orange-400 to-red-500 text-white' :
                               'bg-gradient-to-r from-emerald-400 to-teal-500 text-white'
                             }`}>
-                              {user.rank <= 3 ? (
+                              {(user.rank ?? 999) <= 3 ? (
                                 user.rank === 1 ? '🥇' : user.rank === 2 ? '🥈' : '🥉'
-                              ) : user.rank}
+                              ) : user.rank ?? '-'}
                             </span>
                           </div>
                         </td>
@@ -205,8 +252,110 @@ export default function Ranking() {
                 </table>
               </div>
             )}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* 总排行榜 */}
+        {activeTab === 'total' && (
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 mb-12 border border-purple-100 dark:border-gray-700 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-200 to-pink-300 dark:from-purple-800 dark:to-pink-900 opacity-20 rounded-full -translate-y-16 translate-x-16"></div>
+            <div className="relative z-10">
+              <div className="flex items-center mb-8">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
+                  <span className="text-2xl">🏆</span>
+                </div>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">总排行榜</h2>
+              </div>
+
+              {/* 总排行榜说明 */}
+              <div className="mb-8 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border border-purple-200 dark:border-purple-700">
+                <div className="flex justify-between items-center">
+                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                    历史总积分: <span className="text-purple-600 dark:text-purple-400 font-bold">
+                      {totalRankings.reduce((total, user) => total + (user.totalPoints || 0), 0)}{t('ranking.points.unit')}
+                    </span>
+                  </div>
+                  <div className="text-sm font-normal text-gray-600 dark:text-gray-300">
+                    记录分数最高的前20名用户
+                  </div>
+                </div>
+              </div>
+              {loading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                  <span className="ml-2 text-gray-600 dark:text-gray-300">加载中...</span>
+                </div>
+              ) : error ? (
+                <div className="text-center py-8">
+                  <div className="text-red-600 dark:text-red-400">{error}</div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y-2 divide-purple-200 dark:divide-purple-700">
+                    <thead className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                          排名
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                          用户名
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                          邮箱
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                          总积分
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                          等级
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {totalRankings.slice(0, 20).map((user) => (
+                        <tr key={user.rank ?? user.id} className={`hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors duration-200 ${
+                          (user.rank ?? 999) <= 3 ? 'bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20' : ''
+                        }`}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <span className={`inline-flex items-center justify-center w-10 h-10 rounded-2xl text-sm font-bold shadow-lg ${
+                                user.rank === 1 ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white' :
+                                user.rank === 2 ? 'bg-gradient-to-r from-gray-400 to-slate-500 text-white' :
+                                user.rank === 3 ? 'bg-gradient-to-r from-orange-400 to-red-500 text-white' :
+                                'bg-gradient-to-r from-purple-400 to-pink-500 text-white'
+                              }`}>
+                                {(user.rank ?? 999) <= 3 ? (
+                                  user.rank === 1 ? '🥇' : user.rank === 2 ? '🥈' : '🥉'
+                                ) : user.rank ?? '-'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">
+                            {user.userName}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600 dark:text-gray-300">
+                            {user.userEmail}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            <span className="bg-purple-100 dark:bg-purple-900/30 px-3 py-1 rounded-full">
+                              {user.totalPoints || 0}{t('ranking.points.unit')}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-3 py-2 text-xs font-bold rounded-full shadow-sm ${getLevelStyle(user.totalPoints || 0)}`}>
+                              {getLevelText(user.totalPoints || 0)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 当前用户排名 */}
         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-teal-100 dark:border-gray-700 relative overflow-hidden">
@@ -246,7 +395,7 @@ export default function Ranking() {
                     <span className="text-xl text-white">📊</span>
                   </div>
                   <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                    {rankings.length > 0 ? Math.ceil((currentUser.userPoints / rankings[0].userPoints) * 100) : 0}%
+                    {activeTab === 'weekly' && rankings.length > 0 ? Math.ceil((currentUser.userPoints / rankings[0].userPoints) * 100) : activeTab === 'total' && totalRankings.length > 0 && totalRankings[0].totalPoints ? Math.ceil(((currentUser.totalPoints || 0) / totalRankings[0].totalPoints) * 100) : 0}%
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.completion')}</div>
                 </div>

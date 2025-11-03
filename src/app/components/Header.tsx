@@ -34,7 +34,7 @@ export default function Header() {
             { href: '/footprint/honor', key: 'honor.title', color: 'blue' },
             { href: '/footprint/ranking', key: 'ranking.title', color: 'emerald' },
             { href: '/footprint/process', key: 'process.title', color: 'indigo' },
-            { href: '/footprint/forms', key: 'forms.title', color: 'purple' },
+            { href: '/footprint/weekly-challenge', key: 'weeklyChallenge.title', color: 'green' },
           ]
         };
       case 'launch':
@@ -42,7 +42,6 @@ export default function Header() {
           logo: { icon: '🚀', text: 'Flipflop Launch Competition', href: '/launch-contest' },
           navItems: [
             { href: '/launch-contest/rules', key: { zh: '大赛规则', en: 'Contest Rules' }, color: 'cyan' },
-            { href: '/launch-contest/forms', key: { zh: '表格申请', en: 'Form Applications' }, color: 'blue' },
             { href: '/launch-contest/leaderboard', key: { zh: '参赛名单', en: 'Participant List' }, color: 'purple' },
           ]
         };
@@ -79,7 +78,7 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className={`hidden md:flex ${currentModule === 'mint' ? 'justify-center flex-1 mx-8' : currentModule === 'pathport' ? 'justify-center flex-1 mx-8' : 'space-x-0.5'}`}>
+          <nav className={`flex ${currentModule === 'mint' ? 'justify-center flex-1 mx-8' : currentModule === 'pathport' ? 'justify-center flex-1 mx-8' : 'space-x-0.5'}`}>
             {moduleConfig.navItems.map((item) => {
               const displayText = (() => {
                 if (currentModule === 'footprint') {
@@ -220,6 +219,7 @@ export default function Header() {
                   'honor.title': '🏆',
                   'ranking.title': '📊',
                   'process.title': '🔄',
+                  'weeklyChallenge.title': '🔥',
                   'forms.title': '📝',
                   '脚印计划': '👣',
                   'Footprint Program': '👣',
@@ -229,6 +229,8 @@ export default function Header() {
                   'Flipflop mint competition': '🎮',
                   '大赛规则': '📋',
                   'Contest Rules': '📋',
+                  '每周挑战': '🔥',
+                  'Weekly Challenge': '🔥',
                   '参赛登记': '✍️',
                   'Registration': '✍️',
                   '参赛名单': '📋',

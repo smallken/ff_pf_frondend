@@ -44,6 +44,7 @@ export default function AchievementForm() {
         screenshot: null as File | null,
         completionDate: '',
         description: '',
+        viewCount: '',
         collapsed: false
       }
     ]
@@ -143,6 +144,12 @@ export default function AchievementForm() {
         setError(`任务${i + 1}的截图证明是必填项`);
         return false;
       }
+
+      // 验证原创类任务的浏览量
+      if (task.submissionCategory === 'long' && !task.viewCount.trim()) {
+        setError(`任务${i + 1}的当前浏览量是必填项`);
+        return false;
+      }
     }
 
     return true;
@@ -211,6 +218,7 @@ export default function AchievementForm() {
             screenshot: screenshotPath,
             completionDate: task.completionDate,
             description: task.description,
+            viewCount: task.viewCount,
           };
         }))
       };
@@ -309,14 +317,15 @@ export default function AchievementForm() {
         ...formData,
         tasks: [
           ...formData.tasks,
-          { 
-            submissionCategory: firstTask.submissionCategory, 
-            taskType: newTaskType, 
-            contentLink: '', 
-            screenshot: null, 
-            completionDate: '', 
-            description: '', 
-            collapsed: false 
+          {
+            submissionCategory: firstTask.submissionCategory,
+            taskType: newTaskType,
+            contentLink: '',
+            screenshot: null,
+            completionDate: '',
+            description: '',
+            viewCount: '',
+            collapsed: false
           }
         ]
       });
@@ -326,7 +335,7 @@ export default function AchievementForm() {
         ...formData,
         tasks: [
           ...formData.tasks,
-          { submissionCategory: '', taskType: '', contentLink: '', screenshot: null, completionDate: '', description: '', collapsed: false }
+          { submissionCategory: '', taskType: '', contentLink: '', screenshot: null, completionDate: '', description: '', viewCount: '', collapsed: false }
         ]
       });
     }
@@ -779,6 +788,27 @@ export default function AchievementForm() {
                             />
                           </div>
                         </div>
+
+                        {/* 视图计数字段 - 仅对原创类任务显示 */}
+                        {task.submissionCategory === 'long' && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              当前浏览量 <span className="text-red-500">{t('forms.required')}</span>
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="请输入当前浏览量"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                              value={task.viewCount}
+                              onChange={(e) => handleTaskChange(index, 'viewCount', e.target.value)}
+                              required={task.submissionCategory === 'long'}
+                            />
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                              请准确填写当前浏览量，活动结束后将进行复核验证
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
