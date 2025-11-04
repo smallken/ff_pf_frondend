@@ -107,15 +107,16 @@ export default function WeeklyChallengeLogsTab() {
         setLogs(pageData.records);
         setTotal(pageData.total);
         
+        // 使用前端传入的page参数设置当前页，而不是后端返回的pageData.current
         // 计算实际的最大页数
         const maxPages = Math.ceil(pageData.total / pageSize);
-        // 如果当前页超出范围，调整到最后一页或第一页
-        const validCurrent = pageData.current > maxPages ? Math.max(1, maxPages) : pageData.current;
-        setCurrent(validCurrent);
+        // 确保page在有效范围内
+        const validPage = Math.max(1, Math.min(page, maxPages));
+        setCurrent(validPage);
         
-        // 如果页码被调整了，重新获取正确的页数据
-        if (validCurrent !== pageData.current && validCurrent !== page) {
-          fetchLogs(validCurrent);
+        // 如果请求的页码超出范围，重新获取有效页码的数据
+        if (validPage !== page && maxPages > 0) {
+          fetchLogs(validPage);
           return;
         }
       } else {

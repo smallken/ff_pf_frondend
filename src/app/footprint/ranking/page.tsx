@@ -15,6 +15,8 @@ export default function Ranking() {
   const [activeTab, setActiveTab] = useState<RankingType>('weekly'); // 默认显示周排行榜
   const [weeklyRankings, setWeeklyRankings] = useState<RankingUserVO[]>([]);
   const [totalRankings, setTotalRankings] = useState<RankingUserVO[]>([]);
+  const [currentUserWeekly, setCurrentUserWeekly] = useState<RankingUserVO | null>(null);
+  const [currentUserTotal, setCurrentUserTotal] = useState<RankingUserVO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -67,6 +69,12 @@ export default function Ranking() {
       });
       setWeeklyRankings(response.records || []);
       setWeeklyTotal(response.total || 0);
+      
+      // 保存当前用户的周排名信息
+      if (user) {
+        const currentUserRanking = response.records?.find(u => u.id === user.id);
+        setCurrentUserWeekly(currentUserRanking || null);
+      }
     } catch (error: any) {
       console.error('❌ 获取周排行榜失败:', error);
       setError(error.message || '获取周排行榜失败');
@@ -85,6 +93,12 @@ export default function Ranking() {
       });
       setTotalRankings(response.records || []);
       setTotalTotal(response.total || 0);
+      
+      // 保存当前用户的总排名信息
+      if (user) {
+        const currentUserRanking = response.records?.find(u => u.id === user.id);
+        setCurrentUserTotal(currentUserRanking || null);
+      }
     } catch (error: any) {
       console.error('❌ 获取总排行榜失败:', error);
       setError(error.message || '获取总排行榜失败');
@@ -322,6 +336,90 @@ export default function Ranking() {
               )}
             </div>
           )}
+        </div>
+
+        {/* 我的排名模块 */}
+        <div className="max-w-5xl mx-auto mt-12">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-indigo-100 dark:border-gray-700 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-indigo-200 to-purple-300 dark:from-indigo-800 dark:to-purple-900 opacity-20 rounded-full -translate-y-24 translate-x-24"></div>
+            <div className="relative z-10">
+              <div className="flex items-center mb-8">
+                <div className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
+                  <span className="text-3xl">👤</span>
+                </div>
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">我的排名</h2>
+              </div>
+              
+              {(currentUserWeekly || currentUserTotal) ? (
+                <div className="space-y-6">
+                  {/* 排名数据网格 */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* 周积分 */}
+                    <div className="group text-center p-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                      <div className="w-12 h-12 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <span className="text-xl text-white">⭐</span>
+                      </div>
+                      <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+                        {currentUserWeekly?.weeklyPoints || 0}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">周积分</div>
+                    </div>
+
+                    {/* 总积分 */}
+                    <div className="group text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border border-purple-200 dark:border-purple-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                      <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <span className="text-xl text-white">🏆</span>
+                      </div>
+                      <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                        {currentUserTotal?.totalPoints || 0}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">总积分</div>
+                    </div>
+
+                    {/* 周排名 */}
+                    <div className="group text-center p-6 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-2xl border border-blue-200 dark:border-blue-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <span className="text-xl text-white font-bold">#</span>
+                      </div>
+                      <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
+                        {currentUserWeekly?.rank || '-'}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">周排名</div>
+                    </div>
+
+                    {/* 总排名 */}
+                    <div className="group text-center p-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl border border-amber-200 dark:border-amber-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                      <div className="w-12 h-12 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <span className="text-xl text-white font-bold">#</span>
+                      </div>
+                      <div className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400 bg-clip-text text-transparent">
+                        {currentUserTotal?.rank || '-'}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">总排名</div>
+                    </div>
+                  </div>
+
+                  {/* 提升排名链接 */}
+                  <div className="text-center pt-4">
+                    <a href="/footprint/weekly-challenge" className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-2xl font-semibold hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
+                      <span className="mr-2 text-xl">🚀</span>
+                      <span className="text-lg">提升我的排名</span>
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-500 dark:text-gray-400 text-lg mb-6">
+                    {!isAuthenticated ? '请先登录查看您的排名' : '您还没有参与排名，快去完成任务吧！'}
+                  </div>
+                  <a href="/footprint/weekly-challenge" className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-2xl font-semibold hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
+                    <span className="mr-2 text-xl">🚀</span>
+                    <span className="text-lg">开始我的旅程</span>
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

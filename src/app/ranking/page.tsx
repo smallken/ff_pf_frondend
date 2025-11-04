@@ -12,6 +12,8 @@ export default function Ranking() {
   const [rankings, setRankings] = useState<RankingUserVO[]>([]);
   const [totalRankings, setTotalRankings] = useState<RankingUserVO[]>([]);
   const [currentUser, setCurrentUser] = useState<RankingUserVO | null>(null);
+  const [currentUserWeekly, setCurrentUserWeekly] = useState<RankingUserVO | null>(null);
+  const [currentUserTotal, setCurrentUserTotal] = useState<RankingUserVO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'weekly' | 'total'>('weekly');
@@ -66,6 +68,7 @@ export default function Ranking() {
       if (user) {
         const currentUserRanking = filtered.find(u => u.id === user.id);
         setCurrentUser(currentUserRanking || null);
+        setCurrentUserWeekly(currentUserRanking || null);
       }
     } catch (error: any) {
       console.error('❌ 获取周排行榜数据失败:', error);
@@ -93,6 +96,7 @@ export default function Ranking() {
       if (user) {
         const currentUserRanking = filtered.find(u => u.id === user.id);
         setCurrentUser(currentUserRanking || null);
+        setCurrentUserTotal(currentUserRanking || null);
       }
     } catch (error: any) {
       console.error('❌ 获取总排行榜数据失败:', error);
@@ -103,11 +107,24 @@ export default function Ranking() {
   };
 
   useEffect(() => {
-    if (activeTab === 'weekly') {
-      fetchWeeklyRankings();
-    } else {
-      fetchTotalRankings();
-    }
+    // 同时加载周排行和总排行数据，以便在底部显示完整信息
+    const fetchAllRankings = async () => {
+      if (activeTab === 'weekly') {
+        await fetchWeeklyRankings();
+        // 如果还没有总排行数据，也加载它
+        if (!currentUserTotal && user) {
+          await fetchTotalRankings();
+        }
+      } else {
+        await fetchTotalRankings();
+        // 如果还没有周排行数据，也加载它
+        if (!currentUserWeekly && user) {
+          await fetchWeeklyRankings();
+        }
+      }
+    };
+    
+    fetchAllRankings();
   }, [user, activeTab]);
 
   return (
@@ -357,68 +374,119 @@ export default function Ranking() {
           </div>
         )}
 
-        {/* 当前用户排名 */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-teal-100 dark:border-gray-700 relative overflow-hidden">
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-teal-200 to-cyan-300 dark:from-teal-800 dark:to-cyan-900 opacity-20 rounded-full -translate-y-20 -translate-x-20"></div>
+        {/* 我的排名 */}
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-indigo-100 dark:border-gray-700 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-indigo-200 to-purple-300 dark:from-indigo-800 dark:to-purple-900 opacity-20 rounded-full -translate-y-24 translate-x-24"></div>
           <div className="relative z-10">
             <div className="flex items-center mb-8">
-              <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
-                <span className="text-2xl">👤</span>
+              <div className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
+                <span className="text-3xl">👤</span>
               </div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">{t('ranking.myrank.title')}</h2>
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">我的排名</h2>
             </div>
-            {currentUser ? (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="group text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border border-blue-200 dark:border-blue-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-xl text-white font-bold">#</span>
+            
+            {(currentUserWeekly || currentUserTotal) ? (
+              <div className="space-y-6">
+                {/* 用户基本信息卡片 */}
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-6 border border-indigo-200 dark:border-indigo-700">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
+                        <span className="text-xl">👤</span>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">用户名</div>
+                        <div className="text-lg font-bold text-gray-900 dark:text-white">{(currentUserWeekly || currentUserTotal)?.userName}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-sky-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                        <span className="text-xl">🐦</span>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">推特</div>
+                        <div className="text-lg font-bold text-gray-900 dark:text-white">
+                          {(currentUserWeekly || currentUserTotal)?.twitterUsername || '未绑定'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                        <span className="text-xl">✉️</span>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">邮箱</div>
+                        <div className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                          {(currentUserWeekly || currentUserTotal)?.userEmail}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">{currentUser.rank}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.rank')}</div>
                 </div>
-                <div className="group text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border border-green-200 dark:border-green-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-xl text-white">⭐</span>
+
+                {/* 排名数据网格 */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* 周积分 */}
+                  <div className="group text-center p-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <div className="w-12 h-12 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-xl text-white">⭐</span>
+                    </div>
+                    <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+                      {currentUserWeekly?.userPoints || 0}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">周积分</div>
                   </div>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">{currentUser.userPoints}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.points')}</div>
-                </div>
-                <div className="group text-center p-6 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-2xl border border-yellow-200 dark:border-yellow-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                  <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-xl text-white">🏆</span>
+
+                  {/* 总积分 */}
+                  <div className="group text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border border-purple-200 dark:border-purple-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-xl text-white">🏆</span>
+                    </div>
+                    <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                      {currentUserTotal?.totalPoints || 0}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">总积分</div>
                   </div>
-                  <div className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 dark:from-yellow-400 dark:to-amber-400 bg-clip-text text-transparent">{getLevelText(currentUser.userPoints)}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.level')}</div>
-                </div>
-                <div className="group text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border border-purple-200 dark:border-purple-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-xl text-white">📊</span>
+
+                  {/* 周排名 */}
+                  <div className="group text-center p-6 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-2xl border border-blue-200 dark:border-blue-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-xl text-white font-bold">#</span>
+                    </div>
+                    <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
+                      {currentUserWeekly?.rank || '-'}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">周排名</div>
                   </div>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                    {activeTab === 'weekly' && rankings.length > 0 ? Math.ceil((currentUser.userPoints / rankings[0].userPoints) * 100) : activeTab === 'total' && totalRankings.length > 0 && totalRankings[0].totalPoints ? Math.ceil(((currentUser.totalPoints || 0) / totalRankings[0].totalPoints) * 100) : 0}%
+
+                  {/* 总排名 */}
+                  <div className="group text-center p-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl border border-amber-200 dark:border-amber-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <div className="w-12 h-12 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-xl text-white font-bold">#</span>
+                    </div>
+                    <div className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400 bg-clip-text text-transparent">
+                      {currentUserTotal?.rank || '-'}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">总排名</div>
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">{t('ranking.myrank.completion')}</div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-gray-500 dark:text-gray-400">
-                  {!isAuthenticated ? t('ranking.notice.notlogin') : t('ranking.notice.notonboarded')}
-                </div>
-                <div className="mt-4">
-                  <a href="/forms" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-2xl font-semibold hover:from-teal-600 hover:to-cyan-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
-                    <span className="mr-2">🚀</span>
-                    {t('ranking.improve.link')}
+
+                {/* 提升排名链接 */}
+                <div className="text-center pt-4">
+                  <a href="/forms" className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-2xl font-semibold hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
+                    <span className="mr-2 text-xl">🚀</span>
+                    <span className="text-lg">提升我的排名</span>
                   </a>
                 </div>
               </div>
-            )}
-            
-            {currentUser && (
-              <div className="mt-8 text-center">
-                <a href="/forms" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-2xl font-semibold hover:from-teal-600 hover:to-cyan-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
-                  <span className="mr-2">🚀</span>
-                  {t('ranking.improve.link')}
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-gray-500 dark:text-gray-400 text-lg mb-6">
+                  {!isAuthenticated ? '请先登录查看您的排名' : '您还没有参与排名，快去完成任务吧！'}
+                </div>
+                <a href="/forms" className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-2xl font-semibold hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
+                  <span className="mr-2 text-xl">🚀</span>
+                  <span className="text-lg">开始我的旅程</span>
                 </a>
               </div>
             )}
