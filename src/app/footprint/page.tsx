@@ -92,24 +92,24 @@ export default function Home() {
             </div>
 
             {/* Enhanced title with gradient and animation */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 dark:from-blue-400 dark:via-purple-400 dark:to-cyan-400 bg-clip-text text-transparent animate-pulse whitespace-nowrap">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight px-2">
+              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 dark:from-blue-400 dark:via-purple-400 dark:to-cyan-400 bg-clip-text text-transparent animate-pulse">
                 {t('home.hero.title')}
               </span>
             </h1>
 
             {/* Enhanced subtitle */}
-            <p className="text-lg md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-2xl text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed px-4">
               <span className="bg-gradient-to-r from-gray-700 to-gray-500 dark:from-gray-300 dark:to-gray-400 bg-clip-text text-transparent">
                 {t('home.subtitle')}
               </span>
             </p>
 
             {/* Enhanced action buttons */}
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 mb-6 sm:mb-8 px-4">
               <a
                 href="/"
-                className="group relative px-8 py-3 bg-gradient-to-r from-pink-400 to-purple-500 text-white rounded-2xl hover:from-pink-500 hover:to-purple-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl font-semibold text-base min-w-[180px]"
+                className="group relative px-6 sm:px-8 py-3 bg-gradient-to-r from-pink-400 to-purple-500 text-white rounded-2xl hover:from-pink-500 hover:to-purple-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl font-semibold text-sm sm:text-base w-full sm:w-auto sm:min-w-[180px] text-center"
               >
                 <span className="relative z-10 flex items-center justify-center">
                   <span className="mr-2">⛵</span>
@@ -118,7 +118,7 @@ export default function Home() {
               </a>
               <button
                 onClick={handleJoinClick}
-                className="group relative px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl font-semibold text-base min-w-[180px]"
+                className="group relative px-6 sm:px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl font-semibold text-sm sm:text-base w-full sm:w-auto sm:min-w-[180px] text-center"
               >
                 <span className="relative z-10 flex items-center justify-center">
                   <span className="mr-2">🚀</span>
@@ -128,7 +128,7 @@ export default function Home() {
               </button>
               <a
                 href="/footprint/process"
-                className="group relative px-8 py-3 border-2 border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg font-semibold text-base min-w-[180px] backdrop-blur-sm"
+                className="group relative px-6 sm:px-8 py-3 border-2 border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg font-semibold text-sm sm:text-base w-full sm:w-auto sm:min-w-[180px] backdrop-blur-sm text-center"
               >
                 <span className="flex items-center justify-center">
                   <span className="mr-2">📚</span>
@@ -138,7 +138,7 @@ export default function Home() {
             </div>
 
             {/* Stats or feature highlights */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto px-4">
               <div className="group p-5 bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/20 hover:bg-white/20 dark:hover:bg-gray-800/20 transition-all duration-300 transform hover:-translate-y-1">
                 <div className="text-2xl mb-2">👣</div>
                 <div className="text-xl font-bold text-gray-900 dark:text-white mb-1">1000+</div>
@@ -170,12 +170,12 @@ export default function Home() {
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent mb-6">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent mb-4 sm:mb-6 px-2">
               {t('home.mission.title')}
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             <div className="group bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-emerald-100 dark:border-gray-700">
               <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <span className="text-2xl">🌍</span>
@@ -231,15 +231,15 @@ export default function Home() {
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-rose-600 to-orange-600 dark:from-rose-400 dark:to-orange-400 bg-clip-text text-transparent mb-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-rose-600 to-orange-600 dark:from-rose-400 dark:to-orange-400 bg-clip-text text-transparent mb-3 sm:mb-4 px-2">
               ✨ {t('home.pathfinders.title')}
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
               {t('home.pathfinders.subtitle')}
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* 1. Footprint 积分荣誉体系 */}
             <div className="group bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-blue-100 dark:border-gray-700">
               <div className="relative mb-6">

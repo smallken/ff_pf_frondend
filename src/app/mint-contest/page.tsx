@@ -51,7 +51,7 @@ export default function MintContest() {
           transition={{ duration: 0.8 }}
         >
           <motion.h1 
-            className="text-6xl md:text-8xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-pink-500 to-orange-500"
+            className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-pink-500 to-orange-500 px-2"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.2 }}
@@ -60,7 +60,7 @@ export default function MintContest() {
           </motion.h1>
           
           <motion.h2 
-            className="text-3xl md:text-4xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500"
+            className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 px-2"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
@@ -69,14 +69,14 @@ export default function MintContest() {
           </motion.h2>
 
           <motion.div 
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
             <a
               href="/"
-              className="group relative px-8 py-3 bg-gradient-to-r from-red-400 to-pink-500 text-white rounded-2xl hover:from-red-500 hover:to-pink-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl font-semibold text-base min-w-[180px]"
+              className="group relative px-6 sm:px-8 py-3 bg-gradient-to-r from-red-400 to-pink-500 text-white rounded-2xl hover:from-red-500 hover:to-pink-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl font-semibold text-sm sm:text-base w-full sm:w-auto sm:min-w-[180px] text-center"
             >
               <span className="relative z-10 flex items-center justify-center">
                 <span className="mr-2">⛵</span>
@@ -86,13 +86,13 @@ export default function MintContest() {
             
             <button
               onClick={() => setShowRegistrationModal(true)}
-              className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold rounded-xl hover:from-red-400 hover:to-pink-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
+              className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold rounded-xl hover:from-red-400 hover:to-pink-500 transition-all duration-300 transform hover:scale-105 shadow-lg w-full sm:w-auto text-sm sm:text-base"
             >
               {language === 'zh' ? '现在报名' : 'Register Now'}
             </button>
             <a
               href="/mint-contest/rules"
-              className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
+              className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 transform hover:scale-105 shadow-lg w-full sm:w-auto text-center text-sm sm:text-base"
             >
               {language === 'zh' ? '详细规则书' : 'Detailed Rules'}
             </a>

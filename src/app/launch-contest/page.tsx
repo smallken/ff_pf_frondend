@@ -82,17 +82,17 @@ export default function LaunchContestHome() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.2 }}
             >
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent px-2">
                 🚀 {language === 'zh' ? 'Flipflop Launch 大赛' : 'Flipflop Launch Competition'}
               </h1>
-              <h2 className="text-2xl md:text-4xl font-bold mb-8 text-cyan-300">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-cyan-300 px-2">
                 {language === 'zh' ? '用代币点燃梦想，瓜分 30 万美金！' : 'Ignite Dreams with Tokens, Share $300K Prize Pool!'}
               </h2>
             </motion.div>
 
             {/* 描述文字 */}
             <motion.p 
-              className="text-lg md:text-xl text-gray-300 mb-12 max-w-6xl mx-auto leading-relaxed"
+              className="text-base sm:text-lg md:text-xl text-gray-300 mb-8 sm:mb-12 max-w-6xl mx-auto leading-relaxed px-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.4 }}
@@ -112,14 +112,14 @@ export default function LaunchContestHome() {
 
             {/* 行动按钮 */}
             <motion.div 
-              className="flex flex-col sm:flex-row justify-center items-center gap-6"
+              className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 px-4"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.8 }}
             >
               <a
                 href="/"
-                className="group relative px-8 py-3 bg-gradient-to-r from-blue-400 to-cyan-500 text-white rounded-2xl hover:from-blue-500 hover:to-cyan-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl font-semibold text-base min-w-[180px]"
+                className="group relative px-6 sm:px-8 py-3 bg-gradient-to-r from-blue-400 to-cyan-500 text-white rounded-2xl hover:from-blue-500 hover:to-cyan-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl font-semibold text-sm sm:text-base w-full sm:w-auto sm:min-w-[180px] text-center"
               >
                 <span className="relative z-10 flex items-center justify-center">
                   <span className="mr-2">⛵</span>
@@ -129,7 +129,7 @@ export default function LaunchContestHome() {
               
               <motion.button
                 onClick={() => router.push('/launch-contest/rules')}
-                className="px-8 py-4 border-2 border-cyan-400 text-cyan-400 rounded-xl hover:bg-cyan-400 hover:text-black transition-all duration-300 font-bold neon-border"
+                className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-cyan-400 text-cyan-400 rounded-xl hover:bg-cyan-400 hover:text-black transition-all duration-300 font-bold neon-border w-full sm:w-auto text-sm sm:text-base"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -140,10 +140,10 @@ export default function LaunchContestHome() {
         </section>
 
         {/* 奖励详情 */}
-        <section className="py-20 px-4">
+        <section className="py-12 sm:py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <motion.h2 
-              className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent"
+              className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-10 sm:mb-16 bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
@@ -152,16 +152,16 @@ export default function LaunchContestHome() {
               🏆 {language === 'zh' ? '奖励机制' : 'Reward System'}
             </motion.h2>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
               {/* 毕业奖励 */}
               <motion.div 
-                className="bg-gradient-to-br from-gray-900/50 to-cyan-900/20 backdrop-blur-sm border border-cyan-500/30 rounded-2xl p-8 tech-glow"
+                className="bg-gradient-to-br from-gray-900/50 to-cyan-900/20 backdrop-blur-sm border border-cyan-500/30 rounded-2xl p-4 sm:p-6 md:p-8 tech-glow"
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8 }}
                 viewport={{ once: true }}
               >
-                <h3 className="text-2xl font-bold text-cyan-400 mb-6">
+                <h3 className="text-xl sm:text-2xl font-bold text-cyan-400 mb-4 sm:mb-6">
                   💎 {language === 'zh' ? '毕业奖励（基础激励）' : 'Graduation Rewards (Base Incentive)'}
                 </h3>
                 <p className="text-gray-300 mb-6">
@@ -214,13 +214,13 @@ export default function LaunchContestHome() {
 
               {/* 赛道排名奖励 */}
               <motion.div 
-                className="bg-gradient-to-br from-gray-900/50 to-purple-900/20 backdrop-blur-sm border border-purple-500/30 rounded-2xl p-8 tech-glow"
+                className="bg-gradient-to-br from-gray-900/50 to-purple-900/20 backdrop-blur-sm border border-purple-500/30 rounded-2xl p-4 sm:p-6 md:p-8 tech-glow"
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8 }}
                 viewport={{ once: true }}
               >
-                <h3 className="text-2xl font-bold text-purple-400 mb-6">
+                <h3 className="text-xl sm:text-2xl font-bold text-purple-400 mb-4 sm:mb-6">
                   🏅 {language === 'zh' ? '赛道排名奖励（Top 3）' : 'Track Ranking Rewards (Top 3)'}
                 </h3>
                 <p className="text-gray-300 mb-6">
@@ -285,10 +285,10 @@ export default function LaunchContestHome() {
         </section>
 
         {/* 赛事时间线 */}
-        <section className="py-20 px-4">
+        <section className="py-12 sm:py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <motion.h2 
-              className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent"
+              className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-10 sm:mb-16 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}

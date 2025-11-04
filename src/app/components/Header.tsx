@@ -69,16 +69,16 @@ export default function Header() {
         <div className="flex justify-between items-center h-18">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href={moduleConfig.logo.href} className="flex items-center space-x-3 group">
-              <span className="text-3xl transform group-hover:scale-110 transition-transform duration-300">{moduleConfig.logo.icon}</span>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent hover:from-purple-600 hover:to-blue-600 transition-all duration-300">
+            <Link href={moduleConfig.logo.href} className="flex items-center space-x-2 sm:space-x-3 group">
+              <span className="text-2xl sm:text-3xl transform group-hover:scale-110 transition-transform duration-300">{moduleConfig.logo.icon}</span>
+              <span className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent hover:from-purple-600 hover:to-blue-600 transition-all duration-300 truncate max-w-[150px] sm:max-w-none">
                 {moduleConfig.logo.text}
               </span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className={`flex ${currentModule === 'mint' ? 'justify-center flex-1 mx-8' : currentModule === 'pathport' ? 'justify-center flex-1 mx-8' : 'space-x-0.5'}`}>
+          <nav className={`hidden lg:flex ${currentModule === 'mint' ? 'justify-center flex-1 mx-8' : currentModule === 'pathport' ? 'justify-center flex-1 mx-8' : 'space-x-0.5'}`}>
             {moduleConfig.navItems.map((item) => {
               const displayText = (() => {
                 if (currentModule === 'footprint') {
@@ -108,7 +108,7 @@ export default function Header() {
           </nav>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-2">
+          <div className="lg:hidden flex items-center space-x-1 sm:space-x-2">
             {/* Theme Toggle for mobile - Hidden for Launch and Mint contests */}
             {(currentModule !== 'launch' && currentModule !== 'mint') && (
               <button
@@ -154,7 +154,7 @@ export default function Header() {
           </div>
 
           {/* Desktop Controls */}
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden lg:flex items-center space-x-2">
             {/* Theme Toggle - Hidden for Launch and Mint contests */}
             {(currentModule !== 'launch' && currentModule !== 'mint') && (
               <button
@@ -210,7 +210,7 @@ export default function Header() {
 
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-t border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+        <div className="lg:hidden bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-t border-gray-200/50 dark:border-gray-700/50 shadow-lg">
           <div className="max-w-7xl mx-auto px-4 py-4 space-y-2">
             {/* Navigation Links */}
             <div className="space-y-1">
