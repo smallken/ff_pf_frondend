@@ -476,7 +476,7 @@ export default function Profile() {
   // L2 Pathfinder（探路者）：101-300
   // L3 Trailblazer（开路者）：301-700
   // L4 Pioneer（先驱者）：700+
-  const calculateLevel = (points: number) => {
+  const calculateLevelFromPoints = (points: number) => {
     if (points >= 700) return 4;
     if (points >= 301) return 3;
     if (points >= 101) return 2;
@@ -613,13 +613,13 @@ export default function Profile() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile.user.title')}</label>
-              <p className={`mt-1 font-semibold ${getTitleColorByLevel(calculateLevel(userInfo?.totalPoints || 0))}`}>
-                {getTitleByLevel(calculateLevel(userInfo?.totalPoints || 0))}
+              <p className={`mt-1 font-semibold ${getTitleColorByLevel(userInfo?.userLevel ?? calculateLevelFromPoints(userInfo?.totalPoints || 0))}`}>
+                {getTitleByLevel(userInfo?.userLevel ?? calculateLevelFromPoints(userInfo?.totalPoints || 0))}
               </p>
               {/* 调试信息 */}
               {process.env.NODE_ENV === 'development' && (
                 <p className="mt-1 text-xs text-gray-500">
-                  (积分: {userInfo?.totalPoints || 0}, 等级: {calculateLevel(userInfo?.totalPoints || 0)}, 已通过申请: {hasApproved ? '是' : '否'})
+                  (积分: {userInfo?.totalPoints || 0}, 等级: {userInfo?.userLevel ?? calculateLevelFromPoints(userInfo?.totalPoints || 0)}, 已通过申请: {hasApproved ? '是' : '否'})
                 </p>
               )}
             </div>

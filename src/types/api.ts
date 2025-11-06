@@ -106,6 +106,9 @@ export interface AdminStatsVO {
   currentMonthApprovedShortTasks: number;
   currentMonthApprovedLongTasks: number;
   currentMonthApprovedCommunityTasks: number;
+  totalApplications?: number; // 已申请人数
+  weeklyParticipants?: number; // 周挑战参与人数
+  weeklyTopicViews?: number; // 周话题浏览数
 }
 
 export interface MonthlyPointVO {

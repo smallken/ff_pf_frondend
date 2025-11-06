@@ -29,15 +29,14 @@ export default function Ranking() {
 
   // 根据脚印数量计算等级
   const calculateLevel = (points: number) => {
-    if (points >= 300) return 4; // Pioneer（先驱者）
-    if (points >= 101) return 3; // Trailblazer（开路者）
-    if (points >= 31) return 2;  // Pathfinder（探路者）
+    if (points >= 700) return 4; // Pioneer（先驱者）
+    if (points >= 301) return 3; // Trailblazer（开路者）
+    if (points >= 101) return 2;  // Pathfinder（探路者）
     return 1; // Explorer（探索者）
   };
 
   // 根据脚印数量获取等级文本
-  const getLevelText = (points: number) => {
-    const level = calculateLevel(points);
+  const getLevelText = (level: number) => {
     switch(level) {
       case 1: return t('profile.title.explorer');
       case 2: return t('profile.title.pathfinder');
@@ -48,8 +47,7 @@ export default function Ranking() {
   };
 
   // 根据脚印数量获取等级样式
-  const getLevelStyle = (points: number) => {
-    const level = calculateLevel(points);
+  const getLevelStyle = (level: number) => {
     switch(level) {
       case 1: return 'bg-gradient-to-r from-green-400 to-emerald-500 text-white';
       case 2: return 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white';
@@ -179,16 +177,21 @@ export default function Ranking() {
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-600 dark:text-gray-300">
                     {user.twitterUsername || '-'}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                    <span className="bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
-                      {points}{t('ranking.points.unit')}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-bold rounded-full shadow-sm ${getLevelStyle(points)}`}>
-                      {getLevelText(points)}
-                    </span>
-                  </td>
+                 <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                   <span className="bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
+                     {points}{t('ranking.points.unit')}
+                   </span>
+                 </td>
+                 <td className="px-4 py-3 whitespace-nowrap">
+                    {(() => {
+                      const level = user.userLevel ?? calculateLevel(points);
+                      return (
+                        <span className={`px-2 py-1 text-xs font-bold rounded-full shadow-sm ${getLevelStyle(level)}`}>
+                          {getLevelText(level)}
+                        </span>
+                      );
+                    })()}
+                 </td>
                 </tr>
               );
             })

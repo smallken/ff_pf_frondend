@@ -7,7 +7,6 @@ import {
   formService, 
   taskSubmissionService, 
   activityApplicationService, 
-  userService, 
   monthlyRewardService, 
   monthlyPointService, 
   adminUnifiedService 
@@ -16,14 +15,13 @@ import type {
   ApplicationForm, 
   TaskSubmissionVO, 
   ActivityApplication, 
-  AdminStatsVO, 
   MonthlyPointVO,
   UnifiedSubmissionVO
 } from '../../types/api';
 import AdminMonthlyReward from '../components/AdminMonthlyReward';
-import AdminAnalytics from '../components/AdminAnalytics';
 import WeeklyChallengeLogsTab from './weekly-challenge-logs';
 import OriginalTaskReview from './original-task-review';
+import UserManagement from './user-management';
 import { API_CONFIG } from '../../config/api';
 
 // 统一的待审核表单类型
@@ -888,7 +886,6 @@ export default function Admin() {
   const [editReviewedLoading, setEditReviewedLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reviewedLoading, setReviewedLoading] = useState(false);
-  const [statsLoading, setStatsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
@@ -1134,30 +1131,6 @@ export default function Admin() {
     });
   };
   
-  // 统计数据状态
-  const [stats, setStats] = useState<AdminStatsVO>({
-    totalUsers: 0,
-    pendingForms: 0,
-    approvedForms: 0,
-    rejectedForms: 0,
-    totalPoints: 0,
-    totalSubmissions: 0,
-    averagePoints: 0,
-    pendingApplications: 0,
-    pendingTaskSubmissions: 0,
-    pendingActivityApplications: 0,
-    approvedApplications: 0,
-    approvedTaskSubmissions: 0,
-    approvedActivityApplications: 0,
-    rejectedApplications: 0,
-    rejectedTaskSubmissions: 0,
-    rejectedActivityApplications: 0,
-    currentMonthApprovedPromotionTasks: 0,
-    currentMonthApprovedShortTasks: 0,
-    currentMonthApprovedLongTasks: 0,
-    currentMonthApprovedCommunityTasks: 0,
-  });
-
   const fetchMonthlyPointInfo = async (userId: number) => {
     setMonthlyPoint(null);
     setMonthlyPointError('');
@@ -1600,24 +1573,6 @@ export default function Admin() {
     const sortField = reviewedSortConfig?.key || 'updateTime';
     const sortOrder = reviewedSortConfig?.direction || 'desc';
     fetchReviewedSubmissions(page, reviewedFormType, sortField, sortOrder);
-  };
-
-  // 获取统计数据
-  const fetchStats = async () => {
-    try {
-      setStatsLoading(true);
-      setError(''); // 清除之前的错误
-      
-      // 调用新的统计数据API
-      const statsData = await userService.getAdminStats();
-      
-      setStats(statsData);
-    } catch (error: any) {
-      console.error('❌ 获取统计数据失败:', error);
-      setError(error.message || t('admin.error.fetch.stats'));
-    } finally {
-      setStatsLoading(false);
-    }
   };
 
   // 显示审核弹窗
@@ -2166,9 +2121,7 @@ export default function Admin() {
 
   useEffect(() => {
     if (isAuthenticated && user?.userRole === 'admin') {
-      if (activeTab === 'stats') {
-        fetchStats();
-      } else if (activeTab === 'forms') {
+      if (activeTab === 'forms') {
         // 加载报名申请审核数据
         fetchPendingSubmissions(1, pendingFormType);
       }
@@ -2229,8 +2182,6 @@ export default function Admin() {
         const sortField = reviewedSortConfig?.key || 'updateTime';
         const sortOrder = reviewedSortConfig?.direction || 'desc';
         fetchReviewedSubmissions(1, reviewedFormType, sortField, sortOrder);
-      } else if (activeTab === 'stats') {
-        fetchStats();
       }
       // 月度奖励模块的数据获取在组件内部处理
     }
@@ -2284,6 +2235,16 @@ export default function Admin() {
           <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex space-x-8">
               <button
+                onClick={() => setActiveTab('user-management')}
+                className={`py-4 px-6 border-b-2 font-medium text-sm ${
+                  activeTab === 'user-management'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                用户管理
+              </button>
+              <button
                 onClick={() => setActiveTab('weekly-challenge-logs')}
                 className={`py-4 px-6 border-b-2 font-medium text-sm ${
                   activeTab === 'weekly-challenge-logs'
@@ -2312,26 +2273,6 @@ export default function Admin() {
                 }`}
               >
                 原创任务
-              </button>
-              <button
-                onClick={() => setActiveTab('stats')}
-                className={`py-4 px-6 border-b-2 font-medium text-sm ${
-                  activeTab === 'stats'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                {t('admin.tab.stats')}
-              </button>
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className={`py-4 px-6 border-b-2 font-medium text-sm ${
-                  activeTab === 'analytics'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                数据分析
               </button>
               <button
                 onClick={() => setActiveTab('monthly-reward')}
@@ -2377,7 +2318,11 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* 每周挑战数据 */}
+        {/* 用户管理 */}
+        {activeTab === 'user-management' && (
+          <UserManagement />
+        )}
+
         {activeTab === 'weekly-challenge-logs' && (
           <WeeklyChallengeLogsTab />
         )}
@@ -3080,201 +3025,6 @@ export default function Admin() {
                 </div>
               </div>
             )}
-          </div>
-        )}
-
-        {/* 数据统计 */}
-        {activeTab === 'stats' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{t('admin.stats.title')}</h2>
-            
-            {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-4">
-                <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
-              </div>
-            )}
-            
-            {statsLoading ? (
-              <div className="flex justify-center items-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600 dark:text-gray-300">加载统计数据中...</span>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* 主要统计卡片 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 text-center">
-                    <div className="text-3xl font-bold text-blue-600 mb-2">{stats.totalUsers}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{t('admin.stats.totalusers')}</div>
-                  </div>
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-6 text-center">
-                    <div className="text-3xl font-bold text-yellow-600 mb-2">{stats.pendingForms}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{t('admin.pending.title')}</div>
-                  </div>
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6 text-center">
-                    <div className="text-3xl font-bold text-green-600 mb-2">{stats.approvedForms}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{t('admin.stats.approvedforms')}</div>
-                  </div>
-                  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6 text-center">
-                    <div className="text-3xl font-bold text-purple-600 mb-2">{stats.totalPoints}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{t('admin.stats.totalpoints')}</div>
-                  </div>
-                </div>
-
-                {/* 详细统计 */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">申请表统计</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">待审核</span>
-                        <span className="text-sm font-medium text-yellow-600">{stats.pendingApplications}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">已通过</span>
-                        <span className="text-sm font-medium text-green-600">{stats.approvedApplications}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">已拒绝</span>
-                        <span className="text-sm font-medium text-red-600">{stats.rejectedApplications}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">任务提交统计</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">待审核</span>
-                        <span className="text-sm font-medium text-yellow-600">{stats.pendingTaskSubmissions}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">已通过</span>
-                        <span className="text-sm font-medium text-green-600">{stats.approvedTaskSubmissions}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">已拒绝</span>
-                        <span className="text-sm font-medium text-red-600">{stats.rejectedTaskSubmissions}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">活动申请统计</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">待审核</span>
-                        <span className="text-sm font-medium text-yellow-600">{stats.pendingActivityApplications}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">已通过</span>
-                        <span className="text-sm font-medium text-green-600">{stats.approvedActivityApplications}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">已拒绝</span>
-                        <span className="text-sm font-medium text-red-600">{stats.rejectedActivityApplications}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 汇总统计 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('admin.stats.formstats')}</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">{t('admin.pending.title')}</span>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">{stats.pendingForms}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">{t('admin.stats.approvedforms')}</span>
-                        <span className="text-sm font-medium text-green-600">{stats.approvedForms}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">{t('admin.stats.rejectedforms')}</span>
-                        <span className="text-sm font-medium text-red-600">{stats.rejectedForms}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">{t('admin.stats.totalsubmissions')}</span>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">{stats.totalSubmissions}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('admin.stats.userstats')}</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">{t('admin.stats.totalusers')}</span>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">{stats.totalUsers}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">{t('admin.stats.totalpoints')}</span>
-                        <span className="text-sm font-medium text-purple-600">{stats.totalPoints}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">{t('admin.stats.averagepoints')}</span>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {stats.averagePoints.toFixed(1)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 本月已审核通过任务类型统计 */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    本月已审核通过的任务类型统计
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center shadow-sm border border-blue-100 dark:border-blue-800/50">
-                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                        {stats.currentMonthApprovedPromotionTasks}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300">传播类任务</div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center shadow-sm border border-green-100 dark:border-green-800/50">
-                      <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">
-                        {stats.currentMonthApprovedShortTasks}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300">短篇类任务</div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center shadow-sm border border-purple-100 dark:border-purple-800/50">
-                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-                        {stats.currentMonthApprovedLongTasks}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300">长篇类任务</div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center shadow-sm border border-orange-100 dark:border-orange-800/50">
-                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-1">
-                        {stats.currentMonthApprovedCommunityTasks}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300">社区类任务</div>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800/50">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-300">本月已审核通过任务总数</span>
-                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                        {Number(stats.currentMonthApprovedPromotionTasks) + Number(stats.currentMonthApprovedShortTasks) + Number(stats.currentMonthApprovedLongTasks) + Number(stats.currentMonthApprovedCommunityTasks)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* 数据分析 */}
-        {activeTab === 'analytics' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <AdminAnalytics />
           </div>
         )}
 

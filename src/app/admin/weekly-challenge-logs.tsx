@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { adminWeeklyChallengeService, type WeeklyRankingItem } from '../../services/adminWeeklyChallengeService';
 
 interface AutoReviewLog {
   id: number;
@@ -46,6 +47,7 @@ interface PageData {
 
 export default function WeeklyChallengeLogsTab() {
   const { language } = useLanguage();
+  const [activeTab, setActiveTab] = useState<'logs' | 'ranking'>('logs');
   const [logs, setLogs] = useState<AutoReviewLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -60,6 +62,13 @@ export default function WeeklyChallengeLogsTab() {
   const [current, setCurrent] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
+  
+  // 周排行状态
+  const [rankingWeek, setRankingWeek] = useState<string>('');
+  const [rankingLoading, setRankingLoading] = useState(false);
+  const [rankingError, setRankingError] = useState('');
+  const [rankingRecords, setRankingRecords] = useState<WeeklyRankingItem[]>([]);
+  const [rankingWeekCount, setRankingWeekCount] = useState<number | undefined>();
   
   // 详情弹窗
   const [selectedLog, setSelectedLog] = useState<AutoReviewLog | null>(null);
@@ -131,13 +140,80 @@ export default function WeeklyChallengeLogsTab() {
   };
 
   useEffect(() => {
-    setCurrent(1); // 重置页码为第1页
-    fetchLogs(1);
-  }, [taskType, weekCount, reviewStatus, userId]);
+    if (activeTab === 'logs') {
+      setCurrent(1);
+      fetchLogs(1);
+    }
+  }, [activeTab, taskType, weekCount, reviewStatus, userId]);
 
   const handlePageChange = (page: number) => {
     setCurrent(page);
     fetchLogs(page);
+  };
+
+  const fetchRanking = async () => {
+    setRankingLoading(true);
+    setRankingError('');
+    try {
+      const params: { weekCount?: number; limit: number } = { limit: 80 };
+      if (rankingWeek.trim()) {
+        const parsed = parseInt(rankingWeek.trim(), 10);
+        if (!Number.isNaN(parsed) && parsed > 0) {
+          params.weekCount = parsed;
+        } else {
+          throw new Error('周次必须为正整数');
+        }
+      }
+      const response = await adminWeeklyChallengeService.getWeeklyRanking(params);
+      setRankingRecords(response.records || []);
+      const targetWeek = response.weekCount ?? params.weekCount;
+      setRankingWeekCount(targetWeek !== undefined ? targetWeek : undefined);
+    } catch (err: any) {
+      console.error('获取周排行榜失败:', err);
+      setRankingError(err.message || '获取周排行榜失败');
+      setRankingRecords([]);
+      setRankingWeekCount(undefined);
+    } finally {
+      setRankingLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'ranking') {
+      fetchRanking();
+    }
+  }, [activeTab]);
+
+  const handleDownloadRanking = () => {
+    if (!rankingRecords.length) {
+      return;
+    }
+    const headers = ['排名', '用户ID', '用户名', '推特', '周积分', '钱包地址'];
+    const rows = rankingRecords.map((item) => [
+      item.rank ?? '',
+      item.id ?? '',
+      item.userName ?? '',
+      item.twitterUsername ?? '',
+      item.weeklyPoints ?? 0,
+      item.walletAddress ?? '',
+    ]);
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`)
+          .join(',')
+      )
+      .join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const week = (rankingWeekCount ?? rankingWeek) || 'latest';
+    link.href = url;
+    link.setAttribute('download', `weekly-ranking-week-${week}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleViewDetail = async (logId: number) => {
@@ -230,202 +306,288 @@ export default function WeeklyChallengeLogsTab() {
   };
 
   const totalPages = Math.ceil(total / pageSize);
-
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-        每周挑战自动审核记录
+        每周挑战数据
       </h2>
 
-      {/* 筛选条件 */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            任务类型
-          </label>
-          <select
-            value={taskType}
-            onChange={(e) => setTaskType(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-          >
-            <option value="">全部</option>
-            <option value="communication">传播类</option>
-            <option value="community">社群类</option>
-          </select>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            周数
-          </label>
-          <input
-            type="number"
-            value={weekCount}
-            onChange={(e) => setWeekCount(e.target.value)}
-            placeholder="筛选周数"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            审核状态
-          </label>
-          <select
-            value={reviewStatus}
-            onChange={(e) => setReviewStatus(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-          >
-            <option value="">全部</option>
-            <option value="1">通过</option>
-            <option value="2">拒绝</option>
-            <option value="0">待审核</option>
-          </select>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            用户ID
-          </label>
-          <input
-            type="number"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            placeholder="筛选用户ID"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-          />
-        </div>
+      <div className="flex space-x-6 border-b border-gray-200 dark:border-gray-700 mb-6">
+        <button
+          onClick={() => { setActiveTab('logs'); setError(''); }}
+          className={`py-3 px-2 border-b-2 text-sm font-medium transition-colors ${
+            activeTab === 'logs'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+          }`}
+        >
+          自动审核记录
+        </button>
+        <button
+          onClick={() => { setActiveTab('ranking'); setRankingError(''); }}
+          className={`py-3 px-2 border-b-2 text-sm font-medium transition-colors ${
+            activeTab === 'ranking'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+          }`}
+        >
+          周积分排行榜
+        </button>
       </div>
 
-      {/* 错误提示 */}
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-          <p className="text-red-600 dark:text-red-400">{error}</p>
-        </div>
-      )}
-
-      {/* 加载状态 */}
-      {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      ) : (
+      {activeTab === 'logs' ? (
         <>
-          {/* 表格 */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">类型</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">用户</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">周数</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">OCR</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">AI置信度</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">状态</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">积分</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">耗时</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">时间</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">操作</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{log.id}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{log.taskTypeName}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                      <div>{log.username || '-'}</div>
-                      <div className="text-xs text-gray-500">ID: {log.userId}</div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                      第{log.weekCount}周
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {log.ocrSuccess ? (
-                        <span className="text-green-600 dark:text-green-400">✓ 成功</span>
-                      ) : (
-                        <span className="text-red-600 dark:text-red-400">✗ 失败</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                      {log.confidence !== null ? `${log.confidence}%` : '-'}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        log.reviewStatus === 1
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : log.reviewStatus === 2
-                          ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                      }`}>
-                        {log.reviewStatusName}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                      {log.pointsAdded ? (
-                        <span className="text-green-600 dark:text-green-400">+{log.pointsValue}</span>
-                      ) : (
-                        <span className="text-gray-400">0</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                      {log.totalDuration ? `${(log.totalDuration / 1000).toFixed(1)}s` : '-'}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(log.createTime).toLocaleString('zh-CN', { 
-                        month: '2-digit', 
-                        day: '2-digit', 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleViewDetail(log.id)}
-                          className="text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                          详情
-                        </button>
-                        {log.reviewStatus !== 0 && (
-                          <button
-                            onClick={() => handleEditReview(log)}
-                            className="text-green-600 dark:text-green-400 hover:underline"
-                          >
-                            修改
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">任务类型</label>
+              <select
+                value={taskType}
+                onChange={(e) => setTaskType(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+              >
+                <option value="">全部</option>
+                <option value="communication">传播类</option>
+                <option value="community">社群类</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">周数</label>
+              <input
+                type="number"
+                value={weekCount}
+                onChange={(e) => setWeekCount(e.target.value)}
+                placeholder="筛选周数"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">审核状态</label>
+              <select
+                value={reviewStatus}
+                onChange={(e) => setReviewStatus(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+              >
+                <option value="">全部</option>
+                <option value="1">通过</option>
+                <option value="2">拒绝</option>
+                <option value="0">待审核</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">用户ID</label>
+              <input
+                type="number"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                placeholder="筛选用户ID"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+              />
+            </div>
           </div>
 
-          {/* 分页 */}
-          {totalPages > 1 && (
-            <div className="mt-6 flex justify-center items-center space-x-2">
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">类型</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">用户</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">周数</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">OCR</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">AI置信度</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">状态</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">积分</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">耗时</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">时间</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {logs.map((log) => (
+                      <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{log.id}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{log.taskTypeName}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                          <div>{log.username || '-'}</div>
+                          <div className="text-xs text-gray-500">ID: {log.userId}</div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">第{log.weekCount}周</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                          {log.ocrSuccess ? (
+                            <span className="text-green-600 dark:text-green-400">✓ 成功</span>
+                          ) : (
+                            <span className="text-red-600 dark:text-red-400">✗ 失败</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                          {log.confidence !== null ? `${log.confidence}%` : '-'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            log.reviewStatus === 1
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                              : log.reviewStatus === 2
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                          }`}>
+                            {log.reviewStatusName}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                          {log.pointsAdded ? (
+                            <span className="text-green-600 dark:text-green-400">+{log.pointsValue}</span>
+                          ) : (
+                            <span className="text-gray-400">0</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                          {log.totalDuration ? `${(log.totalDuration / 1000).toFixed(1)}s` : '-'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                          {new Date(log.createTime).toLocaleString('zh-CN', {
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleViewDetail(log.id)}
+                              className="text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              详情
+                            </button>
+                            {log.reviewStatus !== 0 && (
+                              <button
+                                onClick={() => handleEditReview(log)}
+                                className="text-green-600 dark:text-green-400 hover:underline"
+                              >
+                                修改
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="mt-6 flex justify-center items-center space-x-2">
+                  <button
+                    onClick={() => handlePageChange(current - 1)}
+                    disabled={current <= 1}
+                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    上一页
+                  </button>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    第 {current} / {totalPages} 页，共 {total} 条
+                  </span>
+                  <button
+                    onClick={() => handlePageChange(current + 1)}
+                    disabled={current >= totalPages}
+                    className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    下一页
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+            <div className="flex items-end gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">周次</label>
+                <input
+                  type="number"
+                  value={rankingWeek}
+                  onChange={(e) => setRankingWeek(e.target.value)}
+                  placeholder="不填默认最新周"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                />
+              </div>
               <button
-                onClick={() => handlePageChange(current - 1)}
-                disabled={current <= 1}
-                className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={fetchRanking}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
               >
-                上一页
+                查询
               </button>
-              
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                第 {current} / {totalPages} 页，共 {total} 条
-              </span>
-              
+            </div>
+            <div className="flex items-center gap-3">
+              {typeof rankingWeekCount === 'number' && rankingWeekCount > 0 && (
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                  当前显示第 {rankingWeekCount} 周
+                </span>
+              )}
               <button
-                onClick={() => handlePageChange(current + 1)}
-                disabled={current >= totalPages}
-                className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleDownloadRanking}
+                disabled={!rankingRecords.length}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                下一页
+                导出前80名
               </button>
+            </div>
+          </div>
+
+          {rankingError && (
+            <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-red-600 dark:text-red-400">{rankingError}</p>
+            </div>
+          )}
+
+          {rankingLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : rankingRecords.length === 0 ? (
+            <div className="py-12 text-center text-gray-500 dark:text-gray-400">
+              暂无排行榜数据
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">排名</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">用户ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">用户名</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">推特</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">周积分</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">钱包地址</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
+                  {rankingRecords.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.rank ?? '-'}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.id}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.userName || '-'}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.twitterUsername || '-'}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-blue-600 dark:text-blue-300 font-semibold">{item.weeklyPoints ?? 0}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.walletAddress || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </>

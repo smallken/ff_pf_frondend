@@ -15,8 +15,26 @@ export interface OriginalTaskDetailVO {
   verifierName: string;
   weekCount: number;
   dateRange: string;
+  ifAddTotal?: number;
   createTime: string;
   updateTime: string;
+}
+
+export interface WeeklyPlanStatLogVO {
+  id: number;
+  originalTaskId: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  twitterUsername: string;
+  weekCount: number;
+  dateRange: string;
+  addedPoints: number;
+  weeklyPoints: number;
+  totalPointsBefore: number;
+  totalPointsAfter: number;
+  userLevelAfter: number;
+  createTime: string;
 }
 
 export interface AdminReviewOriginalTaskRequest {
@@ -109,6 +127,41 @@ export const adminOriginalTaskService = {
     const result = await response.json();
     if (result.code !== 0) {
       throw new Error(result.message || 'Failed to fetch task detail');
+    }
+
+    return result.data;
+  },
+
+  /**
+   * 获取周计划统计日志
+   */
+  async listWeeklyPlanLogs(
+    weekCount?: number,
+    userId?: number,
+    current: number = 1,
+    pageSize: number = 10
+  ) {
+    const params = new URLSearchParams();
+    if (weekCount !== undefined) params.append('weekCount', weekCount.toString());
+    if (userId !== undefined) params.append('userId', userId.toString());
+    params.append('current', current.toString());
+    params.append('pageSize', pageSize.toString());
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/original-task/plan-logs?${params}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch weekly plan logs');
+    }
+
+    const result = await response.json();
+    if (result.code !== 0) {
+      throw new Error(result.message || 'Failed to fetch weekly plan logs');
     }
 
     return result.data;

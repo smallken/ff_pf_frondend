@@ -151,4 +151,9 @@ export const userService = {
       value
     });
   },
+
+  // 批量更新所有用户等级（管理员）
+  updateAllUserLevels: (): Promise<{successCount: number, totalUsers: number, message: string}> => {
+    return request.post<{successCount: number, totalUsers: number, message: string}>('/user/updateAllLevels');
+  },
 };
