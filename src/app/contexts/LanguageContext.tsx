@@ -932,8 +932,8 @@ const translations = {
     'ranking.weekly.date.format': '{startMonth}/{startDay}-{endMonth}/{endDay}',
     'ranking.tab.total': 'Total Ranking',
     'ranking.tab.weekly': 'Weekly Ranking',
-    'process.title': '🚀 Flipflop Footprint Upgraded to Weekly Challenge!',
-    'process.subtitle': 'Every week, you can complete tasks, earn points, climb the leaderboard, and win rewards and honors, leaving your own footprints.',
+    'process.title': 'Process',
+    'process.subtitle': 'Learn how to participate in Footprint Program',
     'weeklyChallenge.title': 'Weekly Challenge',
     'forms.title': 'Forms',
     // Common i18n used by all forms (re-added)

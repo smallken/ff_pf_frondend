@@ -59,20 +59,41 @@ export default function Ranking() {
       });
       
       // 过滤条件：周积分>0
-      const filtered = rankingResponse.records.filter(u => (u.userPoints || 0) > 0);
+      const filtered = rankingResponse.records.filter(u => {
+        const weeklyPoints = u.weeklyPoints ?? u.userPoints ?? 0;
+        return weeklyPoints > 0;
+      });
       setRankings(filtered);
 
       // 设置当前用户信息（周排行）
       if (user) {
         const currentUserRanking = filtered.find(u => u.id === user.id);
         setCurrentUser(currentUserRanking || null);
-        setCurrentUserWeekly(currentUserRanking || null);
+        if (currentUserRanking) {
+          setCurrentUserWeekly(currentUserRanking);
+        }
       }
     } catch (error: any) {
       console.error('❌ 获取周排行榜数据失败:', error);
       setError(error.message || '获取排行榜数据失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 获取当前登录用户的周排行榜信息
+  const fetchMyWeeklyRanking = async () => {
+    if (!isAuthenticated) {
+      setCurrentUserWeekly(null);
+      return;
+    }
+
+    try {
+      const myRanking = await userService.getMyWeeklyRanking();
+      setCurrentUserWeekly(myRanking || null);
+    } catch (error: any) {
+      console.error('❌ 获取当前用户周排名失败:', error);
+      // 保持现有数据，不额外提示
     }
   };
 
@@ -109,12 +130,14 @@ export default function Ranking() {
     const fetchAllRankings = async () => {
       if (activeTab === 'weekly') {
         await fetchWeeklyRankings();
+        await fetchMyWeeklyRanking();
         // 如果还没有总排行数据，也加载它
         if (!currentUserTotal && user) {
           await fetchTotalRankings();
         }
       } else {
         await fetchTotalRankings();
+        await fetchMyWeeklyRanking();
         // 如果还没有周排行数据，也加载它
         if (!currentUserWeekly && user) {
           await fetchWeeklyRankings();
@@ -253,12 +276,13 @@ export default function Ranking() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                           <span className="bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full">
-                            {user.userPoints}{t('ranking.points.unit')}
+                            {user.weeklyPoints ?? user.userPoints ?? 0}{t('ranking.points.unit')}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {(() => {
-                            const level = user.userLevel ?? calculateLevel(user.userPoints || user.weeklyPoints || 0);
+                            const weeklyPoints = user.weeklyPoints ?? user.userPoints ?? 0;
+                            const level = user.userLevel ?? calculateLevel(weeklyPoints);
                             return (
                               <span className={`px-3 py-2 text-xs font-bold rounded-full shadow-sm ${getLevelStyle(level)}`}>
                                 {getLevelText(level)}
@@ -440,7 +464,7 @@ export default function Ranking() {
                       <span className="text-xl text-white">⭐</span>
                     </div>
                     <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
-                      {currentUserWeekly?.userPoints || 0}
+                      {currentUserWeekly?.weeklyPoints ?? currentUserWeekly?.userPoints ?? 0}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-2">周积分</div>
                   </div>

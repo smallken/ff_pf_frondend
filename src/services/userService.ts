@@ -156,4 +156,9 @@ export const userService = {
   updateAllUserLevels: (): Promise<{successCount: number, totalUsers: number, message: string}> => {
     return request.post<{successCount: number, totalUsers: number, message: string}>('/user/updateAllLevels');
   },
+
+  // 获取当前用户的周排行榜信息
+  getMyWeeklyRanking: (): Promise<RankingUserVO | null> => {
+    return request.get<RankingUserVO | null>('/user/weeklyRanking/my');
+  },
 };
