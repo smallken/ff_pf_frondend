@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { formService, userService } from '../../../services';
+import CountrySelect from '../../components/CountrySelect';
 
 export default function ApplicationForm() {
   const { t, language } = useLanguage();
@@ -369,15 +370,10 @@ export default function ApplicationForm() {
               <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 所在国家地区 <span className="text-red-500">{t('forms.required')}</span>
               </label>
-              <input
-                type="text"
-                id="country"
-                name="country"
-                required
-                placeholder="例如：中国、美国、日本等"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+              <CountrySelect
                 value={formData.country}
-                onChange={handleChange}
+                onChange={(value) => setFormData({...formData, country: value})}
+                language={language}
               />
             </div>
 
@@ -636,12 +632,10 @@ export default function ApplicationForm() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {language === 'zh' ? '所在国家地区' : 'Country/Region'} <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
+                  <CountrySelect
                     value={profileForm.country}
-                    onChange={(e) => setProfileForm({...profileForm, country: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
-                    placeholder={language === 'zh' ? '例如：中国、美国、日本等' : 'e.g., China, USA, Japan'}
+                    onChange={(value) => setProfileForm({...profileForm, country: value})}
+                    language={language}
                   />
                 </div>
               )}

@@ -441,9 +441,9 @@ export default function WeeklyChallenge() {
   };
 
   const communicationSubmitted = taskOverview?.communicationSubmitted ?? 0;
-  const communicationLimit = taskOverview?.communicationLimit ?? 3;
+  const communicationLimit = taskOverview?.communicationLimit ?? 5;
   const communitySubmitted = taskOverview?.communitySubmitted ?? 0;
-  const communityLimit = taskOverview?.communityLimit ?? 2;
+  const communityLimit = taskOverview?.communityLimit ?? 3;
   const originalSubmitted = taskOverview?.originalSubmitted ?? 0;
   const originalLimit = taskOverview?.originalLimit ?? 1;
   const weeklyPoints = taskOverview?.weeklyPoints ?? 0;
@@ -461,8 +461,8 @@ export default function WeeklyChallenge() {
         : 'Triple-click (retweet+like+comment) on this week\'s official tweet',
       points: language === 'zh' ? `本周提交次数上限：${communicationLimit} 次` : `Weekly submissions limit: ${communicationLimit}`,
       requirement: language === 'zh' 
-        ? '提交要求：上传截图（含评论文字）+ 链接；必须包含推特名字（需与平台登记一致）；截图需包含转发/点赞/评论证明' 
-        : 'Submission: Upload screenshot (with comment text) + link; Must contain Twitter username (match registered name); Screenshot must show retweet/like/comment proof',
+        ? '提交要求：上传截图（含评论文字）+ 链接；必须包含推特名字（需与平台登记一致）；截图需包含转发/点赞/评论证明（每周最多 5 次）' 
+        : 'Submission: Upload screenshot (with comment text) + link; Must contain Twitter username (match registered name); Screenshot must show retweet/like/comment proof (up to 5 times per week)',
       buttonText: language === 'zh' ? '上传并领取积分' : 'Upload & Claim Points',
       color: 'from-blue-500 to-cyan-500',
       onClick: () => openTaskModal('spread'),
@@ -472,12 +472,12 @@ export default function WeeklyChallenge() {
       id: '社群任务',
       title: language === 'zh' ? '💬 社群任务' : '💬 Community Task',
       description: language === 'zh' 
-        ? '参与本周 Telegram Topic / AMA 发言' 
-        : 'Participate in this week\'s Telegram Topic / AMA',
+        ? '参与本周 Telegram Topic / AMA 发言（每周最多 3 次）' 
+        : 'Participate in this week\'s Telegram Topic / AMA (up to 3 times per week)',
       points: language === 'zh' ? `本周提交次数上限：${communityLimit} 次` : `Weekly submissions limit: ${communityLimit}`,
       requirement: language === 'zh' 
-        ? '提交要求：上传截图（含发言内容）+ 链接' 
-        : 'Submission: Upload screenshot (with discussion content) + link',
+        ? '提交要求：上传截图（含发言内容）+ 链接（每周最多 3 次）' 
+        : 'Submission: Upload screenshot (with discussion content) + link (up to 3 times per week)',
       buttonText: language === 'zh' ? '上传并领取积分' : 'Upload & Claim Points',
       color: 'from-purple-500 to-pink-500',
       onClick: () => openTaskModal('community'),
@@ -487,12 +487,12 @@ export default function WeeklyChallenge() {
       id: '原创任务',
       title: language === 'zh' ? '✍️ 原创任务' : '✍️ Original Task',
       description: language === 'zh' 
-        ? '#FFFPWeek5 –「你眼中的Flipflop」' 
-        : '#FFFPWeek5 - "Flipflop in Your Eyes"',
+        ? '#FFFPWeek6 –「用三个元素形容FlipFlop」\n空投、热闹、社区狂欢\n展示FlipFlop的嗨翻一面\n发布平台：X/Twitter' 
+        : '#FFFPWeek6 - "FlipFlop in Three Elements"\nAirdrops, chaos, and community madness\nShow the wild side of FlipFlop\nPublishing Platform: X/Twitter',
       points: language === 'zh' ? `本周提交次数上限：${originalLimit} 次` : `Weekly submissions limit: ${originalLimit}`,
       requirement: language === 'zh' 
-        ? '提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签' 
-        : 'Submission: Upload screenshot + link + view count; Content must @ official account and add #FFFP hashtag',
+        ? '提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等' 
+        : 'Submission: Upload screenshot + link + view count; Content must @ official account and add #FFFP hashtag; Content type is flexible: text, image, video, etc.',
       buttonText: language === 'zh' ? '上传作品' : 'Upload Work',
       color: 'from-amber-500 to-orange-500',
       onClick: () => openTaskModal('original'),
@@ -597,7 +597,7 @@ export default function WeeklyChallenge() {
                   </CardHeader>
                   <CardContent className="flex flex-col flex-grow space-y-3">
                     <div className="flex-grow space-y-3">
-                      <p>{task.description}</p>
+                      <p className="whitespace-pre-line">{task.description}</p>
                       <p className="text-sm opacity-90">{task.points}</p>
                       <p className="text-sm opacity-90">{task.requirement}</p>
                     </div>

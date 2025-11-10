@@ -73,9 +73,9 @@ export default function AchievementForm() {
     if (language === 'zh') return errorMsg;
     
     // 传播类频率限制
-    const promotionMatch = errorMsg.match(/传播类任务一周内不能超过3次提交（当前已提交(\d+)次，本次提交(\d+)次）/);
+    const promotionMatch = errorMsg.match(/传播类任务一周内不能超过5次提交（当前已提交(\d+)次，本次提交(\d+)次）/);
     if (promotionMatch) {
-      return `Promotion tasks cannot exceed 3 submissions per week (currently submitted ${promotionMatch[1]} times, this submission ${promotionMatch[2]} time(s))`;
+      return `Promotion tasks cannot exceed 5 submissions per week (currently submitted ${promotionMatch[1]} times, this submission ${promotionMatch[2]} time(s))`;
     }
     
     // 短篇原创频率限制
@@ -85,9 +85,9 @@ export default function AchievementForm() {
     }
     
     // 社区TG频率限制
-    const communityMatch = errorMsg.match(/社区类TG任务一周内不能超过1次提交（当前已提交(\d+)次，本次提交(\d+)次）/);
+    const communityMatch = errorMsg.match(/社区类TG任务一周内不能超过3次提交（当前已提交(\d+)次，本次提交(\d+)次）/);
     if (communityMatch) {
-      return `Community TG tasks cannot exceed 1 submission per week (currently submitted ${communityMatch[1]} time(s), this submission ${communityMatch[2]} time(s))`;
+      return `Community TG tasks cannot exceed 3 submissions per week (currently submitted ${communityMatch[1]} time(s), this submission ${communityMatch[2]} time(s))`;
     }
     
     // 其他通用错误翻译

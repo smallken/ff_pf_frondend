@@ -10,8 +10,8 @@ export default function WeeklyChallenge() {
   const { language, t } = useLanguage();
   const [timeLeft, setTimeLeft] = useState({ days: 3, hours: 12, minutes: 45, seconds: 0 });
   const [userStats, setUserStats] = useState({
-    spreadTask: { submitted: 2, limit: 3 },
-    communityTask: { submitted: 1, limit: 2 },
+    spreadTask: { submitted: 2, limit: 5 },
+    communityTask: { submitted: 1, limit: 3 },
     originalTask: { submitted: 1, limit: 1 },
     totalPoints: 0
   });
@@ -47,7 +47,7 @@ export default function WeeklyChallenge() {
       description: language === 'zh' 
         ? '为本周官方推文一键三联（转+赞+评）' 
         : 'Triple-click (retweet+like+comment) on this week\'s official tweet',
-      points: language === 'zh' ? '积分上限：3分' : 'Points limit: 3 points',
+      points: language === 'zh' ? '积分上限：5分' : 'Points limit: 5 points',
       requirement: language === 'zh' ? '提交要求：上传截图 + 链接' : 'Submission: Upload screenshot + link',
       buttonText: language === 'zh' ? '上传并领取积分' : 'Upload & Claim Points',
       color: 'from-blue-500 to-cyan-500'
