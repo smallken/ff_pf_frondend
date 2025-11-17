@@ -155,7 +155,8 @@ export default function WeeklyChallengeLogsTab() {
     setRankingLoading(true);
     setRankingError('');
     try {
-      const params: { weekCount?: number; limit: number } = { limit: 80 };
+      // 获取排行榜时使用-1获取全部数据
+      const params: { weekCount?: number; limit: number } = { limit: -1 };
       if (rankingWeek.trim()) {
         const parsed = parseInt(rankingWeek.trim(), 10);
         if (!Number.isNaN(parsed) && parsed > 0) {
@@ -178,42 +179,72 @@ export default function WeeklyChallengeLogsTab() {
     }
   };
 
+  const fetchAllRankingData = async () => {
+    // 用于导出功能的专门方法，传入limit=-1获取全部数据
+    const params: { weekCount?: number; limit: number } = { limit: -1 };
+    if (rankingWeek.trim()) {
+      const parsed = parseInt(rankingWeek.trim(), 10);
+      if (!Number.isNaN(parsed) && parsed > 0) {
+        params.weekCount = parsed;
+      } else {
+        throw new Error('周次必须为正整数');
+      }
+    }
+    
+    const response = await adminWeeklyChallengeService.getWeeklyRanking(params);
+    return response.records || [];
+  };
+
   useEffect(() => {
     if (activeTab === 'ranking') {
       fetchRanking();
     }
   }, [activeTab]);
 
-  const handleDownloadRanking = () => {
-    if (!rankingRecords.length) {
-      return;
+  const handleDownloadRanking = async () => {
+    try {
+      setRankingLoading(true);
+      // 获取全部数据进行导出
+      const allRankingRecords = await fetchAllRankingData();
+      if (!allRankingRecords.length) {
+        alert('没有数据可导出');
+        return;
+      }
+
+      const headers = ['排名', '用户ID', '用户名', '推特', '周积分', '钱包地址'];
+      const rows = allRankingRecords.map((item) => [
+        item.rank ?? '',
+        item.id ?? '',
+        item.userName ?? '',
+        item.twitterUsername ?? '',
+        item.weeklyPoints ?? 0,
+        item.walletAddress ?? '',
+      ]);
+      const csvContent = [headers, ...rows]
+        .map((row) =>
+          row
+            .map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`)
+            .join(',')
+        )
+        .join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const week = (rankingWeekCount ?? rankingWeek) || 'latest';
+      link.href = url;
+      link.setAttribute('download', `weekly-ranking-week-${week}-all.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      alert(`成功导出${allRankingRecords.length}条排行榜数据`);
+    } catch (err: any) {
+      console.error('导出排行榜失败:', err);
+      alert(err.message || '导出排行榜失败');
+    } finally {
+      setRankingLoading(false);
     }
-    const headers = ['排名', '用户ID', '用户名', '推特', '周积分', '钱包地址'];
-    const rows = rankingRecords.map((item) => [
-      item.rank ?? '',
-      item.id ?? '',
-      item.userName ?? '',
-      item.twitterUsername ?? '',
-      item.weeklyPoints ?? 0,
-      item.walletAddress ?? '',
-    ]);
-    const csvContent = [headers, ...rows]
-      .map((row) =>
-        row
-          .map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`)
-          .join(',')
-      )
-      .join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const week = (rankingWeekCount ?? rankingWeek) || 'latest';
-    link.href = url;
-    link.setAttribute('download', `weekly-ranking-week-${week}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   const handleViewDetail = async (logId: number) => {
@@ -543,7 +574,7 @@ export default function WeeklyChallengeLogsTab() {
                 disabled={!rankingRecords.length}
                 className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                导出前80名
+                导出本周期数据
               </button>
             </div>
           </div>
