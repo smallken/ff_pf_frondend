@@ -486,12 +486,12 @@ export default function WeeklyChallenge() {
     {
       id: '原创任务',
       title: language === 'zh' ? '✍️ 原创任务' : '✍️ Original Task',
-      description: language === 'zh' 
-        ? '#FFFPWeek6 –「用三个元素形容FlipFlop」\n空投、热闹、社区狂欢\n展示FlipFlop的嗨翻一面\n发布平台：X/Twitter' 
-        : '#FFFPWeek6 - "FlipFlop in Three Elements"\nAirdrops, chaos, and community madness\nShow the wild side of FlipFlop\nPublishing Platform: X/Twitter',
+      description: language === 'zh'
+        ? '#FFFPWeek7 –「你觉得未来Web3哪个赛道会先爆？来押一波」\n发布平台：X/Twitter\n本周提交次数上限：1 次\n提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等'
+        : '#FFFPWeek7 - "Which Web3 track will moon first? Drop your prediction"\nPublishing Platform: X/Twitter\nWeekly submissions limit: 1\nSubmission: Upload screenshot + link + view count; Content must @ official account and add #FFFP hashtag; Content type is flexible: text, image, video, etc.',
       points: language === 'zh' ? `本周提交次数上限：${originalLimit} 次` : `Weekly submissions limit: ${originalLimit}`,
-      requirement: language === 'zh' 
-        ? '提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等' 
+      requirement: language === 'zh'
+        ? '提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等'
         : 'Submission: Upload screenshot + link + view count; Content must @ official account and add #FFFP hashtag; Content type is flexible: text, image, video, etc.',
       buttonText: language === 'zh' ? '上传作品' : 'Upload Work',
       color: 'from-amber-500 to-orange-500',
