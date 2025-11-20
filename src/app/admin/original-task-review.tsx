@@ -358,7 +358,7 @@ export default function OriginalTaskReview() {
               <div>
                 <label className="block font-medium mb-2">审核意见（可选）</label>
                 <textarea value={reviewForm.reviewMessage} onChange={(e) => setReviewForm({ ...reviewForm, reviewMessage: e.target.value })} rows={4}
-                  placeholder="请输入审核意见..." className="w-full px-3 py-2 border rounded-md" />
+                  placeholder="请输入审核意见..." className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" />
               </div>
               <div className="flex gap-2">
                 <button onClick={handleSubmitReview} disabled={reviewLoading}

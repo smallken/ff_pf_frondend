@@ -98,22 +98,30 @@ export default function WeeklyChallengeLogsTab() {
       if (weekCount) params.append('weekCount', weekCount);
       if (reviewStatus) params.append('reviewStatus', reviewStatus);
       // 只有当userId不为空且trim后不为空时才添加参数
-      if (userId && userId.trim() !== '') params.append('userId', userId.trim());
-      
+      if (userId && userId.trim() !== '') {
+        params.append('userId', userId.trim());
+        console.log('🔍 筛选条件 - 用户ID:', userId.trim(), '类型:', typeof userId.trim());
+      }
+
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8100/api';
-      const response = await fetch(`${apiBaseUrl}/auto-review-log/list?${params.toString()}`, {
+      const requestUrl = `${apiBaseUrl}/auto-review-log/list?${params.toString()}`;
+      console.log('📡 请求URL:', requestUrl);
+
+      const response = await fetch(requestUrl, {
         credentials: 'include',
         cache: 'no-store', // 禁用缓存
       });
-      
+
       if (!response.ok) {
         throw new Error('获取数据失败');
       }
-      
+
       const result = await response.json();
-      
+      console.log('📥 服务器响应:', result);
+
       if (result.code === 0 && result.data) {
         const pageData: PageData = result.data;
+        console.log('✅ 数据统计 - 总记录数:', pageData.total, '当前页记录数:', pageData.records.length);
         setLogs(pageData.records);
         setTotal(pageData.total);
         
@@ -408,9 +416,13 @@ export default function WeeklyChallengeLogsTab() {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">用户ID</label>
               <input
-                type="number"
+                type="text"
                 value={userId}
-                onChange={(e) => setUserId(e.target.value)}
+                onChange={(e) => {
+                  // 只允许输入数字
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setUserId(value);
+                }}
                 placeholder="筛选用户ID"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
               />
