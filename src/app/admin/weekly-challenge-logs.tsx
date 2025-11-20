@@ -87,17 +87,18 @@ export default function WeeklyChallengeLogsTab() {
   const fetchLogs = async (page: number = current) => {
     setLoading(true);
     setError('');
-    
+
     try {
       const params = new URLSearchParams({
         current: page.toString(),
         pageSize: pageSize.toString(),
       });
-      
+
       if (taskType) params.append('taskType', taskType);
       if (weekCount) params.append('weekCount', weekCount);
       if (reviewStatus) params.append('reviewStatus', reviewStatus);
-      if (userId) params.append('userId', userId);
+      // 只有当userId不为空且trim后不为空时才添加参数
+      if (userId && userId.trim() !== '') params.append('userId', userId.trim());
       
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8100/api';
       const response = await fetch(`${apiBaseUrl}/auto-review-log/list?${params.toString()}`, {

@@ -281,6 +281,10 @@ export default function OriginalTaskReview() {
                         <button onClick={() => { setSelectedTask(task); setReviewForm({ reviewStatus: 1, reviewMessage: '' }); setShowReviewModal(true); }}
                           className="text-purple-600 hover:text-purple-500">审核</button>
                       )}
+                      {activeSubTab === 'reviewed' && (
+                        <button onClick={() => { setSelectedTask(task); setReviewForm({ reviewStatus: task.reviewStatus || 1, reviewMessage: task.reviewMessage || '' }); setShowReviewModal(true); }}
+                          className="text-green-600 hover:text-green-500">修改</button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -336,7 +340,7 @@ export default function OriginalTaskReview() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowReviewModal(false)}>
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 space-y-4">
-              <h3 className="text-xl font-semibold">审核原创任务</h3>
+              <h3 className="text-xl font-semibold">{activeSubTab === 'pending' ? '审核原创任务' : '修改审核结果'}</h3>
               <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded text-sm space-y-2">
                 <div><span className="text-gray-600">用户：</span>{selectedTask.userName}</div>
                 <div><span className="text-gray-600">用户ID：</span>{selectedTask.userId}</div>
@@ -359,7 +363,7 @@ export default function OriginalTaskReview() {
               <div className="flex gap-2">
                 <button onClick={handleSubmitReview} disabled={reviewLoading}
                   className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50">
-                  {reviewLoading ? '提交中...' : '提交审核'}
+                  {reviewLoading ? '提交中...' : (activeSubTab === 'pending' ? '提交审核' : '确认修改')}
                 </button>
                 <button onClick={() => setShowReviewModal(false)} disabled={reviewLoading} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">取消</button>
               </div>
