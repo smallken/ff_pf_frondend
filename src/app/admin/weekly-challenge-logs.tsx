@@ -56,7 +56,7 @@ export default function WeeklyChallengeLogsTab() {
   const [taskType, setTaskType] = useState('');
   const [weekCount, setWeekCount] = useState('');
   const [reviewStatus, setReviewStatus] = useState('');
-  const [userId, setUserId] = useState('');
+  const [twitterUsername, setTwitterUsername] = useState('');
   
   // 分页
   const [current, setCurrent] = useState(1);
@@ -97,10 +97,11 @@ export default function WeeklyChallengeLogsTab() {
       if (taskType) params.append('taskType', taskType);
       if (weekCount) params.append('weekCount', weekCount);
       if (reviewStatus) params.append('reviewStatus', reviewStatus);
-      // 只有当userId不为空且trim后不为空时才添加参数
-      if (userId && userId.trim() !== '') {
-        params.append('userId', userId.trim());
-        console.log('🔍 筛选条件 - 用户ID:', userId.trim(), '类型:', typeof userId.trim());
+      // 推特用户名筛选，自动去除@符号
+      if (twitterUsername && twitterUsername.trim() !== '') {
+        const cleanUsername = twitterUsername.trim().replace(/^@/, '');
+        params.append('username', cleanUsername);
+        console.log('🔍 筛选条件 - 推特用户名:', cleanUsername);
       }
 
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8100/api';
@@ -153,7 +154,7 @@ export default function WeeklyChallengeLogsTab() {
       setCurrent(1);
       fetchLogs(1);
     }
-  }, [activeTab, taskType, weekCount, reviewStatus, userId]);
+  }, [activeTab, taskType, weekCount, reviewStatus, twitterUsername]);
 
   const handlePageChange = (page: number) => {
     setCurrent(page);
@@ -414,16 +415,12 @@ export default function WeeklyChallengeLogsTab() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">用户ID</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">推特用户名</label>
               <input
                 type="text"
-                value={userId}
-                onChange={(e) => {
-                  // 只允许输入数字
-                  const value = e.target.value.replace(/[^0-9]/g, '');
-                  setUserId(value);
-                }}
-                placeholder="筛选用户ID"
+                value={twitterUsername}
+                onChange={(e) => setTwitterUsername(e.target.value)}
+                placeholder="输入推特用户名（可不带@）"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
               />
             </div>
