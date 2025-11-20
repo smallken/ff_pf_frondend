@@ -471,13 +471,13 @@ export default function WeeklyChallenge() {
     {
       id: '社群任务',
       title: language === 'zh' ? '💬 社群任务' : '💬 Community Task',
-      description: language === 'zh' 
-        ? '参与本周 Telegram Topic / AMA 发言（每周最多 3 次）' 
-        : 'Participate in this week\'s Telegram Topic / AMA (up to 3 times per week)',
+      description: language === 'zh'
+        ? '参与本周 Telegram Topic，上传截图（含tg群内发言内容）+ 链接\n参与本周 AMA 发言，上传截图（圈出自己作为speaker的头像）+链接\n（每周最多 3 次)'
+        : 'Participate in this week\'s Telegram Topic, upload screenshot (with TG group discussion content) + link\nParticipate in this week\'s AMA, upload screenshot (circle your avatar as speaker) + link\n(up to 3 times per week)',
       points: language === 'zh' ? `本周提交次数上限：${communityLimit} 次` : `Weekly submissions limit: ${communityLimit}`,
-      requirement: language === 'zh' 
-        ? '提交要求：上传截图（含发言内容）+ 链接（每周最多 3 次）' 
-        : 'Submission: Upload screenshot (with discussion content) + link (up to 3 times per week)',
+      requirement: language === 'zh'
+        ? '提交要求：\n• Telegram Topic：上传截图（含tg群内发言内容）+ 链接\n• AMA 发言：上传截图（圈出自己作为speaker的头像）+ 链接\n（每周最多 3 次）'
+        : 'Submission Requirements:\n• Telegram Topic: Upload screenshot (with TG group discussion content) + link\n• AMA: Upload screenshot (circle your avatar as speaker) + link\n(up to 3 times per week)',
       buttonText: language === 'zh' ? '上传并领取积分' : 'Upload & Claim Points',
       color: 'from-purple-500 to-pink-500',
       onClick: () => openTaskModal('community'),

@@ -101,14 +101,10 @@ export default function WeeklyChallengeLogsTab() {
       if (twitterUsername && twitterUsername.trim() !== '') {
         const cleanUsername = twitterUsername.trim().replace(/^@/, '');
         params.append('username', cleanUsername);
-        console.log('🔍 筛选条件 - 推特用户名:', cleanUsername);
       }
 
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8100/api';
-      const requestUrl = `${apiBaseUrl}/auto-review-log/list?${params.toString()}`;
-      console.log('📡 请求URL:', requestUrl);
-
-      const response = await fetch(requestUrl, {
+      const response = await fetch(`${apiBaseUrl}/auto-review-log/list?${params.toString()}`, {
         credentials: 'include',
         cache: 'no-store', // 禁用缓存
       });
@@ -118,11 +114,9 @@ export default function WeeklyChallengeLogsTab() {
       }
 
       const result = await response.json();
-      console.log('📥 服务器响应:', result);
 
       if (result.code === 0 && result.data) {
         const pageData: PageData = result.data;
-        console.log('✅ 数据统计 - 总记录数:', pageData.total, '当前页记录数:', pageData.records.length);
         setLogs(pageData.records);
         setTotal(pageData.total);
         
