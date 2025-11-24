@@ -204,7 +204,7 @@ export default function OriginalTaskReview() {
         </div>
       )}
       {/* 成功提示 - 固定定位，显示在页面下方一点 */}
-      {success && (activeSubTab !== 'planLogs' || activeSubTab === 'contentManagement') && (
+      {success && activeSubTab !== 'planLogs' && (
         <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[100] max-w-2xl w-full mx-4">
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg">{success}</div>
         </div>
