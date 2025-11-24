@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { adminOriginalTaskService, type OriginalTaskDetailVO, type WeeklyPlanStatLogVO } from '../../services/adminOriginalTaskService';
 
 export default function OriginalTaskReview() {
-  const [activeSubTab, setActiveSubTab] = useState<'pending' | 'reviewed' | 'planLogs'>('pending');
+  const [activeSubTab, setActiveSubTab] = useState<'pending' | 'reviewed' | 'planLogs' | 'contentManagement'>('pending');
   const [tasks, setTasks] = useState<OriginalTaskDetailVO[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -31,6 +31,38 @@ export default function OriginalTaskReview() {
   const [reviewStatusFilter, setReviewStatusFilter] = useState<number | undefined>();
   const [planLogWeekFilter, setPlanLogWeekFilter] = useState<number | undefined>();
 
+  // 任务内容管理相关状态
+  const [contentForm, setContentForm] = useState({
+    weekNumber: 8,
+    chineseTopic: 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？',
+    englishTopic: 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?'
+  });
+  const [savingContent, setSavingContent] = useState(false);
+
+  // 模板内容（固定部分）
+  const getTemplateContent = (language: 'zh' | 'en', weekNumber: number, topic: string) => {
+    const template = language === 'zh'
+      ? `#FFFPWeek${weekNumber} –「{topic}」\n发布平台：X/Twitter\n本周提交次数上限：1 次\n提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等`
+      : `#FFFPWeek${weekNumber} - "{topic}"\nPublishing Platform: X/Twitter\nWeekly submissions limit: 1\nSubmission: Upload screenshot + link + view count; Content must @ official account and add #FFFP hashtag; Content type is flexible: text, image, video, etc.`;
+    return template.replace('{topic}', topic);
+  };
+
+  // 解析保存的内容，提取主题
+  const parseSavedContent = (content?: string) => {
+    if (!content) {
+      return {
+        chineseTopic: 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？',
+        englishTopic: 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?'
+      };
+    }
+    const zhMatch = content.match(/「(.+?)」/);
+    const enMatch = content.match(/"(.+?)"/);
+    return {
+      chineseTopic: zhMatch ? zhMatch[1] : 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？',
+      englishTopic: enMatch ? enMatch[1] : 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?'
+    };
+  };
+
   useEffect(() => {
     if (activeSubTab === 'pending' || activeSubTab === 'reviewed') {
       fetchTasks();
@@ -42,6 +74,14 @@ export default function OriginalTaskReview() {
       fetchPlanLogs(planLogPage, planLogWeekFilter);
     }
   }, [activeSubTab, planLogPage, planLogWeekFilter]);
+
+  useEffect(() => {
+    if (activeSubTab === 'contentManagement') {
+      loadSavedContent();
+      setError('');
+      setSuccess('');
+    }
+  }, [activeSubTab]);
 
   const fetchTasks = async () => {
     try {
@@ -100,6 +140,61 @@ export default function OriginalTaskReview() {
   const calculatePoints = (browseNum: number): number => Math.round(5 * (1 + browseNum / 2000));
   const currentError = activeSubTab === 'planLogs' ? planLogError : error;
 
+  // 保存任务内容
+  const handleSaveContent = async () => {
+    if (!contentForm.chineseTopic.trim()) {
+      setError('中文主题不能为空');
+      return;
+    }
+    if (!contentForm.weekNumber || contentForm.weekNumber < 1) {
+      setError('请输入正确的周次');
+      return;
+    }
+
+    try {
+      setSavingContent(true);
+      setError('');
+
+      // 使用模板生成完整内容
+      const weekNumber = contentForm.weekNumber;
+      const contentData = {
+        chineseContent: getTemplateContent('zh', weekNumber, contentForm.chineseTopic),
+        englishContent: getTemplateContent('en', weekNumber, contentForm.englishTopic || contentForm.chineseTopic),
+        weekNumber,
+        chineseTopic: contentForm.chineseTopic,
+        englishTopic: contentForm.englishTopic,
+        updateTime: new Date().toISOString()
+      };
+      localStorage.setItem('footprint_original_task_content', JSON.stringify(contentData));
+
+      setSuccess('任务内容保存成功！每周挑战页面将立即生效');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || '保存失败');
+    } finally {
+      setSavingContent(false);
+    }
+  };
+
+  // 加载已保存的内容
+  const loadSavedContent = () => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const savedContent = localStorage.getItem('footprint_original_task_content');
+      if (savedContent) {
+        const data = JSON.parse(savedContent);
+        setContentForm({
+          weekNumber: data.weekNumber || 8,
+          chineseTopic: data.chineseTopic || parseSavedContent(data.chineseContent).chineseTopic,
+          englishTopic: data.englishTopic || parseSavedContent(data.englishContent).englishTopic
+        });
+      }
+    } catch (error) {
+      console.error('读取保存的内容失败:', error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* 错误提示 - 固定定位，显示在页面下方一点 */}
@@ -109,7 +204,7 @@ export default function OriginalTaskReview() {
         </div>
       )}
       {/* 成功提示 - 固定定位，显示在页面下方一点 */}
-      {success && activeSubTab !== 'planLogs' && (
+      {success && (activeSubTab !== 'planLogs' || activeSubTab === 'contentManagement') && (
         <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[100] max-w-2xl w-full mx-4">
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg">{success}</div>
         </div>
@@ -129,6 +224,10 @@ export default function OriginalTaskReview() {
             <button onClick={() => { setActiveSubTab('planLogs'); setPlanLogPage(1); setPlanLogError(''); }}
               className={`py-4 px-2 border-b-2 font-medium text-sm ${activeSubTab === 'planLogs' ? 'border-purple-500 text-purple-600' : 'border-transparent text-gray-500'}`}>
               周计划统计日志 {planLogTotal > 0 && activeSubTab === 'planLogs' && `(${planLogTotal})`}
+            </button>
+            <button onClick={() => { setActiveSubTab('contentManagement'); setError(''); setSuccess(''); }}
+              className={`py-4 px-2 border-b-2 font-medium text-sm ${activeSubTab === 'contentManagement' ? 'border-purple-500 text-purple-600' : 'border-transparent text-gray-500'}`}>
+              任务内容管理
             </button>
           </nav>
         </div>
@@ -172,7 +271,9 @@ export default function OriginalTaskReview() {
         </div>
 
         <div className="p-6">
-          {activeSubTab === 'planLogs' ? (
+          {activeSubTab === 'contentManagement' ? (
+            <div className="text-center py-8 text-gray-500">请在下方表单中管理任务内容</div>
+          ) : activeSubTab === 'planLogs' ? (
             planLogLoading ? (
               <div className="text-center py-8 text-gray-500">加载中...</div>
             ) : planLogs.length === 0 ? (
@@ -292,7 +393,7 @@ export default function OriginalTaskReview() {
             </table>
           )}
 
-          {total > pageSize && (
+          {total > pageSize && activeSubTab !== 'contentManagement' && (
             <div className="flex justify-between mt-4 pt-4 border-t">
               <div className="text-sm">显示 {(page - 1) * pageSize + 1} 到 {Math.min(page * pageSize, total)} 条，共 {total} 条</div>
               <div className="flex space-x-2">
@@ -300,6 +401,99 @@ export default function OriginalTaskReview() {
                 <span className="px-3 py-1">{page} / {Math.ceil(total / pageSize)}</span>
                 <button onClick={() => setPage(Math.min(Math.ceil(total / pageSize), page + 1))} disabled={page >= Math.ceil(total / pageSize)}
                   className="px-3 py-1 border rounded disabled:opacity-50">下一页</button>
+              </div>
+            </div>
+          )}
+
+          {/* 任务内容管理表单 */}
+          {activeSubTab === 'contentManagement' && (
+            <div className="space-y-6">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">📝 原创任务内容管理</h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  管理员可以修改原创任务的主题和内容。修改后将影响前端页面的任务描述显示。
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block font-medium mb-2">周次 *</label>
+                    <input
+                      type="number"
+                      value={contentForm.weekNumber}
+                      onChange={(e) => setContentForm(prev => ({ ...prev, weekNumber: parseInt(e.target.value) || 8 }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+                      min="1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">必填项，用于生成 FFFPWeek[N]</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block font-medium mb-2">中文主题 *</label>
+                    <input
+                      type="text"
+                      value={contentForm.chineseTopic}
+                      onChange={(e) => setContentForm(prev => ({ ...prev, chineseTopic: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+                      placeholder="请输入中文主题..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">必填项，只修改主题部分</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-medium mb-2">英文主题（选填）</label>
+                  <input
+                    type="text"
+                    value={contentForm.englishTopic}
+                    onChange={(e) => setContentForm(prev => ({ ...prev, englishTopic: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+                    placeholder="请输入英文主题...（不填写将使用中文主题）"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">选填项，不填写将使用中文主题翻译</p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <h4 className="font-medium mb-2">预览效果（完整内容）</h4>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">中文预览：</span>
+                      <pre className="mt-1 text-xs bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-600 overflow-x-auto whitespace-pre-wrap">
+                        {getTemplateContent('zh', contentForm.weekNumber, contentForm.chineseTopic)}
+                      </pre>
+                    </div>
+                    <div>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">英文预览：</span>
+                      <pre className="mt-1 text-xs bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-600 overflow-x-auto whitespace-pre-wrap">
+                        {getTemplateContent('en', contentForm.weekNumber, contentForm.englishTopic || contentForm.chineseTopic)}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button
+                    onClick={handleSaveContent}
+                    disabled={savingContent || !contentForm.chineseTopic.trim()}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  >
+                    {savingContent ? '保存中...' : '💾 保存修改'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setContentForm({
+                        weekNumber: 8,
+                        chineseTopic: 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？',
+                        englishTopic: 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?'
+                      });
+                      setError('');
+                      setSuccess('');
+                    }}
+                    className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium"
+                  >
+                    🔄 重置内容
+                  </button>
+                </div>
               </div>
             </div>
           )}

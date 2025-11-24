@@ -43,6 +43,82 @@ export default function WeeklyChallenge() {
   const [isSunday, setIsSunday] = useState(false);
   const [weeklyRankings, setWeeklyRankings] = useState<RankingUserVO[]>([]);
   const [rankingsLoading, setRankingsLoading] = useState(false);
+  const [contentVersion, setContentVersion] = useState(0); // 用于触发重新渲染
+
+  // 模板内容生成函数
+  const getTemplateContent = (language: 'zh' | 'en', weekNumber: number, topic: string) => {
+    const template = language === 'zh'
+      ? `#FFFPWeek${weekNumber} –「{topic}」\n发布平台：X/Twitter\n本周提交次数上限：1 次\n提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等`
+      : `#FFFPWeek${weekNumber} - "{topic}"\nPublishing Platform: X/Twitter\nWeekly submissions limit: 1\nSubmission: Upload screenshot + link + view count; Content must @ official account and add #FFFP hashtag; Content type is flexible: text, image, video, etc.`;
+    return template.replace('{topic}', topic);
+  };
+
+  // 动态获取原创任务内容
+  const getOriginalTaskContent = () => {
+    if (typeof window === 'undefined') {
+      // 服务端渲染时返回默认值
+      return {
+        chinese: getTemplateContent('zh', 8, 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？'),
+        english: getTemplateContent('en', 8, 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?')
+      };
+    }
+
+    try {
+      const savedContent = localStorage.getItem('footprint_original_task_content');
+      if (savedContent) {
+        const data = JSON.parse(savedContent);
+        console.log('读取到的保存数据:', data); // 调试日志
+
+        // 优先使用完整的chineseContent和englishContent
+        if (data.chineseContent && data.englishContent) {
+          console.log('使用完整的保存内容');
+          return {
+            chinese: data.chineseContent,
+            english: data.englishContent
+          };
+        }
+        // 如果没有完整内容，尝试从主题构建
+        const weekNumber = data.weekNumber || 8;
+        const chineseTopic = data.chineseTopic || 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？';
+        const englishTopic = data.englishTopic || 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?';
+
+        console.log('从主题构建内容:', { weekNumber, chineseTopic, englishTopic }); // 调试日志
+
+        return {
+          chinese: getTemplateContent('zh', weekNumber, chineseTopic),
+          english: getTemplateContent('en', weekNumber, englishTopic)
+        };
+      }
+    } catch (error) {
+      console.error('读取原创任务内容失败:', error);
+    }
+
+    console.log('使用默认内容'); // 调试日志
+    // 返回默认值
+    return {
+      chinese: getTemplateContent('zh', 8, 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？'),
+      english: getTemplateContent('en', 8, 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?')
+    };
+  };
+
+  // 监听localStorage变化，实现实时更新
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'footprint_original_task_content') {
+        setContentVersion(prev => prev + 1);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // 组件挂载时读取本地存储
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setContentVersion(prev => prev + 1);
+    }
+  }, []);
   const taskModalCopy = useMemo(() => ({
     spread: {
       title: language === 'zh' ? '提交传播任务成果' : 'Submit Spread Task Proof',
@@ -452,7 +528,12 @@ export default function WeeklyChallenge() {
   const canSubmitCommunity = hasSubmittedApplication && !isCheckingApplication && communitySubmitted < communityLimit;
   const canSubmitOriginal = hasSubmittedApplication && !isCheckingApplication && originalSubmitted < originalLimit;
 
-  const taskCards = [
+  const taskCards = useMemo(() => {
+    console.log('当前语言:', language); // 调试日志
+    const originalContent = getOriginalTaskContent();
+    console.log('原创任务内容:', originalContent); // 调试日志
+
+    return [
     {
       id: '传播任务',
       title: language === 'zh' ? '📣 传播任务' : '📣 Spread Task',
@@ -486,9 +567,7 @@ export default function WeeklyChallenge() {
     {
       id: '原创任务',
       title: language === 'zh' ? '✍️ 原创任务' : '✍️ Original Task',
-      description: language === 'zh'
-        ? '#FFFPWeek7 –「你觉得未来Web3哪个赛道会先爆？来押一波」\n发布平台：X/Twitter\n本周提交次数上限：1 次\n提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等'
-        : '#FFFPWeek7 - "Which Web3 track will moon first? Drop your prediction"\nPublishing Platform: X/Twitter\nWeekly submissions limit: 1\nSubmission: Upload screenshot + link + view count; Content must @ official account and add #FFFP hashtag; Content type is flexible: text, image, video, etc.',
+      description: language === 'zh' ? originalContent.chinese : originalContent.english,
       points: language === 'zh' ? `本周提交次数上限：${originalLimit} 次` : `Weekly submissions limit: ${originalLimit}`,
       requirement: language === 'zh'
         ? '提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等'
@@ -498,7 +577,8 @@ export default function WeeklyChallenge() {
       onClick: () => openTaskModal('original'),
       disabled: !canSubmitOriginal
     }
-  ];
+    ];
+  }, [contentVersion, language]);
 
   // 使用真实的周排行榜数据
 
