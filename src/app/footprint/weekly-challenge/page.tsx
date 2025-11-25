@@ -528,6 +528,22 @@ export default function WeeklyChallenge() {
   const canSubmitCommunity = hasSubmittedApplication && !isCheckingApplication && communitySubmitted < communityLimit;
   const canSubmitOriginal = hasSubmittedApplication && !isCheckingApplication && originalSubmitted < originalLimit;
 
+  // 调试信息：输出关键状态
+  useEffect(() => {
+    console.log('=== 任务按钮状态调试 ===');
+    console.log('hasSubmittedApplication:', hasSubmittedApplication);
+    console.log('isCheckingApplication:', isCheckingApplication);
+    console.log('hasApproved:', hasApproved);
+    console.log('communicationSubmitted/Limit:', communicationSubmitted, '/', communicationLimit);
+    console.log('communitySubmitted/Limit:', communitySubmitted, '/', communityLimit);
+    console.log('originalSubmitted/Limit:', originalSubmitted, '/', originalLimit);
+    console.log('canSubmitCommunication:', canSubmitCommunication);
+    console.log('canSubmitCommunity:', canSubmitCommunity);
+    console.log('canSubmitOriginal:', canSubmitOriginal);
+    console.log('overviewLoading:', overviewLoading);
+    console.log('========================');
+  }, [hasSubmittedApplication, isCheckingApplication, hasApproved, communicationSubmitted, communitySubmitted, originalSubmitted, canSubmitCommunication, canSubmitCommunity, canSubmitOriginal, overviewLoading]);
+
   const taskCards = useMemo(() => {
     console.log('当前语言:', language); // 调试日志
     const originalContent = getOriginalTaskContent();
@@ -578,7 +594,7 @@ export default function WeeklyChallenge() {
       disabled: !canSubmitOriginal
     }
     ];
-  }, [contentVersion, language]);
+  }, [contentVersion, language, canSubmitCommunication, canSubmitCommunity, canSubmitOriginal, communicationLimit, communityLimit, originalLimit, openTaskModal]);
 
   // 使用真实的周排行榜数据
 
