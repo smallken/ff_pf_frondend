@@ -222,18 +222,18 @@ function WeeklyChallenge() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border border-green-200 dark:border-green-600">
                   <div className="text-2xl mb-2">📣 传播类</div>
-                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">2 / 3 次</div>
-                  <div className="text-green-600 dark:text-green-400">✅</div>
+                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">0 / 5 次</div>
+                  <div className="text-yellow-600 dark:text-yellow-400">⏳</div>
                 </div>
                 <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-2xl border border-blue-200 dark:border-blue-600">
                   <div className="text-2xl mb-2">💬 社群类</div>
-                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">1 / 2 次</div>
+                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">0 / 10 次</div>
                   <div className="text-yellow-600 dark:text-yellow-400">⏳</div>
                 </div>
                 <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-2xl border border-purple-200 dark:border-purple-600">
                   <div className="text-2xl mb-2">✍️ 原创类</div>
-                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">1 / 1 次</div>
-                  <div className="text-green-600 dark:text-green-400">✅</div>
+                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">0 / 1 次</div>
+                  <div className="text-yellow-600 dark:text-yellow-400">⏳</div>
                 </div>
               </div>
               <div className="mt-6 text-center">
