@@ -42,7 +42,7 @@ export default function OriginalTaskReview() {
   // 模板内容（固定部分）
   const getTemplateContent = (language: 'zh' | 'en', weekNumber: number, topic: string) => {
     const template = language === 'zh'
-      ? `#FFFPWeek${weekNumber} –「{topic}」\n发布平台：X/Twitter\n本周提交次数上限：1 次\n提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等`
+      ? `#FFFPWeek${weekNumber} –「{topic}」\n发布平台：X/Twitter\n每周提交次数上限：1 次\n提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等`
       : `#FFFPWeek${weekNumber} - "{topic}"\nPublishing Platform: X/Twitter\nWeekly submissions limit: 1\nSubmission: Upload screenshot + link + view count; Content must @ official account and add #FFFP hashtag; Content type is flexible: text, image, video, etc.`;
     return template.replace('{topic}', topic);
   };

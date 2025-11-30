@@ -18,14 +18,18 @@ export default function WeeklyChallenge() {
   const [isCheckingApplication, setIsCheckingApplication] = useState<boolean>(true);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [activeTask, setActiveTask] = useState<'spread' | 'community' | 'original' | null>(null);
+  const [showCommunityChoice, setShowCommunityChoice] = useState(false);
+  const [communityTaskType, setCommunityTaskType] = useState<'tg' | 'ama' | null>(null);
   const [taskSubmitting, setTaskSubmitting] = useState(false);
   const [taskError, setTaskError] = useState('');
   const [taskSuccess, setTaskSuccess] = useState('');
   const [uploadProgress, setUploadProgress] = useState<'idle' | 'uploading' | 'submitting' | 'success'>('idle');
-  const [taskForm, setTaskForm] = useState<{ contentLink: string; screenshot: File | null; browseNum: string }>({
+  const [taskForm, setTaskForm] = useState<{ contentLink: string; screenshot: File | null; browseNum: string; tgScreenshot: File | null; amaScreenshot: File | null }>({
     contentLink: '',
     screenshot: null,
     browseNum: '',
+    tgScreenshot: null,
+    amaScreenshot: null,
   });
   const [taskOverview, setTaskOverview] = useState<WeeklyTaskOverview | null>(null);
   const [overviewLoading, setOverviewLoading] = useState<boolean>(false);
@@ -48,7 +52,7 @@ export default function WeeklyChallenge() {
   // 模板内容生成函数
   const getTemplateContent = (language: 'zh' | 'en', weekNumber: number, topic: string) => {
     const template = language === 'zh'
-      ? `#FFFPWeek${weekNumber} –「{topic}」\n发布平台：X/Twitter\n本周提交次数上限：1 次\n提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等`
+      ? `#FFFPWeek${weekNumber} –「{topic}」\n发布平台：X/Twitter\n每周提交次数上限：1 次\n提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等`
       : `#FFFPWeek${weekNumber} - "{topic}"\nPublishing Platform: X/Twitter\nWeekly submissions limit: 1\nSubmission: Upload screenshot + link + view count; Content must @ official account and add #FFFP hashtag; Content type is flexible: text, image, video, etc.`;
     return template.replace('{topic}', topic);
   };
@@ -136,14 +140,16 @@ export default function WeeklyChallenge() {
     community: {
       title: language === 'zh' ? '提交社群任务成果' : 'Submit Community Task Proof',
       description: language === 'zh'
-        ? '请提供本周社群互动的内容链接，并上传截图证明，审核通过后可领取积分。'
-        : 'Provide the community interaction link and upload a screenshot proof. Points will be granted once approved.',
+        ? '请上传社群互动截图证明。TG群发言通过后+1分，AMA发言通过后+3分。可同时上传两类截图。'
+        : 'Upload community interaction screenshots. TG group +1 point, AMA speaking +3 points. You can upload both types.',
       linkLabel: language === 'zh' ? '社群互动链接（必填）' : 'Community Link (required)',
       linkPlaceholder: language === 'zh' ? '请输入社群互动链接' : 'Enter the community link',
       screenshotLabel: language === 'zh' ? '社群互动截图（必填）' : 'Community Screenshot (required)',
       screenshotHint: language === 'zh'
         ? '支持 PNG、JPG、JPEG 格式，大小不超过 5MB。'
         : 'Supports PNG, JPG, JPEG up to 5MB.',
+      tgLabel: language === 'zh' ? 'TG群发言截图（通过+1分）' : 'TG Group Screenshot (+1 point)',
+      amaLabel: language === 'zh' ? 'AMA发言截图（通过+3分）' : 'AMA Speaking Screenshot (+3 points)',
       success: language === 'zh' ? '社群任务提交成功，我们将尽快审核！' : 'Community task submitted. We will review shortly.',
     },
     original: {
@@ -322,22 +328,43 @@ export default function WeeklyChallenge() {
   }, []);
 
   const openTaskModal = useCallback((task: 'spread' | 'community' | 'original') => {
+    if (task === 'community') {
+      // 社群任务先显示选择界面
+      setShowCommunityChoice(true);
+      return;
+    }
     setActiveTask(task);
     setShowTaskModal(true);
-    setTaskForm({ contentLink: '', screenshot: null, browseNum: '' });
+    setTaskForm({ contentLink: '', screenshot: null, browseNum: '', tgScreenshot: null, amaScreenshot: null });
     setTaskError('');
     setTaskSuccess('');
     setUploadProgress('idle');
   }, []);
 
+  const openCommunityUpload = useCallback((type: 'tg' | 'ama') => {
+    setCommunityTaskType(type);
+    setShowCommunityChoice(false);
+    setActiveTask('community');
+    setShowTaskModal(true);
+    setTaskForm({ contentLink: '', screenshot: null, browseNum: '', tgScreenshot: null, amaScreenshot: null });
+    setTaskError('');
+    setTaskSuccess('');
+    setUploadProgress('idle');
+  }, []);
+
+  const closeCommunityChoice = () => {
+    setShowCommunityChoice(false);
+  };
+
   const closeTaskModal = () => {
     setShowTaskModal(false);
     setActiveTask(null);
+    setCommunityTaskType(null);
     setTaskSubmitting(false);
     setTaskError('');
     setTaskSuccess('');
     setUploadProgress('idle');
-    setTaskForm({ contentLink: '', screenshot: null, browseNum: '' });
+    setTaskForm({ contentLink: '', screenshot: null, browseNum: '', tgScreenshot: null, amaScreenshot: null });
   };
 
   const handleTaskFormChange = (field: 'contentLink' | 'browseNum', value: string) => {
@@ -361,7 +388,13 @@ export default function WeeklyChallenge() {
       return;
     }
 
-    if (!taskForm.screenshot) {
+    // 社群任务需要上传对应类型的截图
+    if (activeTask === 'community') {
+      if (!taskForm.screenshot) {
+        setTaskError(language === 'zh' ? '请上传截图证明' : 'Please upload a screenshot proof.');
+        return;
+      }
+    } else if (!taskForm.screenshot) {
       setTaskError(language === 'zh' ? '请上传截图证明' : 'Please upload a screenshot proof.');
       return;
     }
@@ -390,7 +423,10 @@ export default function WeeklyChallenge() {
 
     try {
       // 第一步：上传截图到Vercel
-      const screenshotUrl = await uploadTaskScreenshot(taskForm.screenshot as File);
+      let screenshotUrl = '';
+      if (taskForm.screenshot) {
+        screenshotUrl = await uploadTaskScreenshot(taskForm.screenshot);
+      }
 
       // 第二步：提交数据到后端
       setUploadProgress('submitting');
@@ -401,10 +437,11 @@ export default function WeeklyChallenge() {
           screenshotUrl,
         });
       } else if (activeTask === 'community') {
-        // 社群任务不需要contentLink字段，但API要求，所以传空字符串
+        // 社群任务：根据选择的类型提交
         await weeklyChallengeService.submitCommunityTask({
           contentLink: '',
           screenshotUrl,
+          communityType: communityTaskType === 'ama' ? 2 : 1, // 1-TG群发言, 2-AMA发言
         });
       } else if (activeTask === 'original') {
         await weeklyChallengeService.submitOriginalTask({
@@ -418,7 +455,7 @@ export default function WeeklyChallenge() {
       setUploadProgress('success');
       setTaskSuccess(taskModalCopy[activeTask].success);
       await fetchTaskOverview();
-      setTaskForm({ contentLink: '', screenshot: null, browseNum: '' });
+      setTaskForm({ contentLink: '', screenshot: null, browseNum: '', tgScreenshot: null, amaScreenshot: null });
       
       // 立即刷新一次，然后延迟10秒后再刷新一次以获取审核后的积分
       setTimeout(async () => {
@@ -519,14 +556,15 @@ export default function WeeklyChallenge() {
   const communicationSubmitted = taskOverview?.communicationSubmitted ?? 0;
   const communicationLimit = taskOverview?.communicationLimit ?? 5;
   const communitySubmitted = taskOverview?.communitySubmitted ?? 0;
-  const communityLimit = taskOverview?.communityLimit ?? 3;
+  const communityLimit = taskOverview?.communityLimit ?? 10;
   const originalSubmitted = taskOverview?.originalSubmitted ?? 0;
   const originalLimit = taskOverview?.originalLimit ?? 1;
   const weeklyPoints = taskOverview?.weeklyPoints ?? 0;
   const originalTasks = taskOverview?.originalTasks ?? [];
-  const canSubmitCommunication = hasSubmittedApplication && !isCheckingApplication && communicationSubmitted < communicationLimit;
-  const canSubmitCommunity = hasSubmittedApplication && !isCheckingApplication && communitySubmitted < communityLimit;
-  const canSubmitOriginal = hasSubmittedApplication && !isCheckingApplication && originalSubmitted < originalLimit;
+  // 周日（isSunday为true）时本周挑战已结束，禁止提交任务
+  const canSubmitCommunication = hasSubmittedApplication && !isCheckingApplication && communicationSubmitted < communicationLimit && !isSunday;
+  const canSubmitCommunity = hasSubmittedApplication && !isCheckingApplication && communitySubmitted < communityLimit && !isSunday;
+  const canSubmitOriginal = hasSubmittedApplication && !isCheckingApplication && originalSubmitted < originalLimit && !isSunday;
 
   // 调试信息：输出关键状态
   useEffect(() => {
@@ -556,10 +594,10 @@ export default function WeeklyChallenge() {
       description: language === 'zh' 
         ? '为本周官方推文一键三联（转+赞+评）' 
         : 'Triple-click (retweet+like+comment) on this week\'s official tweet',
-      points: language === 'zh' ? `本周提交次数上限：${communicationLimit} 次` : `Weekly submissions limit: ${communicationLimit}`,
-      requirement: language === 'zh' 
-        ? '提交要求：上传截图（含评论文字）+ 链接；必须包含推特名字（需与平台登记一致）；截图需包含转发/点赞/评论证明（每周最多 5 次）' 
-        : 'Submission: Upload screenshot (with comment text) + link; Must contain Twitter username (match registered name); Screenshot must show retweet/like/comment proof (up to 5 times per week)',
+      points: language === 'zh' ? `每周提交次数上限：${communicationLimit} 次` : `Weekly submissions limit: ${communicationLimit}`,
+      requirement: language === 'zh'
+        ? '提交要求：上传截图（含评论文字）+ 链接；必须包含推特名字（需与平台登记一致）；截图需包含转发/点赞/评论证明（每周最多 10 次）'
+        : 'Submission: Upload screenshot (with comment text) + link; Must contain Twitter username (match registered name); Screenshot must show retweet/like/comment proof (up to 10 times per week)',
       buttonText: language === 'zh' ? '上传并领取积分' : 'Upload & Claim Points',
       color: 'from-blue-500 to-cyan-500',
       onClick: () => openTaskModal('spread'),
@@ -569,12 +607,12 @@ export default function WeeklyChallenge() {
       id: '社群任务',
       title: language === 'zh' ? '💬 社群任务' : '💬 Community Task',
       description: language === 'zh'
-        ? '参与本周 Telegram Topic，上传截图（含tg群内发言内容）+ 链接\n参与本周 AMA 发言，上传截图（圈出自己作为speaker的头像）+链接\n（每周最多 3 次)'
-        : 'Participate in this week\'s Telegram Topic, upload screenshot (with TG group discussion content) + link\nParticipate in this week\'s AMA, upload screenshot (circle your avatar as speaker) + link\n(up to 3 times per week)',
-      points: language === 'zh' ? `本周提交次数上限：${communityLimit} 次` : `Weekly submissions limit: ${communityLimit}`,
+        ? '参与本周 Telegram Topic，上传截图（含tg群内发言内容）+ 链接\n参与本周 AMA 发言，上传截图（圈出自己作为speaker的头像）+链接'
+        : 'Participate in this week\'s Telegram Topic, upload screenshot (with TG group discussion content) + link\nParticipate in this week\'s AMA, upload screenshot (circle your avatar as speaker) + link',
+      points: language === 'zh' ? `每周提交次数上限：10 次` : `Weekly submissions limit: 10`,
       requirement: language === 'zh'
-        ? '提交要求：\n• Telegram Topic：上传截图（含tg群内发言内容）+ 链接\n• AMA 发言：上传截图（圈出自己作为speaker的头像）+ 链接\n（每周最多 3 次）'
-        : 'Submission Requirements:\n• Telegram Topic: Upload screenshot (with TG group discussion content) + link\n• AMA: Upload screenshot (circle your avatar as speaker) + link\n(up to 3 times per week)',
+        ? '提交要求：\n• Telegram Topic：上传截图（含tg群内发言内容）+ 链接\n• AMA 发言：上传截图（圈出自己作为speaker的头像）+ 链接'
+        : 'Submission Requirements:\n• Telegram Topic: Upload screenshot (with TG group discussion content) + link\n• AMA: Upload screenshot (circle your avatar as speaker) + link',
       buttonText: language === 'zh' ? '上传并领取积分' : 'Upload & Claim Points',
       color: 'from-purple-500 to-pink-500',
       onClick: () => openTaskModal('community'),
@@ -584,7 +622,7 @@ export default function WeeklyChallenge() {
       id: '原创任务',
       title: language === 'zh' ? '✍️ 原创任务' : '✍️ Original Task',
       description: language === 'zh' ? originalContent.chinese : originalContent.english,
-      points: language === 'zh' ? `本周提交次数上限：${originalLimit} 次` : `Weekly submissions limit: ${originalLimit}`,
+      points: language === 'zh' ? `每周提交次数上限：${originalLimit} 次` : `Weekly submissions limit: ${originalLimit}`,
       requirement: language === 'zh'
         ? '提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等'
         : 'Submission: Upload screenshot + link + view count; Content must @ official account and add #FFFP hashtag; Content type is flexible: text, image, video, etc.',
@@ -876,6 +914,76 @@ export default function WeeklyChallenge() {
         </section>
       </div>
     </div>
+    {/* 社群任务选择弹框 */}
+    {showCommunityChoice && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+        <div className="relative w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl dark:bg-gray-900 border border-purple-100 dark:border-purple-700">
+          <button
+            className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            onClick={closeCommunityChoice}
+          >
+            ×
+          </button>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2 text-center">
+            {language === 'zh' ? '选择任务类型' : 'Select Task Type'}
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">
+            {language === 'zh' ? '请选择您要提交的社群任务类型' : 'Please select the community task type you want to submit'}
+          </p>
+          <div className="space-y-4">
+            {/* TG群发言按钮 */}
+            <button
+              onClick={() => openCommunityUpload('tg')}
+              className="w-full p-4 rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 hover:border-blue-400 dark:hover:border-blue-600 transition-all duration-200 group"
+            >
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-2xl">
+                  📱
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="font-bold text-gray-800 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    {language === 'zh' ? 'TG群发言截图' : 'TG Group Screenshot'}
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {language === 'zh' ? '通过审核 +1 分' : '+1 point after approval'}
+                  </p>
+                </div>
+                <div className="text-blue-500 text-xl">→</div>
+              </div>
+            </button>
+            
+            {/* AMA发言按钮 */}
+            <button
+              onClick={() => openCommunityUpload('ama')}
+              className="w-full p-4 rounded-xl border-2 border-purple-200 dark:border-purple-800 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 hover:border-purple-400 dark:hover:border-purple-600 transition-all duration-200 group"
+            >
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-2xl">
+                  🎤
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="font-bold text-gray-800 dark:text-gray-100 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                    {language === 'zh' ? 'AMA发言截图' : 'AMA Speaking Screenshot'}
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {language === 'zh' ? '通过审核 +3 分' : '+3 points after approval'}
+                  </p>
+                </div>
+                <div className="text-purple-500 text-xl">→</div>
+              </div>
+            </button>
+          </div>
+          <div className="mt-6 text-center">
+            <button
+              onClick={closeCommunityChoice}
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              {language === 'zh' ? '取消' : 'Cancel'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     {showTaskModal && activeTaskCopy && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
           <div className="relative w-full max-w-xl rounded-3xl bg-white p-8 shadow-2xl dark:bg-gray-900 border border-blue-100 dark:border-blue-700">
@@ -929,15 +1037,42 @@ export default function WeeklyChallenge() {
               )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  {activeTaskCopy.screenshotLabel}
+                  {activeTask === 'community' 
+                    ? (communityTaskType === 'ama' 
+                        ? (language === 'zh' ? '🎤 AMA发言截图' : '🎤 AMA Speaking Screenshot')
+                        : (language === 'zh' ? '📱 TG群发言截图' : '📱 TG Group Screenshot'))
+                    : activeTaskCopy.screenshotLabel}
                 </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleTaskScreenshotChange(e.target.files?.[0] ?? null)}
-                  className="w-full rounded-lg border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleTaskScreenshotChange(e.target.files?.[0] ?? null)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    required
+                  />
+                  <div className={`w-full rounded-lg border border-dashed ${
+                    activeTask === 'community' && communityTaskType === 'ama' 
+                      ? 'border-purple-300 dark:border-purple-700' 
+                      : activeTask === 'community' 
+                        ? 'border-blue-300 dark:border-blue-700'
+                        : 'border-gray-300 dark:border-gray-700'
+                  } bg-white dark:bg-gray-800 px-4 py-3 text-gray-500 dark:text-gray-400 flex items-center justify-between`}>
+                    <span>{taskForm.screenshot ? taskForm.screenshot.name : (language === 'zh' ? '点击选择文件' : 'Click to select file')}</span>
+                    <span className={`text-sm ${
+                      activeTask === 'community' && communityTaskType === 'ama'
+                        ? 'text-purple-500'
+                        : activeTask === 'community'
+                          ? 'text-blue-500'
+                          : 'text-blue-500'
+                    }`}>{language === 'zh' ? '浏览' : 'Browse'}</span>
+                  </div>
+                </div>
+                {taskForm.screenshot && (
+                  <p className="mt-2 text-xs text-green-600 dark:text-green-400">
+                    ✓ {language === 'zh' ? `已选择: ${taskForm.screenshot.name}` : `Selected: ${taskForm.screenshot.name}`}
+                  </p>
+                )}
                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                   {activeTaskCopy.screenshotHint}
                 </p>

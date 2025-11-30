@@ -425,6 +425,8 @@ export interface WeeklyTaskOverview {
 export interface WeeklyTaskSubmitRequest {
   contentLink: string;
   screenshotUrl: string;
+  /** 社群任务类型：1-TG群发言，2-AMA发言 */
+  communityType?: number;
 }
 
 export interface OriginalTaskSubmitRequest {
