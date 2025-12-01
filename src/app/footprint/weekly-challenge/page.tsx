@@ -105,6 +105,24 @@ export default function WeeklyChallenge() {
     };
   };
 
+  // 检查原创任务上传功能是否开启
+  const isOriginalTaskUploadEnabled = () => {
+    if (typeof window === 'undefined') {
+      // 服务端渲染时默认开启
+      return true;
+    }
+    
+    try {
+      const uploadSetting = localStorage.getItem('footprint_original_task_upload_enabled');
+      // 如果没有设置，默认开启
+      return uploadSetting === null || JSON.parse(uploadSetting);
+    } catch (error) {
+      console.error('读取上传功能开关失败:', error);
+      // 读取失败时默认开启
+      return true;
+    }
+  };
+
   // 监听localStorage变化，实现实时更新
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
@@ -564,7 +582,7 @@ export default function WeeklyChallenge() {
   // 周日（isSunday为true）时本周挑战已结束，禁止提交任务
   const canSubmitCommunication = hasSubmittedApplication && !isCheckingApplication && communicationSubmitted < communicationLimit && !isSunday;
   const canSubmitCommunity = hasSubmittedApplication && !isCheckingApplication && communitySubmitted < communityLimit && !isSunday;
-  const canSubmitOriginal = hasSubmittedApplication && !isCheckingApplication && originalSubmitted < originalLimit && !isSunday;
+  const canSubmitOriginal = hasSubmittedApplication && !isCheckingApplication && originalSubmitted < originalLimit && !isSunday && isOriginalTaskUploadEnabled();
 
   // 调试信息：输出关键状态
   useEffect(() => {

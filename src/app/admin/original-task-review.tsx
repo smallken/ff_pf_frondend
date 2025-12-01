@@ -38,6 +38,10 @@ export default function OriginalTaskReview() {
     englishTopic: 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?'
   });
   const [savingContent, setSavingContent] = useState(false);
+  
+  // 上传功能开关状态
+  const [uploadEnabled, setUploadEnabled] = useState(true);
+  const [savingUploadSetting, setSavingUploadSetting] = useState(false);
 
   // 模板内容（固定部分）
   const getTemplateContent = (language: 'zh' | 'en', weekNumber: number, topic: string) => {
@@ -190,8 +194,32 @@ export default function OriginalTaskReview() {
           englishTopic: data.englishTopic || parseSavedContent(data.englishContent).englishTopic
         });
       }
+      
+      // 加载上传功能开关状态
+      const uploadSetting = localStorage.getItem('footprint_original_task_upload_enabled');
+      if (uploadSetting) {
+        setUploadEnabled(JSON.parse(uploadSetting));
+      }
     } catch (error) {
       console.error('读取保存的内容失败:', error);
+    }
+  };
+  
+  // 保存上传功能开关状态
+  const handleSaveUploadSetting = async () => {
+    try {
+      setSavingUploadSetting(true);
+      setError('');
+      
+      // 保存到localStorage
+      localStorage.setItem('footprint_original_task_upload_enabled', JSON.stringify(uploadEnabled));
+      
+      setSuccess('上传功能开关设置成功！');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || '保存失败');
+    } finally {
+      setSavingUploadSetting(false);
     }
   };
 
@@ -411,8 +439,43 @@ export default function OriginalTaskReview() {
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">📝 原创任务内容管理</h3>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  管理员可以修改原创任务的主题和内容。修改后将影响前端页面的任务描述显示。
+                  管理员可以修改原创任务的主题和内容，以及控制上传功能的开启与关闭。修改后将影响前端页面的任务描述和上传功能。
                 </p>
+              </div>
+
+              {/* 上传功能开关 */}
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100 mb-3">🔄 原创任务上传功能开关</h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      控制前端用户是否可以提交原创任务。关闭后，用户将无法上传新的原创任务。
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className={`text-sm font-medium ${uploadEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {uploadEnabled ? '已开启' : '已关闭'}
+                    </span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={uploadEnabled} 
+                        onChange={(e) => setUploadEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 dark:peer-focus:ring-yellow-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-yellow-600`}></div>
+                    </label>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={handleSaveUploadSetting}
+                    disabled={savingUploadSetting}
+                    className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  >
+                    {savingUploadSetting ? '保存中...' : '💾 保存上传开关设置'}
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-4">
