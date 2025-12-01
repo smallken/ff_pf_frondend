@@ -3,15 +3,25 @@
 import { useState, useEffect } from 'react';
 import { userService } from '@/services/userService';
 
+interface CountryStats {
+  country: string;
+  userCount: number;
+  percentage: number;
+}
+
 export default function UserManagement() {
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [countryStatsLoading, setCountryStatsLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [stats, setStats] = useState({
     totalUsers: 0,
     applicants: 0,
     weeklyParticipants: 0,
     weeklyTopicViews: 0
   });
+  const [countryStats, setCountryStats] = useState<CountryStats[]>([]);
+  const [statsDate, setStatsDate] = useState('');
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
@@ -31,6 +41,57 @@ export default function UserManagement() {
       setError('获取统计数据失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 获取国家地区统计
+  const fetchCountryStats = async () => {
+    setCountryStatsLoading(true);
+    try {
+      const data = await userService.getCountryStats();
+      setCountryStats(data || []);
+      // 设置统计日期
+      setStatsDate(new Date().toISOString().split('T')[0]);
+    } catch (err: any) {
+      console.error('获取国家地区统计失败:', err);
+      setError('获取国家地区统计失败');
+    } finally {
+      setCountryStatsLoading(false);
+    }
+  };
+
+  // 导出国家地区统计
+  const handleExportCountryStats = async () => {
+    setExporting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const csvContent = await userService.exportCountryStats();
+
+      // 添加统计日期到CSV内容
+      const currentDate = new Date().toISOString().split('T')[0];
+      const enhancedCsvContent = `统计日期：${currentDate}\n\n${csvContent}`;
+
+      // 创建下载链接
+      const blob = new Blob([enhancedCsvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `用户国家地区统计_${currentDate}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setSuccess('导出成功！');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      console.error('导出失败:', err);
+      setError(err.message || '导出失败');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -59,6 +120,10 @@ export default function UserManagement() {
 
   useEffect(() => {
     fetchStats();
+  }, []);
+
+  useEffect(() => {
+    fetchCountryStats();
   }, []);
 
   return (
@@ -198,6 +263,109 @@ export default function UserManagement() {
               )}
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* 用户国家地区统计 */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">用户国家地区统计</h2>
+              {statsDate && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  统计日期：{statsDate}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={handleExportCountryStats}
+              disabled={exporting || countryStatsLoading}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {exporting ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  导出中...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  导出CSV
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          {countryStatsLoading ? (
+            <div className="text-center py-8 text-gray-500">加载中...</div>
+          ) : countryStats.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              暂无国家地区统计数据
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      国家/地区
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      用户数量
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      占比
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      统计日期
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      可视化
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {countryStats.map((stat, index) => {
+                    const maxCount = Math.max(...countryStats.map(s => s.userCount));
+                    const barWidth = (stat.userCount / maxCount) * 100;
+
+                    return (
+                      <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {stat.country}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                          {stat.userCount.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                          {stat.percentage.toFixed(2)}%
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                          {statsDate}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+                            <div
+                              className="bg-blue-600 h-2.5 rounded-full"
+                              style={{ width: `${barWidth}%` }}
+                            ></div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

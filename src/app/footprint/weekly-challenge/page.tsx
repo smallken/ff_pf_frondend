@@ -771,6 +771,25 @@ export default function WeeklyChallenge() {
           </div>
         </section>
 
+        {/* 重要提示 */}
+        <section className="mb-6">
+          <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <div className="text-red-600 dark:text-red-400 text-2xl">⚠️</div>
+              <div className="flex-1">
+                <h3 className="font-bold text-red-800 dark:text-red-300 mb-2">
+                  {language === 'zh' ? '重要提示' : 'Important Notice'}
+                </h3>
+                <p className="text-sm text-red-700 dark:text-red-300 leading-relaxed">
+                  {language === 'zh'
+                    ? '请确保上传数据的真实性，如有造假，任务得分为零'
+                    : 'Attention: Please ensure the authenticity of the uploaded data. If there is any fraud, the score will be zero.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Section 2: 奖池与发奖规则 */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200">

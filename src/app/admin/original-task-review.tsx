@@ -24,7 +24,7 @@ export default function OriginalTaskReview() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   
-  const [reviewForm, setReviewForm] = useState({ reviewStatus: 1, reviewMessage: '' });
+  const [reviewForm, setReviewForm] = useState({ reviewStatus: 1, reviewMessage: '', points: 0 });
   const [reviewLoading, setReviewLoading] = useState(false);
 
   const [weekCountFilter, setWeekCountFilter] = useState<number | undefined>();
@@ -127,7 +127,8 @@ export default function OriginalTaskReview() {
       await adminOriginalTaskService.reviewTask({
         taskId: selectedTask.id,
         reviewStatus: reviewForm.reviewStatus,
-        reviewMessage: reviewForm.reviewMessage || undefined
+        reviewMessage: reviewForm.reviewMessage || undefined,
+        points: reviewForm.points
       });
       setSuccess('审核成功！');
       setShowReviewModal(false);
@@ -407,11 +408,10 @@ export default function OriginalTaskReview() {
                     <td className="px-6 py-4 text-sm space-x-2">
                       <button onClick={() => { setSelectedTask(task); setShowDetailModal(true); }} className="text-blue-600 hover:text-blue-500">详情</button>
                       {activeSubTab === 'pending' && (
-                        <button onClick={() => { setSelectedTask(task); setReviewForm({ reviewStatus: 1, reviewMessage: '' }); setShowReviewModal(true); }}
-                          className="text-purple-600 hover:text-purple-500">审核</button>
+                        <button onClick={() => { setSelectedTask(task); setReviewForm({ reviewStatus: 1, reviewMessage: '', points: calculatePoints(task.browseNum || 0) }); setShowReviewModal(true); }} className="text-purple-600 hover:text-purple-500">审核</button>
                       )}
                       {activeSubTab === 'reviewed' && (
-                        <button onClick={() => { setSelectedTask(task); setReviewForm({ reviewStatus: task.reviewStatus || 1, reviewMessage: task.reviewMessage || '' }); setShowReviewModal(true); }}
+                        <button onClick={() => { setSelectedTask(task); setReviewForm({ reviewStatus: task.reviewStatus || 1, reviewMessage: task.reviewMessage || '', points: task.originalPoints || calculatePoints(task.browseNum || 0) }); setShowReviewModal(true); }}
                           className="text-green-600 hover:text-green-500">修改</button>
                       )}
                     </td>
@@ -611,6 +611,21 @@ export default function OriginalTaskReview() {
                   <label className="flex items-center"><input type="radio" checked={reviewForm.reviewStatus === 1} onChange={() => setReviewForm({ ...reviewForm, reviewStatus: 1 })} className="mr-2" />通过</label>
                   <label className="flex items-center"><input type="radio" checked={reviewForm.reviewStatus === 2} onChange={() => setReviewForm({ ...reviewForm, reviewStatus: 2 })} className="mr-2" />拒绝</label>
                 </div>
+              </div>
+              <div>
+                <label className="block font-medium mb-2">积分设置（通过时生效）</label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="number"
+                    value={reviewForm.points}
+                    onChange={(e) => setReviewForm({ ...reviewForm, points: parseInt(e.target.value) || 0 })}
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    placeholder="请输入积分"
+                  />
+                  <span className="text-gray-500">分</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">系统建议积分：<span className="text-orange-600 font-semibold">{calculatePoints(selectedTask?.browseNum || 0)}分</span></p>
               </div>
               <div>
                 <label className="block font-medium mb-2">审核意见（可选）</label>

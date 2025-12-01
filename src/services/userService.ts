@@ -17,6 +17,12 @@ import type {
   AdminStatsVO,
 } from '@/types/api';
 
+interface CountryStatsVO {
+  country: string;
+  userCount: number;
+  percentage: number;
+}
+
 export const userService = {
   // 用户登录
   login: (data: UserLoginRequest): Promise<LoginUserVO> => {
@@ -160,5 +166,15 @@ export const userService = {
   // 获取当前用户的周排行榜信息
   getMyWeeklyRanking: (): Promise<RankingUserVO | null> => {
     return request.get<RankingUserVO | null>('/user/weeklyRanking/my');
+  },
+
+  // 获取用户国家地区统计（管理员）
+  getCountryStats: (): Promise<CountryStatsVO[]> => {
+    return request.get<CountryStatsVO[]>('/user/admin/country-stats');
+  },
+
+  // 导出用户国家地区统计数据（管理员）
+  exportCountryStats: (): Promise<string> => {
+    return request.get<string>('/user/admin/export-country-stats');
   },
 };

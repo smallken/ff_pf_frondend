@@ -41,6 +41,7 @@ export interface AdminReviewOriginalTaskRequest {
   taskId: number;
   reviewStatus: number; // 1-通过，2-拒绝
   reviewMessage?: string;
+  points?: number; // 审核通过时的积分
 }
 
 export const adminOriginalTaskService = {
