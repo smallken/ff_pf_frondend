@@ -402,6 +402,9 @@ export interface OriginalTaskVO {
   contentLink: string;
   screenshot: string;
   browseNum: number;
+  likeNum: number;
+  commentNum: number;
+  retweetNum: number;
   reviewStatus: number;
   reviewMessage?: string;
   weekCount: number;
@@ -433,12 +436,18 @@ export interface OriginalTaskSubmitRequest {
   contentLink: string;
   screenshotUrl: string;
   browseNum: number;
+  likeNum: number;
+  commentNum: number;
+  retweetNum: number;
 }
 
 export interface OriginalTaskUpdateRequest {
   id: number;
   screenshotUrl?: string;
   browseNum?: number;
+  likeNum?: number;
+  commentNum?: number;
+  retweetNum?: number;
   contentLink?: string;
 }
 

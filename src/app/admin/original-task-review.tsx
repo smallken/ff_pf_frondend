@@ -142,7 +142,13 @@ export default function OriginalTaskReview() {
     }
   };
 
-  const calculatePoints = (browseNum: number): number => Math.round(5 * (1 + browseNum / 2000));
+  const calculatePoints = (browseNum: number, likeNum: number = 0, commentNum: number = 0, retweetNum: number = 0): number => {
+    const likePoints = likeNum * 0.5;
+    const commentPoints = commentNum * 0.8;
+    const retweetPoints = retweetNum * 1;
+    const browsePoints = Math.log10(browseNum + 1) * 1.2;
+    return Math.round(likePoints + commentPoints + retweetPoints + browsePoints);
+  };
   const currentError = activeSubTab === 'planLogs' ? planLogError : error;
 
   // 保存任务内容
@@ -379,6 +385,9 @@ export default function OriginalTaskReview() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">用户</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">周次</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">浏览量</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">点赞数</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">评论数</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">转发数</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{activeSubTab === 'pending' ? '预计积分' : '获得积分'}</th>
                   {activeSubTab === 'reviewed' && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">审核状态</th>}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
@@ -394,9 +403,12 @@ export default function OriginalTaskReview() {
                     </td>
                     <td className="px-6 py-4 text-sm">第{task.weekCount}周</td>
                     <td className="px-6 py-4 text-sm">{task.browseNum?.toLocaleString() || 0}</td>
+                    <td className="px-6 py-4 text-sm">{task.likeNum?.toLocaleString() || 0}</td>
+                    <td className="px-6 py-4 text-sm">{task.commentNum?.toLocaleString() || 0}</td>
+                    <td className="px-6 py-4 text-sm">{task.retweetNum?.toLocaleString() || 0}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className={activeSubTab === 'pending' ? 'text-orange-600 font-semibold' : 'text-green-600 font-semibold'}>
-                        {activeSubTab === 'pending' ? `${calculatePoints(task.browseNum || 0)}分` : task.originalPoints > 0 ? `+${task.originalPoints}分` : '-'}
+                        {activeSubTab === 'pending' ? `${calculatePoints(task.browseNum || 0, task.likeNum || 0, task.commentNum || 0, task.retweetNum || 0)}分` : task.originalPoints > 0 ? `+${task.originalPoints}分` : '-'}
                       </span>
                     </td>
                     {activeSubTab === 'reviewed' && (
@@ -409,10 +421,10 @@ export default function OriginalTaskReview() {
                     <td className="px-6 py-4 text-sm space-x-2">
                       <button onClick={() => { setSelectedTask(task); setShowDetailModal(true); }} className="text-blue-600 hover:text-blue-500">详情</button>
                       {activeSubTab === 'pending' && (
-                        <button onClick={() => { setSelectedTask(task); setReviewForm({ reviewStatus: 1, reviewMessage: '', points: calculatePoints(task.browseNum || 0) }); setShowReviewModal(true); }} className="text-purple-600 hover:text-purple-500">审核</button>
+                        <button onClick={() => { setSelectedTask(task); setReviewForm({ reviewStatus: 1, reviewMessage: '', points: calculatePoints(task.browseNum || 0, task.likeNum || 0, task.commentNum || 0, task.retweetNum || 0) }); setShowReviewModal(true); }} className="text-purple-600 hover:text-purple-500">审核</button>
                       )}
                       {activeSubTab === 'reviewed' && (
-                        <button onClick={() => { setSelectedTask(task); setReviewForm({ reviewStatus: task.reviewStatus || 1, reviewMessage: task.reviewMessage || '', points: task.originalPoints || calculatePoints(task.browseNum || 0) }); setShowReviewModal(true); }}
+                        <button onClick={() => { setSelectedTask(task); setReviewForm({ reviewStatus: task.reviewStatus || 1, reviewMessage: task.reviewMessage || '', points: task.originalPoints || calculatePoints(task.browseNum || 0, task.likeNum || 0, task.commentNum || 0, task.retweetNum || 0) }); setShowReviewModal(true); }}
                           className="text-green-600 hover:text-green-500">修改</button>
                       )}
                     </td>
@@ -576,6 +588,9 @@ export default function OriginalTaskReview() {
               <div><label className="font-medium">周次：</label>第{selectedTask.weekCount}周 ({selectedTask.dateRange})</div>
               <div><label className="font-medium">内容链接：</label><a href={selectedTask.contentLink} target="_blank" className="text-blue-600">{selectedTask.contentLink}</a></div>
               <div><label className="font-medium">浏览量：</label>{selectedTask.browseNum?.toLocaleString() || 0}</div>
+              <div><label className="font-medium">点赞数：</label>{selectedTask.likeNum?.toLocaleString() || 0}</div>
+              <div><label className="font-medium">评论数：</label>{selectedTask.commentNum?.toLocaleString() || 0}</div>
+              <div><label className="font-medium">转发数：</label>{selectedTask.retweetNum?.toLocaleString() || 0}</div>
               {selectedTask.originalPoints > 0 && <div><label className="font-medium">获得积分：</label><span className="text-green-600 font-semibold text-lg">+{selectedTask.originalPoints}分</span></div>}
               <div><label className="font-medium">截图：</label><img src={selectedTask.screenshot} alt="截图" className="max-w-full rounded-lg border mt-2" /></div>
               {selectedTask.reviewStatus > 0 && (
@@ -604,7 +619,26 @@ export default function OriginalTaskReview() {
                 <div><span className="text-gray-600">用户ID：</span>{selectedTask.userId}</div>
                 <div><span className="text-gray-600">周次：</span>第{selectedTask.weekCount}周</div>
                 <div><span className="text-gray-600">浏览量：</span>{selectedTask.browseNum?.toLocaleString() || 0}</div>
-                <div><span className="text-gray-600">预计积分：</span><span className="text-orange-600 font-semibold">{calculatePoints(selectedTask.browseNum || 0)}分</span></div>
+                <div><span className="text-gray-600">点赞数：</span>{selectedTask.likeNum?.toLocaleString() || 0}</div>
+                <div><span className="text-gray-600">评论数：</span>{selectedTask.commentNum?.toLocaleString() || 0}</div>
+                <div><span className="text-gray-600">转发数：</span>{selectedTask.retweetNum?.toLocaleString() || 0}</div>
+                <div><span className="text-gray-600">预计积分：</span><span className="text-orange-600 font-semibold">{calculatePoints(selectedTask.browseNum || 0, selectedTask.likeNum || 0, selectedTask.commentNum || 0, selectedTask.retweetNum || 0)}分</span></div>
+                <div className="text-xs text-gray-600 mt-1">
+                  {(() => {
+                    const browseNum = selectedTask.browseNum || 0;
+                    const likeNum = selectedTask.likeNum || 0;
+                    const commentNum = selectedTask.commentNum || 0;
+                    const retweetNum = selectedTask.retweetNum || 0;
+                    
+                    const likePoints = likeNum * 0.5;
+                    const commentPoints = commentNum * 0.8;
+                    const retweetPoints = retweetNum * 1;
+                    const browsePoints = Math.log10(browseNum + 1) * 1.2;
+                    const totalPoints = Math.round(likePoints + commentPoints + retweetPoints + browsePoints);
+                    
+                    return `${likeNum}×0.5 + ${commentNum}×0.8 + ${retweetNum}×1 + lg(${browseNum}+1)×1.2 = ${Math.round(likePoints)} + ${Math.round(commentPoints)} + ${Math.round(retweetPoints)} + ${browsePoints.toFixed(1)} = ${totalPoints}分`;
+                  })()}
+                </div>
               </div>
               <div>
                 <label className="block font-medium mb-2">审核结果 *</label>
@@ -626,7 +660,7 @@ export default function OriginalTaskReview() {
                   />
                   <span className="text-gray-500">分</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">系统建议积分：<span className="text-orange-600 font-semibold">{calculatePoints(selectedTask?.browseNum || 0)}分</span></p>
+                <p className="text-xs text-gray-500 mt-1">系统建议积分：<span className="text-orange-600 font-semibold">{calculatePoints(selectedTask?.browseNum || 0, selectedTask?.likeNum || 0, selectedTask?.commentNum || 0, selectedTask?.retweetNum || 0)}分</span></p>
               </div>
               <div>
                 <label className="block font-medium mb-2">审核意见（可选）</label>

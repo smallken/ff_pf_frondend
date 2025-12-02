@@ -8,6 +8,9 @@ export interface OriginalTaskDetailVO {
   contentLink: string;
   screenshot: string;
   browseNum: number;
+  likeNum: number;
+  commentNum: number;
+  retweetNum: number;
   originalPoints: number;
   reviewStatus: number;
   reviewMessage: string;

@@ -24,10 +24,13 @@ export default function WeeklyChallenge() {
   const [taskError, setTaskError] = useState('');
   const [taskSuccess, setTaskSuccess] = useState('');
   const [uploadProgress, setUploadProgress] = useState<'idle' | 'uploading' | 'submitting' | 'success'>('idle');
-  const [taskForm, setTaskForm] = useState<{ contentLink: string; screenshot: File | null; browseNum: string; tgScreenshot: File | null; amaScreenshot: File | null }>({
+  const [taskForm, setTaskForm] = useState<{ contentLink: string; screenshot: File | null; browseNum: string; likeNum: string; commentNum: string; retweetNum: string; tgScreenshot: File | null; amaScreenshot: File | null }>({
     contentLink: '',
     screenshot: null,
     browseNum: '',
+    likeNum: '',
+    commentNum: '',
+    retweetNum: '',
     tgScreenshot: null,
     amaScreenshot: null,
   });
@@ -36,8 +39,11 @@ export default function WeeklyChallenge() {
   const [overviewError, setOverviewError] = useState<string>('');
   const [selectedOriginalTask, setSelectedOriginalTask] = useState<OriginalTaskVO | null>(null);
   const [showOriginalEditModal, setShowOriginalEditModal] = useState(false);
-  const [originalForm, setOriginalForm] = useState<{ browseNum: string; screenshot: File | null; contentLink: string }>({
+  const [originalForm, setOriginalForm] = useState<{ browseNum: string; likeNum: string; commentNum: string; retweetNum: string; screenshot: File | null; contentLink: string }>({
     browseNum: '',
+    likeNum: '',
+    commentNum: '',
+    retweetNum: '',
     screenshot: null,
     contentLink: '',
   });
@@ -363,7 +369,7 @@ export default function WeeklyChallenge() {
     }
     setActiveTask(task);
     setShowTaskModal(true);
-    setTaskForm({ contentLink: '', screenshot: null, browseNum: '', tgScreenshot: null, amaScreenshot: null });
+    setTaskForm({ contentLink: '', screenshot: null, browseNum: '', likeNum: '', commentNum: '', retweetNum: '', tgScreenshot: null, amaScreenshot: null });
     setTaskError('');
     setTaskSuccess('');
     setUploadProgress('idle');
@@ -374,7 +380,7 @@ export default function WeeklyChallenge() {
     setShowCommunityChoice(false);
     setActiveTask('community');
     setShowTaskModal(true);
-    setTaskForm({ contentLink: '', screenshot: null, browseNum: '', tgScreenshot: null, amaScreenshot: null });
+    setTaskForm({ contentLink: '', screenshot: null, browseNum: '', likeNum: '', commentNum: '', retweetNum: '', tgScreenshot: null, amaScreenshot: null });
     setTaskError('');
     setTaskSuccess('');
     setUploadProgress('idle');
@@ -392,10 +398,10 @@ export default function WeeklyChallenge() {
     setTaskError('');
     setTaskSuccess('');
     setUploadProgress('idle');
-    setTaskForm({ contentLink: '', screenshot: null, browseNum: '', tgScreenshot: null, amaScreenshot: null });
+    setTaskForm({ contentLink: '', screenshot: null, browseNum: '', likeNum: '', commentNum: '', retweetNum: '', tgScreenshot: null, amaScreenshot: null });
   };
 
-  const handleTaskFormChange = (field: 'contentLink' | 'browseNum', value: string) => {
+  const handleTaskFormChange = (field: 'contentLink' | 'browseNum' | 'likeNum' | 'commentNum' | 'retweetNum', value: string) => {
     setTaskForm(prev => ({ ...prev, [field]: value }));
   };
 
@@ -428,14 +434,19 @@ export default function WeeklyChallenge() {
     }
 
     let browseNumValue: number | undefined;
+    let likeNumValue: number | undefined;
+    let commentNumValue: number | undefined;
+    let retweetNumValue: number | undefined;
+    
     if (activeTask === 'original') {
-      const trimmed = taskForm.browseNum.trim();
-      if (!trimmed) {
+      // 验证浏览量
+      const trimmedBrowse = taskForm.browseNum.trim();
+      if (!trimmedBrowse) {
         setTaskError(language === 'zh' ? '请填写浏览量。' : 'Please provide the view count.');
         return;
       }
-      const parsed = Number(trimmed);
-      if (Number.isNaN(parsed) || parsed < 0) {
+      const parsedBrowse = Number(trimmedBrowse);
+      if (Number.isNaN(parsedBrowse) || parsedBrowse < 0) {
         setTaskError(
           language === 'zh'
             ? '浏览量请输入大于或等于 0 的数字。'
@@ -443,7 +454,58 @@ export default function WeeklyChallenge() {
         );
         return;
       }
-      browseNumValue = parsed;
+      browseNumValue = parsedBrowse;
+      
+      // 验证点赞数
+      const trimmedLike = taskForm.likeNum.trim();
+      if (!trimmedLike) {
+        setTaskError(language === 'zh' ? '请填写点赞数。' : 'Please provide the like count.');
+        return;
+      }
+      const parsedLike = Number(trimmedLike);
+      if (Number.isNaN(parsedLike) || parsedLike < 0) {
+        setTaskError(
+          language === 'zh'
+            ? '点赞数请输入大于或等于 0 的数字。'
+            : 'Please enter a like count of 0 or greater.'
+        );
+        return;
+      }
+      likeNumValue = parsedLike;
+      
+      // 验证评论数
+      const trimmedComment = taskForm.commentNum.trim();
+      if (!trimmedComment) {
+        setTaskError(language === 'zh' ? '请填写评论数。' : 'Please provide the comment count.');
+        return;
+      }
+      const parsedComment = Number(trimmedComment);
+      if (Number.isNaN(parsedComment) || parsedComment < 0) {
+        setTaskError(
+          language === 'zh'
+            ? '评论数请输入大于或等于 0 的数字。'
+            : 'Please enter a comment count of 0 or greater.'
+        );
+        return;
+      }
+      commentNumValue = parsedComment;
+      
+      // 验证转发数
+      const trimmedRetweet = taskForm.retweetNum.trim();
+      if (!trimmedRetweet) {
+        setTaskError(language === 'zh' ? '请填写转发数。' : 'Please provide the retweet count.');
+        return;
+      }
+      const parsedRetweet = Number(trimmedRetweet);
+      if (Number.isNaN(parsedRetweet) || parsedRetweet < 0) {
+        setTaskError(
+          language === 'zh'
+            ? '转发数请输入大于或等于 0 的数字。'
+            : 'Please enter a retweet count of 0 or greater.'
+        );
+        return;
+      }
+      retweetNumValue = parsedRetweet;
     }
 
     setTaskSubmitting(true);
@@ -475,7 +537,10 @@ export default function WeeklyChallenge() {
         await weeklyChallengeService.submitOriginalTask({
           contentLink: taskForm.contentLink.trim(),
           screenshotUrl,
-          browseNum: browseNumValue!, // 非空断言：在这之前已经验证过
+          browseNum: browseNumValue!,
+          likeNum: likeNumValue!,
+          commentNum: commentNumValue!,
+          retweetNum: retweetNumValue!,
         });
       }
 
@@ -483,7 +548,7 @@ export default function WeeklyChallenge() {
       setUploadProgress('success');
       setTaskSuccess(taskModalCopy[activeTask].success);
       await fetchTaskOverview();
-      setTaskForm({ contentLink: '', screenshot: null, browseNum: '', tgScreenshot: null, amaScreenshot: null });
+      setTaskForm({ contentLink: '', screenshot: null, browseNum: '', likeNum: '', commentNum: '', retweetNum: '', tgScreenshot: null, amaScreenshot: null });
       
       // 立即刷新一次，然后延迟10秒后再刷新一次以获取审核后的积分
       setTimeout(async () => {
@@ -515,6 +580,9 @@ export default function WeeklyChallenge() {
     setSelectedOriginalTask(task);
     setOriginalForm({
       browseNum: task.browseNum !== undefined && task.browseNum !== null ? String(task.browseNum) : '',
+      likeNum: task.likeNum !== undefined && task.likeNum !== null ? String(task.likeNum) : '',
+      commentNum: task.commentNum !== undefined && task.commentNum !== null ? String(task.commentNum) : '',
+      retweetNum: task.retweetNum !== undefined && task.retweetNum !== null ? String(task.retweetNum) : '',
       screenshot: null,
       contentLink: task.contentLink || '',
     });
@@ -526,12 +594,12 @@ export default function WeeklyChallenge() {
   const closeOriginalEdit = () => {
     setShowOriginalEditModal(false);
     setSelectedOriginalTask(null);
-    setOriginalForm({ browseNum: '', screenshot: null, contentLink: '' });
+    setOriginalForm({ browseNum: '', likeNum: '', commentNum: '', retweetNum: '', screenshot: null, contentLink: '' });
     setOriginalError('');
     setOriginalSuccess('');
   };
 
-  const handleOriginalInputChange = (field: 'browseNum' | 'contentLink', value: string) => {
+  const handleOriginalInputChange = (field: 'browseNum' | 'contentLink' | 'likeNum' | 'commentNum' | 'retweetNum', value: string) => {
     setOriginalForm(prev => ({ ...prev, [field]: value }));
   };
 
@@ -560,11 +628,41 @@ export default function WeeklyChallenge() {
           throw new Error(language === 'zh' ? '浏览量请输入大于或等于 0 的数字。' : 'Please enter a view count of 0 or greater.');
         }
       }
+      
+      // 处理点赞数
+      const likeTrimmed = originalForm.likeNum.trim();
+      let likeNumValue = likeTrimmed ? Number(likeTrimmed) : undefined;
+      if (likeNumValue !== undefined) {
+        if (Number.isNaN(likeNumValue) || likeNumValue < 0) {
+          throw new Error(language === 'zh' ? '点赞数请输入大于或等于 0 的数字。' : 'Please enter a like count of 0 or greater.');
+        }
+      }
+      
+      // 处理评论数
+      const commentTrimmed = originalForm.commentNum.trim();
+      let commentNumValue = commentTrimmed ? Number(commentTrimmed) : undefined;
+      if (commentNumValue !== undefined) {
+        if (Number.isNaN(commentNumValue) || commentNumValue < 0) {
+          throw new Error(language === 'zh' ? '评论数请输入大于或等于 0 的数字。' : 'Please enter a comment count of 0 or greater.');
+        }
+      }
+      
+      // 处理转发数
+      const retweetTrimmed = originalForm.retweetNum.trim();
+      let retweetNumValue = retweetTrimmed ? Number(retweetTrimmed) : undefined;
+      if (retweetNumValue !== undefined) {
+        if (Number.isNaN(retweetNumValue) || retweetNumValue < 0) {
+          throw new Error(language === 'zh' ? '转发数请输入大于或等于 0 的数字。' : 'Please enter a retweet count of 0 or greater.');
+        }
+      }
 
       await weeklyChallengeService.updateOriginalTask({
         id: selectedOriginalTask.id,
         screenshotUrl,
         browseNum: browseNumValue,
+        likeNum: likeNumValue,
+        commentNum: commentNumValue,
+        retweetNum: retweetNumValue,
         contentLink: originalForm.contentLink.trim() || undefined,
       });
 
@@ -1076,23 +1174,70 @@ export default function WeeklyChallenge() {
                 </div>
               )}
               {activeTask === 'original' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    {taskModalCopy.original.browseLabel}
-                  </label>
-                <input
-                  type="number"
-                  min={0}
-                  value={taskForm.browseNum}
-                  onChange={(e) => handleTaskFormChange('browseNum', e.target.value)}
-                  placeholder={taskModalCopy.original.browsePlaceholder}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    {taskModalCopy.original.browseHint}
-                  </p>
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      {taskModalCopy.original.browseLabel}
+                    </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={taskForm.browseNum}
+                    onChange={(e) => handleTaskFormChange('browseNum', e.target.value)}
+                    placeholder={taskModalCopy.original.browsePlaceholder}
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      {taskModalCopy.original.browseHint}
+                    </p>
+                  </div>
+                  {/* 点赞数输入框 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      {language === 'zh' ? '点赞数（必填）' : 'Like Count (required)'}
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={taskForm.likeNum}
+                      onChange={(e) => handleTaskFormChange('likeNum', e.target.value)}
+                      placeholder={language === 'zh' ? '请输入点赞数' : 'Enter like count'}
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  {/* 评论数输入框 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      {language === 'zh' ? '评论数（必填）' : 'Comment Count (required)'}
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={taskForm.commentNum}
+                      onChange={(e) => handleTaskFormChange('commentNum', e.target.value)}
+                      placeholder={language === 'zh' ? '请输入评论数' : 'Enter comment count'}
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  {/* 转发数输入框 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      {language === 'zh' ? '转发数（必填）' : 'Retweet Count (required)'}
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={taskForm.retweetNum}
+                      onChange={(e) => handleTaskFormChange('retweetNum', e.target.value)}
+                      placeholder={language === 'zh' ? '请输入转发数' : 'Enter retweet count'}
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                </>
               )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
@@ -1220,8 +1365,8 @@ export default function WeeklyChallenge() {
         </div>
       )}
     {showOriginalEditModal && selectedOriginalTask && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-        <div className="relative w-full max-w-xl rounded-3xl bg-white p-8 shadow-2xl dark:bg-gray-900 border border-blue-100 dark:border-blue-700">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8 overflow-y-auto">
+        <div className="relative w-full max-w-xl rounded-3xl bg-white p-8 shadow-2xl dark:bg-gray-900 border border-blue-100 dark:border-blue-700 max-h-[90vh] flex flex-col">
           <button
             className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
             onClick={closeOriginalEdit}
@@ -1237,7 +1382,7 @@ export default function WeeklyChallenge() {
               ? '可在截止前更新原创内容链接、截图和浏览量。'
               : 'Update your original submission before the deadline.'}
           </p>
-          <form onSubmit={handleOriginalUpdate} className="space-y-5">
+          <form onSubmit={handleOriginalUpdate} className="space-y-5 flex-grow overflow-y-auto pr-2" style={{ maxHeight: 'calc(90vh - 120px)' }}>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 {language === 'zh' ? '原创内容链接' : 'Original Content Link'}
@@ -1267,6 +1412,48 @@ export default function WeeklyChallenge() {
                   ? '浏览量是当前内容的浏览量，可在周排行活动截止前进行修改。'
                   : 'Use the current view count of your content. You can update it before the weekly leaderboard deadline.'}
               </p>
+            </div>
+            {/* 点赞数输入框 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                {language === 'zh' ? '点赞数（可选）' : 'Like Count (optional)'}
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={originalForm.likeNum}
+                onChange={(e) => handleOriginalInputChange('likeNum', e.target.value)}
+                placeholder={language === 'zh' ? '请输入点赞数' : 'Enter like count'}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            {/* 评论数输入框 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                {language === 'zh' ? '评论数（可选）' : 'Comment Count (optional)'}
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={originalForm.commentNum}
+                onChange={(e) => handleOriginalInputChange('commentNum', e.target.value)}
+                placeholder={language === 'zh' ? '请输入评论数' : 'Enter comment count'}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            {/* 转发数输入框 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                {language === 'zh' ? '转发数（可选）' : 'Retweet Count (optional)'}
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={originalForm.retweetNum}
+                onChange={(e) => handleOriginalInputChange('retweetNum', e.target.value)}
+                placeholder={language === 'zh' ? '请输入转发数' : 'Enter retweet count'}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
