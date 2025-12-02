@@ -52,8 +52,8 @@ export default function WeeklyChallenge() {
   // 模板内容生成函数
   const getTemplateContent = (language: 'zh' | 'en', weekNumber: number, topic: string) => {
     const template = language === 'zh'
-      ? `#FFFPWeek${weekNumber} –「{topic}」\n发布平台：X/Twitter\n每周提交次数上限：1 次\n提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等`
-      : `#FFFPWeek${weekNumber} - "{topic}"\nPublishing Platform: X/Twitter\nWeekly submissions limit: 1\nSubmission: Upload screenshot + link + view count; Content must @ official account and add #FFFP hashtag; Content type is flexible: text, image, video, etc.`;
+      ? `#FFFPWeek${weekNumber} –「{topic}」\n发布平台：X/Twitter\n每周提交次数上限：1 次\n提交要求：上传截图 + 链接 + 浏览量+转发、点赞、评论数据；内容需@官方账号并添加#FFFP话题标签；\n内容形式不限：文字、图片、视频等`
+      : `#FFFPWeek${weekNumber} - "{topic}"\nPublishing Platform: X/Twitter\nWeekly submissions limit: 1\nSubmission: Upload screenshot + link + view count + number of likes, retweets and comments; Content must @ official account and add #FFFP hashtag;\nContent type is flexible: text, image, video, etc.`;
     return template.replace('{topic}', topic);
   };
 
@@ -72,6 +72,16 @@ export default function WeeklyChallenge() {
       if (savedContent) {
         const data = JSON.parse(savedContent);
         console.log('读取到的保存数据:', data); // 调试日志
+
+        // 检查版本号，如果版本不匹配则使用新模板
+        const currentVersion = '2.2'; // 版本2.2：更新提交要求，添加内容形式说明
+        if (!data.version || data.version !== currentVersion) {
+          console.log('版本不匹配，使用新模板:', data.version, 'vs', currentVersion);
+          return {
+            chinese: getTemplateContent('zh', data.weekNumber || 8, data.chineseTopic || 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？'),
+            english: getTemplateContent('en', data.weekNumber || 8, data.englishTopic || 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?')
+          };
+        }
 
         // 优先使用完整的chineseContent和englishContent
         if (data.chineseContent && data.englishContent) {
@@ -640,10 +650,8 @@ export default function WeeklyChallenge() {
       id: '原创任务',
       title: language === 'zh' ? '✍️ 原创任务' : '✍️ Original Task',
       description: language === 'zh' ? originalContent.chinese : originalContent.english,
-      points: language === 'zh' ? `每周提交次数上限：${originalLimit} 次` : `Weekly submissions limit: ${originalLimit}`,
-      requirement: language === 'zh'
-        ? '提交要求：上传截图 + 链接 + 浏览量；内容需@官方账号并添加#FFFP话题标签；内容形式不限：文字、图片、视频等'
-        : 'Submission: Upload screenshot + link + view count; Content must @ official account and add #FFFP hashtag; Content type is flexible: text, image, video, etc.',
+      points: '', // 原创任务的description中已包含提交次数上限，此处留空避免重复
+      requirement: '', // 原创任务的description中已包含提交要求，此处留空避免重复
       buttonText: language === 'zh' ? '上传作品' : 'Upload Work',
       color: 'from-amber-500 to-orange-500',
       onClick: () => openTaskModal('original'),
@@ -749,9 +757,23 @@ export default function WeeklyChallenge() {
                   </CardHeader>
                   <CardContent className="flex flex-col flex-grow space-y-3">
                     <div className="flex-grow space-y-3">
-                      <p className="whitespace-pre-line">{task.description}</p>
-                      <p className="text-sm opacity-90">{task.points}</p>
-                      <p className="text-sm opacity-90">{task.requirement}</p>
+                      {task.id === '原创任务' ? (
+                        // 原创任务：description中已包含完整信息，直接显示
+                        <div className="whitespace-pre-line">
+                          {task.description.split('\n').map((line: string, index: number) => (
+                            <p key={index} className={index === 0 ? 'font-medium' : 'text-sm opacity-90'}>
+                              {line}
+                            </p>
+                          ))}
+                        </div>
+                      ) : (
+                        // 其他任务：保持原有结构
+                        <>
+                          <p className="whitespace-pre-line">{task.description}</p>
+                          <p className="text-sm opacity-90">{task.points}</p>
+                          <p className="text-sm opacity-90">{task.requirement}</p>
+                        </>
+                      )}
                     </div>
                     <Button
                       className="w-full bg-white text-gray-800 hover:bg-gray-100 font-medium mt-auto"

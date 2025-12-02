@@ -70,7 +70,7 @@ export default function WeeklyChallenge() {
         ? '#FFFPWeek5 –「你眼中的Flipflop」' 
         : '#FFFPWeek5 - "Flipflop in Your Eyes"',
       points: language === 'zh' ? '积分：基础5分 + 浏览量加权' : 'Points: Base 5 + view count bonus',
-      requirement: language === 'zh' ? '提交要求：上传链接 + 截图 + 浏览量' : 'Submission: Upload link + screenshot + view count',
+      requirement: language === 'zh' ? '：上传链接 + 截图 + 浏览量+转发、点赞、评论数据；' : 'Submission: Upload link + screenshot + view count',
       buttonText: language === 'zh' ? '上传作品' : 'Upload Work',
       color: 'from-amber-500 to-orange-500'
     }
