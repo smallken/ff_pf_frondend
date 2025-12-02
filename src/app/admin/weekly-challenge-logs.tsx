@@ -120,12 +120,20 @@ export default function WeeklyChallengeLogsTab() {
 
       if (result.code === 0 && result.data) {
         const pageData: PageData = result.data;
-        setLogs(pageData.records);
-        setTotal(pageData.total);
+        let filteredRecords = pageData.records;
+        
+        // 前端进行社群类型筛选
+        if (communityType) {
+          const communityTypeNum = parseInt(communityType, 10);
+          filteredRecords = filteredRecords.filter(log => log.communityType === communityTypeNum);
+        }
+        
+        setLogs(filteredRecords);
+        setTotal(filteredRecords.length);
         
         // 使用前端传入的page参数设置当前页，而不是后端返回的pageData.current
         // 计算实际的最大页数
-        const maxPages = Math.ceil(pageData.total / pageSize);
+        const maxPages = Math.ceil(filteredRecords.length / pageSize);
         // 确保page在有效范围内
         const validPage = Math.max(1, Math.min(page, maxPages));
         setCurrent(validPage);
