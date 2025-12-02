@@ -8,6 +8,7 @@ interface AutoReviewLog {
   id: number;
   taskType: string;
   taskTypeName: string;
+  communityType?: number; // 1-TG群发言，2-AMA发言
   taskId: number;
   userId: number;
   username: string;
@@ -56,6 +57,7 @@ export default function WeeklyChallengeLogsTab() {
   const [taskType, setTaskType] = useState('');
   const [weekCount, setWeekCount] = useState('');
   const [reviewStatus, setReviewStatus] = useState('');
+  const [communityType, setCommunityType] = useState(''); // 1-TG群发言，2-AMA发言
   const [twitterUsername, setTwitterUsername] = useState('');
   
   // 分页
@@ -97,6 +99,7 @@ export default function WeeklyChallengeLogsTab() {
       if (taskType) params.append('taskType', taskType);
       if (weekCount) params.append('weekCount', weekCount);
       if (reviewStatus) params.append('reviewStatus', reviewStatus);
+      if (communityType) params.append('communityType', communityType);
       // 推特用户名筛选，自动去除@符号
       if (twitterUsername && twitterUsername.trim() !== '') {
         const cleanUsername = twitterUsername.trim().replace(/^@/, '');
@@ -148,7 +151,7 @@ export default function WeeklyChallengeLogsTab() {
       setCurrent(1);
       fetchLogs(1);
     }
-  }, [activeTab, taskType, weekCount, reviewStatus, twitterUsername]);
+  }, [activeTab, taskType, weekCount, reviewStatus, communityType, twitterUsername]);
 
   const handlePageChange = (page: number) => {
     setCurrent(page);
@@ -372,7 +375,7 @@ export default function WeeklyChallengeLogsTab() {
 
       {activeTab === 'logs' ? (
         <>
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">任务类型</label>
               <select
@@ -383,6 +386,19 @@ export default function WeeklyChallengeLogsTab() {
                 <option value="">全部</option>
                 <option value="communication">传播类</option>
                 <option value="community">社群类</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">社群类型</label>
+              <select
+                value={communityType}
+                onChange={(e) => setCommunityType(e.target.value)}
+                disabled={taskType !== 'community'}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+              >
+                <option value="">全部</option>
+                <option value="1">TG群发言</option>
+                <option value="2">AMA发言</option>
               </select>
             </div>
             <div>
@@ -438,6 +454,7 @@ export default function WeeklyChallengeLogsTab() {
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">类型</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">社群类型</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">用户</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">周数</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">OCR</th>
@@ -450,10 +467,22 @@ export default function WeeklyChallengeLogsTab() {
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {logs.map((log) => (
+                    {logs.map((log) => {
+                      // 获取社群类型名称
+                      const getCommunityTypeName = () => {
+                        if (log.taskType !== 'community') return '-';
+                        if (log.communityType === 1) return 'TG群发言';
+                        if (log.communityType === 2) return 'AMA发言';
+                        return '-';
+                      };
+                      
+                      return (
                       <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{log.id}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{log.taskTypeName}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                          {getCommunityTypeName()}
+                        </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                           <div>{log.username || '-'}</div>
                           <div className="text-xs text-gray-500">ID: {log.userId}</div>
@@ -517,7 +546,8 @@ export default function WeeklyChallengeLogsTab() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
