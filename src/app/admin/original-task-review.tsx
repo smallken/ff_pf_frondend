@@ -151,7 +151,7 @@ export default function OriginalTaskReview() {
   };
   const currentError = activeSubTab === 'planLogs' ? planLogError : error;
 
-  // 保存任务内容
+  // 保存任务内容（使用后端API）
   const handleSaveContent = async () => {
     if (!contentForm.chineseTopic.trim()) {
       setError('中文主题不能为空');
@@ -166,20 +166,14 @@ export default function OriginalTaskReview() {
       setSavingContent(true);
       setError('');
 
-      // 使用模板生成完整内容
-      const weekNumber = contentForm.weekNumber;
-      const contentData = {
-        version: '2.2', // 版本2.2：更新提交要求，添加内容形式说明
-        chineseContent: getTemplateContent('zh', weekNumber, contentForm.chineseTopic),
-        englishContent: getTemplateContent('en', weekNumber, contentForm.englishTopic || contentForm.chineseTopic),
-        weekNumber,
+      // 调用后端API保存配置
+      await adminOriginalTaskService.saveTaskConfig({
+        weekNumber: contentForm.weekNumber,
         chineseTopic: contentForm.chineseTopic,
-        englishTopic: contentForm.englishTopic,
-        updateTime: new Date().toISOString()
-      };
-      localStorage.setItem('footprint_original_task_content', JSON.stringify(contentData));
+        englishTopic: contentForm.englishTopic || contentForm.chineseTopic,
+      });
 
-      setSuccess('任务内容保存成功！每周挑战页面将立即生效');
+      setSuccess('任务内容保存成功！所有用户将立即看到更新');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
       setError(err.message || '保存失败');
@@ -188,41 +182,40 @@ export default function OriginalTaskReview() {
     }
   };
 
-  // 加载已保存的内容
-  const loadSavedContent = () => {
-    if (typeof window === 'undefined') return;
-
+  // 加载已保存的内容（从后端API获取）
+  const loadSavedContent = async () => {
     try {
-      const savedContent = localStorage.getItem('footprint_original_task_content');
-      if (savedContent) {
-        const data = JSON.parse(savedContent);
+      const config = await adminOriginalTaskService.getTaskConfig();
+      if (config) {
         setContentForm({
-          weekNumber: data.weekNumber || 8,
-          chineseTopic: data.chineseTopic || parseSavedContent(data.chineseContent).chineseTopic,
-          englishTopic: data.englishTopic || parseSavedContent(data.englishContent).englishTopic
+          weekNumber: config.weekNumber || 8,
+          chineseTopic: config.chineseTopic || 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？',
+          englishTopic: config.englishTopic || 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?'
         });
-      }
-      
-      // 加载上传功能开关状态
-      const uploadSetting = localStorage.getItem('footprint_original_task_upload_enabled');
-      if (uploadSetting) {
-        setUploadEnabled(JSON.parse(uploadSetting));
+        setUploadEnabled(config.uploadEnabled ?? true);
       }
     } catch (error) {
-      console.error('读取保存的内容失败:', error);
+      console.error('读取配置失败:', error);
+      // 使用默认值
+      setContentForm({
+        weekNumber: 8,
+        chineseTopic: 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？',
+        englishTopic: 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?'
+      });
+      setUploadEnabled(true);
     }
   };
   
-  // 保存上传功能开关状态
+  // 保存上传功能开关状态（使用后端API）
   const handleSaveUploadSetting = async () => {
     try {
       setSavingUploadSetting(true);
       setError('');
       
-      // 保存到localStorage
-      localStorage.setItem('footprint_original_task_upload_enabled', JSON.stringify(uploadEnabled));
+      // 调用后端API更新上传开关
+      await adminOriginalTaskService.updateUploadEnabled(uploadEnabled);
       
-      setSuccess('上传功能开关设置成功！');
+      setSuccess('上传功能开关设置成功！所有用户将立即生效');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
       setError(err.message || '保存失败');

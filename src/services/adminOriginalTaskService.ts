@@ -47,6 +47,21 @@ export interface AdminReviewOriginalTaskRequest {
   points?: number; // 审核通过时的积分
 }
 
+export interface OriginalTaskConfigVO {
+  weekNumber: number;
+  chineseTopic: string;
+  englishTopic: string;
+  uploadEnabled: boolean;
+  updateTime: string;
+}
+
+export interface SaveOriginalTaskConfigRequest {
+  weekNumber?: number;
+  chineseTopic?: string;
+  englishTopic?: string;
+  uploadEnabled?: boolean;
+}
+
 export const adminOriginalTaskService = {
   /**
    * 获取待审核任务列表
@@ -191,6 +206,81 @@ export const adminOriginalTaskService = {
     const result = await response.json();
     if (result.code !== 0) {
       throw new Error(result.message || 'Failed to review task');
+    }
+
+    return result.data;
+  },
+
+  // ==================== 任务内容配置管理 ====================
+
+  /**
+   * 获取原创任务配置（公开接口）
+   */
+  async getTaskConfig(): Promise<OriginalTaskConfigVO> {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/original-task/config`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch task config');
+    }
+
+    const result = await response.json();
+    if (result.code !== 0) {
+      throw new Error(result.message || 'Failed to fetch task config');
+    }
+
+    return result.data;
+  },
+
+  /**
+   * 保存原创任务配置（管理员专用）
+   */
+  async saveTaskConfig(request: SaveOriginalTaskConfigRequest): Promise<boolean> {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/original-task/config`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to save task config');
+    }
+
+    const result = await response.json();
+    if (result.code !== 0) {
+      throw new Error(result.message || 'Failed to save task config');
+    }
+
+    return result.data;
+  },
+
+  /**
+   * 更新上传功能开关（管理员专用）
+   */
+  async updateUploadEnabled(enabled: boolean): Promise<boolean> {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/original-task/config/upload-enabled?enabled=${enabled}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update upload enabled setting');
+    }
+
+    const result = await response.json();
+    if (result.code !== 0) {
+      throw new Error(result.message || 'Failed to update upload enabled setting');
     }
 
     return result.data;

@@ -8,6 +8,7 @@ import { Button } from '../../components/reactbits/ButtonSimple';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/reactbits/Card';
 import { formService, userService } from '@/services';
 import { weeklyChallengeService } from '@/services/weeklyChallengeService';
+import { adminOriginalTaskService, type OriginalTaskConfigVO } from '@/services/adminOriginalTaskService';
 import type { WeeklyTaskOverview, OriginalTaskVO, RankingUserVO } from '@/types/api';
 
 export default function WeeklyChallenge() {
@@ -53,7 +54,8 @@ export default function WeeklyChallenge() {
   const [isSunday, setIsSunday] = useState(false);
   const [weeklyRankings, setWeeklyRankings] = useState<RankingUserVO[]>([]);
   const [rankingsLoading, setRankingsLoading] = useState(false);
-  const [contentVersion, setContentVersion] = useState(0); // 用于触发重新渲染
+  const [taskConfig, setTaskConfig] = useState<OriginalTaskConfigVO | null>(null);
+  const [configLoading, setConfigLoading] = useState(true);
 
   // 模板内容生成函数
   const getTemplateContent = (language: 'zh' | 'en', weekNumber: number, topic: string) => {
@@ -63,99 +65,57 @@ export default function WeeklyChallenge() {
     return template.replace('{topic}', topic);
   };
 
-  // 动态获取原创任务内容
+  // 动态获取原创任务内容（从后端配置中获取）
   const getOriginalTaskContent = () => {
-    if (typeof window === 'undefined') {
-      // 服务端渲染时返回默认值
-      return {
-        chinese: getTemplateContent('zh', 8, 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？'),
-        english: getTemplateContent('en', 8, 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?')
-      };
+    // 默认值
+    const defaultChinese = getTemplateContent('zh', 8, 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？');
+    const defaultEnglish = getTemplateContent('en', 8, 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?');
+
+    if (!taskConfig) {
+      return { chinese: defaultChinese, english: defaultEnglish };
     }
 
-    try {
-      const savedContent = localStorage.getItem('footprint_original_task_content');
-      if (savedContent) {
-        const data = JSON.parse(savedContent);
-        console.log('读取到的保存数据:', data); // 调试日志
+    const weekNumber = taskConfig.weekNumber || 8;
+    const chineseTopic = taskConfig.chineseTopic || 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？';
+    const englishTopic = taskConfig.englishTopic || 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?';
 
-        // 检查版本号，如果版本不匹配则使用新模板
-        const currentVersion = '2.2'; // 版本2.2：更新提交要求，添加内容形式说明
-        if (!data.version || data.version !== currentVersion) {
-          console.log('版本不匹配，使用新模板:', data.version, 'vs', currentVersion);
-          return {
-            chinese: getTemplateContent('zh', data.weekNumber || 8, data.chineseTopic || 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？'),
-            english: getTemplateContent('en', data.weekNumber || 8, data.englishTopic || 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?')
-          };
-        }
-
-        // 优先使用完整的chineseContent和englishContent
-        if (data.chineseContent && data.englishContent) {
-          console.log('使用完整的保存内容');
-          return {
-            chinese: data.chineseContent,
-            english: data.englishContent
-          };
-        }
-        // 如果没有完整内容，尝试从主题构建
-        const weekNumber = data.weekNumber || 8;
-        const chineseTopic = data.chineseTopic || 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？';
-        const englishTopic = data.englishTopic || 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?';
-
-        console.log('从主题构建内容:', { weekNumber, chineseTopic, englishTopic }); // 调试日志
-
-        return {
-          chinese: getTemplateContent('zh', weekNumber, chineseTopic),
-          english: getTemplateContent('en', weekNumber, englishTopic)
-        };
-      }
-    } catch (error) {
-      console.error('读取原创任务内容失败:', error);
-    }
-
-    console.log('使用默认内容'); // 调试日志
-    // 返回默认值
     return {
-      chinese: getTemplateContent('zh', 8, 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？'),
-      english: getTemplateContent('en', 8, 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?')
+      chinese: getTemplateContent('zh', weekNumber, chineseTopic),
+      english: getTemplateContent('en', weekNumber, englishTopic)
     };
   };
 
-  // 检查原创任务上传功能是否开启
+  // 检查原创任务上传功能是否开启（从后端配置中获取）
   const isOriginalTaskUploadEnabled = () => {
-    if (typeof window === 'undefined') {
-      // 服务端渲染时默认开启
+    // 如果配置还在加载中或配置为空，默认开启
+    if (!taskConfig) {
       return true;
     }
-    
-    try {
-      const uploadSetting = localStorage.getItem('footprint_original_task_upload_enabled');
-      // 如果没有设置，默认开启
-      return uploadSetting === null || JSON.parse(uploadSetting);
-    } catch (error) {
-      console.error('读取上传功能开关失败:', error);
-      // 读取失败时默认开启
-      return true;
-    }
+    return taskConfig.uploadEnabled ?? true;
   };
 
-  // 监听localStorage变化，实现实时更新
+  // 组件挂载时从后端获取任务配置
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'footprint_original_task_content') {
-        setContentVersion(prev => prev + 1);
+    const fetchTaskConfig = async () => {
+      try {
+        setConfigLoading(true);
+        const config = await adminOriginalTaskService.getTaskConfig();
+        setTaskConfig(config);
+      } catch (error) {
+        console.error('获取任务配置失败:', error);
+        // 失败时使用默认配置
+        setTaskConfig({
+          weekNumber: 8,
+          chineseTopic: 'Web3的叙事经济究竟是在推动前进，还是在制造泡沫？',
+          englishTopic: 'In Web3, is the narrative economy pushing us forward or just pumping bubbles?',
+          uploadEnabled: true,
+          updateTime: new Date().toISOString()
+        });
+      } finally {
+        setConfigLoading(false);
       }
     };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  // 组件挂载时读取本地存储
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setContentVersion(prev => prev + 1);
-    }
+    fetchTaskConfig();
   }, []);
   const taskModalCopy = useMemo(() => ({
     spread: {
@@ -756,7 +716,7 @@ export default function WeeklyChallenge() {
       disabled: !canSubmitOriginal
     }
     ];
-  }, [contentVersion, language, canSubmitCommunication, canSubmitCommunity, canSubmitOriginal, communicationLimit, communityLimit, originalLimit, openTaskModal]);
+  }, [taskConfig, language, canSubmitCommunication, canSubmitCommunity, canSubmitOriginal, communicationLimit, communityLimit, originalLimit, openTaskModal]);
 
   // 使用真实的周排行榜数据
 
@@ -1142,21 +1102,21 @@ export default function WeeklyChallenge() {
       </div>
     )}
     {showTaskModal && activeTaskCopy && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="relative w-full max-w-xl rounded-3xl bg-white p-8 shadow-2xl dark:bg-gray-900 border border-blue-100 dark:border-blue-700">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-2 sm:px-4 py-4">
+          <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl sm:rounded-3xl bg-white p-4 sm:p-8 shadow-2xl dark:bg-gray-900 border border-blue-100 dark:border-blue-700">
             <button
-              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              className="absolute right-3 top-3 sm:right-4 sm:top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl leading-none"
               onClick={closeTaskModal}
             >
               ×
             </button>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2 pr-8">
               {activeTaskCopy.title}
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-6">
               {activeTaskCopy.description}
             </p>
-            <form onSubmit={handleTaskSubmit} className="space-y-5">
+            <form onSubmit={handleTaskSubmit} className="space-y-3 sm:space-y-5">
               {/* 社群任务不显示链接输入框 */}
               {activeTask !== 'community' && (
                 <div>
