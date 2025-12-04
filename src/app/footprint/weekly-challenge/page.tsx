@@ -643,6 +643,8 @@ export default function WeeklyChallenge() {
   const communicationLimit = taskOverview?.communicationLimit ?? 5;
   const communitySubmitted = taskOverview?.communitySubmitted ?? 0;
   const communityLimit = taskOverview?.communityLimit ?? 10;
+  const amaSubmitted = taskOverview?.amaSubmitted ?? 0;
+  const amaLimit = taskOverview?.amaLimit ?? 3;
   const originalSubmitted = taskOverview?.originalSubmitted ?? 0;
   const originalLimit = taskOverview?.originalLimit ?? 1;
   const weeklyPoints = taskOverview?.weeklyPoints ?? 0;
@@ -650,6 +652,7 @@ export default function WeeklyChallenge() {
   // 周日（isSunday为true）时本周挑战已结束，禁止提交任务
   const canSubmitCommunication = hasSubmittedApplication && !isCheckingApplication && communicationSubmitted < communicationLimit && !isSunday;
   const canSubmitCommunity = hasSubmittedApplication && !isCheckingApplication && communitySubmitted < communityLimit && !isSunday;
+  const canSubmitAma = hasSubmittedApplication && !isCheckingApplication && amaSubmitted < amaLimit && communitySubmitted < communityLimit && !isSunday;
   const canSubmitOriginal = hasSubmittedApplication && !isCheckingApplication && originalSubmitted < originalLimit && !isSunday && isOriginalTaskUploadEnabled();
 
   // 调试信息：输出关键状态
@@ -1071,22 +1074,32 @@ export default function WeeklyChallenge() {
             
             {/* AMA发言按钮 */}
             <button
-              onClick={() => openCommunityUpload('ama')}
-              className="w-full p-4 rounded-xl border-2 border-purple-200 dark:border-purple-800 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 hover:border-purple-400 dark:hover:border-purple-600 transition-all duration-200 group"
+              onClick={() => canSubmitAma && openCommunityUpload('ama')}
+              disabled={!canSubmitAma}
+              className={`w-full p-4 rounded-xl border-2 transition-all duration-200 group ${
+                canSubmitAma
+                  ? 'border-purple-200 dark:border-purple-800 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 hover:border-purple-400 dark:hover:border-purple-600'
+                  : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 opacity-60 cursor-not-allowed'
+              }`}
             >
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-2xl">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${canSubmitAma ? 'bg-purple-500' : 'bg-gray-400'}`}>
                   🎤
                 </div>
                 <div className="text-left flex-1">
-                  <h3 className="font-bold text-gray-800 dark:text-gray-100 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                  <h3 className={`font-bold ${canSubmitAma ? 'text-gray-800 dark:text-gray-100 group-hover:text-purple-600 dark:group-hover:text-purple-400' : 'text-gray-500 dark:text-gray-400'}`}>
                     {language === 'zh' ? 'AMA发言截图' : 'AMA Speaking Screenshot'}
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {language === 'zh' ? '通过审核 +3 分' : '+3 points after approval'}
+                    {language === 'zh' ? `通过审核 +3 分 (${amaSubmitted}/${amaLimit})` : `+3 points after approval (${amaSubmitted}/${amaLimit})`}
                   </p>
+                  {!canSubmitAma && amaSubmitted >= amaLimit && (
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                      {language === 'zh' ? '本周AMA发言次数已达上限' : 'AMA submissions limit reached this week'}
+                    </p>
+                  )}
                 </div>
-                <div className="text-purple-500 text-xl">→</div>
+                <div className={`text-xl ${canSubmitAma ? 'text-purple-500' : 'text-gray-400'}`}>→</div>
               </div>
             </button>
           </div>

@@ -417,6 +417,10 @@ export interface WeeklyTaskOverview {
   communicationLimit: number;
   communitySubmitted: number;
   communityLimit: number;
+  /** AMA发言已提交次数 */
+  amaSubmitted: number;
+  /** AMA发言提交上限 */
+  amaLimit: number;
   originalSubmitted: number;
   originalLimit: number;
   weeklyPoints: number;
