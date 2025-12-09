@@ -54,6 +54,8 @@ export interface LoginUserVO {
   walletAddress?: string;
   country?: string; // 所在国家地区
   twitterFollowers?: number; // Twitter粉丝数
+  qqGroup?: string; // QQ群号
+  qqNumber?: string; // QQ号
   createTime: string;
   updateTime: string;
 }
@@ -155,6 +157,8 @@ export interface UserUpdateMyRequest {
   walletAddress?: string;
   country?: string; // 所在国家地区
   twitterFollowers?: number; // Twitter粉丝数
+  qqGroup?: string; // QQ群号
+  qqNumber?: string; // QQ号
   emailVerificationCode?: string;
 }
 

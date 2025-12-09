@@ -1,16 +1,72 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import LogoutConfirmModal from '../components/LogoutConfirmModal';
+import { userService } from '@/services';
+import type { LoginUserVO } from '@/types/api';
 
 export default function Home() {
   const { t, language } = useLanguage();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  
+  // QQ字段提示弹窗相关状态
+  const [showQQPromptModal, setShowQQPromptModal] = useState(false);
+  const [userInfo, setUserInfo] = useState<LoginUserVO | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editForm, setEditForm] = useState({
+    qqGroup: '',
+    qqNumber: '',
+    country: ''
+  });
+  
+  // 处理表单输入变化
+  const handleInputChange = (field: string, value: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // 获取用户信息
+  const fetchUserInfo = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const user = await userService.getLoginUser();
+      setUserInfo(user);
+      // 初始化编辑表单数据
+      setEditForm({
+        qqGroup: user.qqGroup || '',
+        qqNumber: user.qqNumber || '',
+        country: user.country || ''
+      });
+      
+      // 检查：如果所在国家地区是中国，QQ群号和QQ号不能为空
+      const isChina = user.country === 'China';
+      if (isChina) {
+        const needQQGroup = !user.qqGroup || user.qqGroup.trim() === '';
+        const needQQNumber = !user.qqNumber || user.qqNumber.trim() === '';
+        
+        if (needQQGroup || needQQNumber) {
+          setShowQQPromptModal(true);
+        }
+      }
+    } catch (error: any) {
+      console.error('获取用户信息失败:', error);
+    }
+  };
+
+  // 组件挂载时获取用户信息
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserInfo();
+    }
+  }, [isAuthenticated]);
 
   const handleJoinClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -558,6 +614,101 @@ export default function Home() {
       </section>
 
       
+
+      {/* QQ字段提示弹窗 */}
+      {showQQPromptModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
+            <div className="mb-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="ml-3 text-xl font-bold text-gray-900 dark:text-white">
+                  {language === 'zh' ? '完善个人资料' : 'Complete Your Profile'}
+                </h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300">
+                {language === 'zh' 
+                  ? '为了更好地为您服务，请先完善以下QQ信息：' 
+                  : 'To better serve you, please complete the following QQ information:'}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {language === 'zh' ? 'QQ群号' : 'QQ Group'} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editForm.qqGroup}
+                  onChange={(e) => handleInputChange('qqGroup', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={language === 'zh' ? '请输入QQ群号' : 'Enter QQ Group'}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {language === 'zh' ? 'QQ号' : 'QQ Number'} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editForm.qqNumber}
+                  onChange={(e) => handleInputChange('qqNumber', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={language === 'zh' ? '请输入QQ号' : 'Enter QQ Number'}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowQQPromptModal(false)}
+                className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+              >
+                {language === 'zh' ? '稍后填写' : 'Fill Later'}
+              </button>
+              <button
+                onClick={async () => {
+                  // 直接保存QQ信息
+                  try {
+                    setEditLoading(true);
+                    const updateData = {
+                      qqGroup: editForm.qqGroup,
+                      qqNumber: editForm.qqNumber
+                    };
+                    await userService.updateMyInfo(updateData);
+                    // 重新获取用户信息
+                    await fetchUserInfo();
+                    setShowQQPromptModal(false);
+                    alert(language === 'zh' ? '信息保存成功！' : 'Information saved successfully!');
+                  } catch (error: any) {
+                    console.error('保存QQ信息失败:', error);
+                    alert(error.message || (language === 'zh' ? '保存失败，请重试' : 'Failed to save, please try again'));
+                  } finally {
+                    setEditLoading(false);
+                  }
+                }}
+                disabled={editLoading}
+                className="px-6 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-md hover:from-violet-700 hover:to-purple-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {language === 'zh' ? '保存中...' : 'Saving...'}
+                  </div>
+                ) : (
+                  language === 'zh' ? '保存' : 'Save'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 退出确认弹窗 */}
       <LogoutConfirmModal

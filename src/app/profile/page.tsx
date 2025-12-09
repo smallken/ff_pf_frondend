@@ -69,6 +69,8 @@ export default function Profile() {
     walletAddress: '',
     country: '',
     twitterFollowers: '',
+    qqGroup: '',
+    qqNumber: '',
     emailVerificationCode: ''
   });
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
@@ -89,6 +91,8 @@ export default function Profile() {
   const [walletAddresses, setWalletAddresses] = useState<string[]>([]);
   const [editingRewardAddress, setEditingRewardAddress] = useState(false);
   const [rewardAddress, setRewardAddress] = useState('');
+  // QQ字段提示弹窗
+  const [showQQPromptModal, setShowQQPromptModal] = useState(false);
 
   // 安全的日期格式化函数
   const formatDate = (dateString: string) => {
@@ -224,8 +228,15 @@ export default function Profile() {
         walletAddress: response.walletAddress || '',
         country: response.country || '',
         twitterFollowers: response.twitterFollowers?.toString() || '',
+        qqGroup: response.qqGroup || '',
+        qqNumber: response.qqNumber || '',
         emailVerificationCode: ''
       });
+      
+      // 检查：如果用户是中国用户且QQ群号或QQ号为空，显示提示弹窗
+      if (response.country === 'China' && (!response.qqGroup || !response.qqNumber)) {
+        setShowQQPromptModal(true);
+      }
     } catch (error: any) {
       console.error('获取用户信息失败:', error);
       setError(error.message || t('profile.error.fetch.user.info'));
@@ -250,6 +261,8 @@ export default function Profile() {
         walletAddress: userInfo.walletAddress || '',
         country: userInfo.country || '',
         twitterFollowers: userInfo.twitterFollowers?.toString() || '',
+        qqGroup: userInfo.qqGroup || '',
+        qqNumber: userInfo.qqNumber || '',
         emailVerificationCode: ''
       });
     }
@@ -340,6 +353,21 @@ export default function Profile() {
         return;
       }
 
+      // 验证：如果所在国家地区是中国，QQ群号和QQ号不能为空
+      const isChina = editForm.country === 'China';
+      if (isChina) {
+        if (!editForm.qqGroup.trim()) {
+          setError(language === 'zh' ? 'QQ群号不能为空' : 'QQ Group cannot be empty');
+          setEditLoading(false);
+          return;
+        }
+        if (!editForm.qqNumber.trim()) {
+          setError(language === 'zh' ? 'QQ号不能为空' : 'QQ Number cannot be empty');
+          setEditLoading(false);
+          return;
+        }
+      }
+
       // 执行更新操作
       const updateData: UserUpdateMyRequest = {
         userName: editForm.userName,
@@ -348,7 +376,9 @@ export default function Profile() {
         telegramUsername: editForm.telegramUsername,
         walletAddress: editForm.walletAddress,
         country: editForm.country,
-        twitterFollowers: editForm.twitterFollowers ? parseInt(editForm.twitterFollowers) : undefined
+        twitterFollowers: editForm.twitterFollowers ? parseInt(editForm.twitterFollowers) : undefined,
+        qqGroup: editForm.qqGroup,
+        qqNumber: editForm.qqNumber
       };
 
       console.log('🔍 发送更新请求:', updateData);
@@ -681,7 +711,85 @@ export default function Profile() {
                   />
                 </div>
               ) : (
-                <p className="mt-1 text-gray-900 dark:text-white">{userInfo?.country || t('profile.not.set')}</p>
+                <p className="mt-1 text-gray-900 dark:text-white">
+                  {userInfo?.country ? (
+                    language === 'zh' ? {
+                      'China': '中国',
+                      'United States': '美国',
+                      'Japan': '日本',
+                      'South Korea': '韩国',
+                      'Singapore': '新加坡',
+                      'United Kingdom': '英国',
+                      'Canada': '加拿大',
+                      'Australia': '澳大利亚',
+                      'Germany': '德国',
+                      'France': '法国',
+                      'India': '印度',
+                      'Brazil': '巴西',
+                      'Russia': '俄罗斯',
+                      'Italy': '意大利',
+                      'Spain': '西班牙',
+                      'Netherlands': '荷兰',
+                      'Switzerland': '瑞士',
+                      'Sweden': '瑞典',
+                      'Poland': '波兰',
+                      'Turkey': '土耳其',
+                      'Mexico': '墨西哥',
+                      'Indonesia': '印度尼西亚',
+                      'Thailand': '泰国',
+                      'Vietnam': '越南',
+                      'Philippines': '菲律宾',
+                      'Malaysia': '马来西亚',
+                      'Hong Kong': '中国香港',
+                      'Taiwan': '中国台湾',
+                      'United Arab Emirates': '阿联酋',
+                      'Saudi Arabia': '沙特阿拉伯',
+                      'Israel': '以色列',
+                      'South Africa': '南非',
+                      'Egypt': '埃及',
+                      'Argentina': '阿根廷',
+                      'Chile': '智利',
+                      'Colombia': '哥伦比亚',
+                      'Peru': '秘鲁',
+                      'Belgium': '比利时',
+                      'Austria': '奥地利',
+                      'Denmark': '丹麦',
+                      'Norway': '挪威',
+                      'Finland': '芬兰',
+                      'Portugal': '葡萄牙',
+                      'Greece': '希腊',
+                      'Czech Republic': '捷克',
+                      'Romania': '罗马尼亚',
+                      'Hungary': '匈牙利',
+                      'New Zealand': '新西兰',
+                      'Ireland': '爱尔兰',
+                      'Pakistan': '巴基斯坦',
+                      'Bangladesh': '孟加拉国',
+                      'Nigeria': '尼日利亚',
+                      'Kenya': '肯尼亚',
+                      'Ukraine': '乌克兰',
+                      'Kazakhstan': '哈萨克斯坦',
+                      'Myanmar': '缅甸',
+                      'Cambodia': '柬埔寨',
+                      'Laos': '老挝',
+                      'Mongolia': '蒙古',
+                      'North Korea': '朝鲜',
+                      'Sri Lanka': '斯里兰卡',
+                      'Nepal': '尼泊尔',
+                      'Afghanistan': '阿富汗',
+                      'Iran': '伊朗',
+                      'Iraq': '伊拉克',
+                      'Jordan': '约旦',
+                      'Lebanon': '黎巴嫩',
+                      'Kuwait': '科威特',
+                      'Qatar': '卡塔尔',
+                      'Bahrain': '巴林',
+                      'Oman': '阿曼',
+                      'Yemen': '也门',
+                      'Syria': '叙利亚',
+                    }[userInfo.country] || userInfo.country : userInfo.country
+                  ) : t('profile.not.set')}
+                </p>
               )}
             </div>
             <div>
@@ -699,6 +807,38 @@ export default function Profile() {
                 <p className="mt-1 text-gray-900 dark:text-white">{userInfo?.twitterFollowers?.toLocaleString() || t('profile.not.set')}</p>
               )}
             </div>
+            {/* 只有当所在国家地区是中国时显示QQ群号和QQ号 */}
+            {(userInfo?.country === 'China' || editForm.country === 'China') && (
+              <>                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{language === 'zh' ? 'QQ群号' : 'QQ Group'}</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editForm.qqGroup}
+                      onChange={(e) => handleInputChange('qqGroup', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={language === 'zh' ? '请输入QQ群号' : 'Enter QQ Group'}
+                    />
+                  ) : (
+                    <p className="mt-1 text-gray-900 dark:text-white">{userInfo?.qqGroup || t('profile.not.set')}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{language === 'zh' ? 'QQ号' : 'QQ Number'}</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editForm.qqNumber}
+                      onChange={(e) => handleInputChange('qqNumber', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={language === 'zh' ? '请输入QQ号' : 'Enter QQ Number'}
+                    />
+                  ) : (
+                    <p className="mt-1 text-gray-900 dark:text-white">{userInfo?.qqNumber || t('profile.not.set')}</p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
           )}
           
@@ -906,6 +1046,101 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* QQ字段提示弹窗 */}
+      {showQQPromptModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
+            <div className="mb-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="ml-3 text-xl font-bold text-gray-900 dark:text-white">
+                  {language === 'zh' ? '完善个人资料' : 'Complete Your Profile'}
+                </h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300">
+                {language === 'zh' 
+                  ? '为了更好地为您服务，请先完善以下QQ信息：' 
+                  : 'To better serve you, please complete the following QQ information:'}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {language === 'zh' ? 'QQ群号' : 'QQ Group'} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editForm.qqGroup}
+                  onChange={(e) => handleInputChange('qqGroup', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={language === 'zh' ? '请输入QQ群号' : 'Enter QQ Group'}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {language === 'zh' ? 'QQ号' : 'QQ Number'} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editForm.qqNumber}
+                  onChange={(e) => handleInputChange('qqNumber', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={language === 'zh' ? '请输入QQ号' : 'Enter QQ Number'}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowQQPromptModal(false)}
+                className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+              >
+                {language === 'zh' ? '稍后填写' : 'Fill Later'}
+              </button>
+              <button
+                onClick={async () => {
+                  // 直接保存QQ信息
+                  try {
+                    setEditLoading(true);
+                    const updateData = {
+                      qqGroup: editForm.qqGroup,
+                      qqNumber: editForm.qqNumber
+                    };
+                    await userService.updateMyInfo(updateData);
+                    // 重新获取用户信息
+                    await fetchUserInfo();
+                    setShowQQPromptModal(false);
+                    alert(language === 'zh' ? '信息保存成功！' : 'Information saved successfully!');
+                  } catch (error: any) {
+                    console.error('保存QQ信息失败:', error);
+                    alert(error.message || (language === 'zh' ? '保存失败，请重试' : 'Failed to save, please try again'));
+                  } finally {
+                    setEditLoading(false);
+                  }
+                }}
+                disabled={editLoading}
+                className="px-6 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-md hover:from-violet-700 hover:to-purple-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {language === 'zh' ? '保存中...' : 'Saving...'}
+                  </div>
+                ) : (
+                  language === 'zh' ? '保存' : 'Save'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 大赛表单详情弹窗 */}
       {showFormModal && selectedForm && (
