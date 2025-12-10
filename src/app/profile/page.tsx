@@ -66,7 +66,8 @@ export default function Profile() {
     userEmail: '',
     twitterUsername: '',
     telegramUsername: '',
-    walletAddress: '',
+    walletAddressSol: '',
+    walletAddressBsc: '',
     country: '',
     twitterFollowers: '',
     qqGroup: '',
@@ -91,8 +92,9 @@ export default function Profile() {
   const [walletAddresses, setWalletAddresses] = useState<string[]>([]);
   const [editingRewardAddress, setEditingRewardAddress] = useState(false);
   const [rewardAddress, setRewardAddress] = useState('');
-  // QQ字段提示弹窗
-  const [showQQPromptModal, setShowQQPromptModal] = useState(false);
+  // 提示弹窗状态
+  const [showPromptModal, setShowPromptModal] = useState(false);
+  const [promptModalType, setPromptModalType] = useState<'qq' | 'wallet'>('qq'); // 弹窗类型：qq或wallet
 
   // 安全的日期格式化函数
   const formatDate = (dateString: string) => {
@@ -218,6 +220,7 @@ export default function Profile() {
     
     try {
       const response = await userService.getLoginUser();
+      console.log('API返回的用户信息:', response);
       setUserInfo(response);
       // 初始化编辑表单数据
       setEditForm({
@@ -225,7 +228,8 @@ export default function Profile() {
         userEmail: response.userEmail || '',
         twitterUsername: response.twitterUsername || '',
         telegramUsername: response.telegramUsername || '',
-        walletAddress: response.walletAddress || '',
+        walletAddressSol: response.walletAddressSol || '',
+        walletAddressBsc: response.walletAddressBsc || '',
         country: response.country || '',
         twitterFollowers: response.twitterFollowers?.toString() || '',
         qqGroup: response.qqGroup || '',
@@ -233,9 +237,16 @@ export default function Profile() {
         emailVerificationCode: ''
       });
       
-      // 检查：如果用户是中国用户且QQ群号或QQ号为空，显示提示弹窗
+      // 检查：如果用户是中国用户且QQ群号或QQ号为空，显示QQ类型的提示弹窗
       if (response.country === 'China' && (!response.qqGroup || !response.qqNumber)) {
-        setShowQQPromptModal(true);
+        setPromptModalType('qq');
+        setShowPromptModal(true);
+      }
+      
+      // 检查：如果钱包地址为空，显示wallet类型的提示弹窗
+      else if (!response.walletAddressSol || !response.walletAddressBsc) {
+        setPromptModalType('wallet');
+        setShowPromptModal(true);
       }
     } catch (error: any) {
       console.error('获取用户信息失败:', error);
@@ -258,7 +269,8 @@ export default function Profile() {
         userEmail: userInfo.userEmail || '',
         twitterUsername: userInfo.twitterUsername || '',
         telegramUsername: userInfo.telegramUsername || '',
-        walletAddress: userInfo.walletAddress || '',
+        walletAddressSol: userInfo.walletAddressSol || '',
+        walletAddressBsc: userInfo.walletAddressBsc || '',
         country: userInfo.country || '',
         twitterFollowers: userInfo.twitterFollowers?.toString() || '',
         qqGroup: userInfo.qqGroup || '',
@@ -307,15 +319,28 @@ export default function Profile() {
         }
       }
       
-      // 检查{language === 'zh' ? '钱包地址' : 'Wallet Address'}重复
-      if (editForm.walletAddress && editForm.walletAddress.trim()) {
+      // 检查Solana钱包地址重复
+      if (editForm.walletAddressSol && editForm.walletAddressSol.trim()) {
         try {
-          const walletResult = await userService.checkFieldUniqueWithError('walletAddress', editForm.walletAddress.trim());
-          if (!walletResult.isUnique && walletResult.errorMessage) {
-            duplicateErrors.push(walletResult.errorMessage);
+          const solWalletResult = await userService.checkFieldUniqueWithError('walletAddressSol', editForm.walletAddressSol.trim());
+          if (!solWalletResult.isUnique && solWalletResult.errorMessage) {
+            duplicateErrors.push(solWalletResult.errorMessage);
           }
         } catch (error: any) {
-          console.error(`❌ ${language === 'zh' ? '钱包地址' : 'Wallet Address'}检查失败:`, error);
+          console.error(`❌ ${language === 'zh' ? 'Solana钱包地址' : 'Solana Wallet Address'}检查失败:`, error);
+          hasApiError = true;
+        }
+      }
+      
+      // 检查BSC钱包地址重复
+      if (editForm.walletAddressBsc && editForm.walletAddressBsc.trim()) {
+        try {
+          const bscWalletResult = await userService.checkFieldUniqueWithError('walletAddressBsc', editForm.walletAddressBsc.trim());
+          if (!bscWalletResult.isUnique && bscWalletResult.errorMessage) {
+            duplicateErrors.push(bscWalletResult.errorMessage);
+          }
+        } catch (error: any) {
+          console.error(`❌ ${language === 'zh' ? 'BSC钱包地址' : 'BSC Wallet Address'}检查失败:`, error);
           hasApiError = true;
         }
       }
@@ -368,13 +393,21 @@ export default function Profile() {
         }
       }
 
+      // 验证：钱包地址至少填写一个
+      if (!editForm.walletAddressSol.trim() && !editForm.walletAddressBsc.trim()) {
+        setError(language === 'zh' ? '请至少填写一个钱包地址' : 'Please fill in at least one wallet address');
+        setEditLoading(false);
+        return;
+      }
+
       // 执行更新操作
       const updateData: UserUpdateMyRequest = {
         userName: editForm.userName,
         userEmail: editForm.userEmail,
         twitterUsername: editForm.twitterUsername,
         telegramUsername: editForm.telegramUsername,
-        walletAddress: editForm.walletAddress,
+        walletAddressSol: editForm.walletAddressSol,
+        walletAddressBsc: editForm.walletAddressBsc,
         country: editForm.country,
         twitterFollowers: editForm.twitterFollowers ? parseInt(editForm.twitterFollowers) : undefined,
         qqGroup: editForm.qqGroup,
@@ -686,18 +719,89 @@ export default function Profile() {
                 <p className="mt-1 text-gray-900 dark:text-white">{userInfo?.telegramUsername || t('profile.not.set')}</p>
               )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile.wallet')}</label>
+            {/* Solana Wallet Address */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {language === 'zh' ? 'Solana钱包地址' : 'Solana Wallet Address'}
+                {/* Tooltip for Solana wallet label */}
+                <span className="inline-block relative ml-1 cursor-help group">
+                  <svg className="w-3 h-3 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="absolute left-1/2 transform -translate-x-1/2 -bottom-full mb-2 w-64 bg-gray-800 dark:bg-gray-700 text-white text-xs px-3 py-1 rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                    {language === 'zh' ? '请确认该钱包地址是否Solana链地址' : 'Please ensure this is a Solana wallet address'}
+                  </span>
+                </span>
+              </label>
               {isEditing ? (
                 <input
                   type="text"
-                  value={editForm.walletAddress}
-                  onChange={(e) => handleInputChange('walletAddress', e.target.value)}
+                  value={editForm.walletAddressSol}
+                  onChange={(e) => handleInputChange('walletAddressSol', e.target.value)}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                  placeholder={t('profile.wallet.placeholder')}
+                  placeholder={language === 'zh' ? '请输入Solana钱包地址' : 'Enter Solana Wallet Address'}
                 />
               ) : (
-                <p className="mt-1 text-gray-900 dark:text-white font-mono text-sm break-all">{userInfo?.walletAddress || t('profile.not.set')}</p>
+                <div className="relative group">
+                  <p
+                    className="mt-1 text-gray-900 dark:text-white font-mono text-sm truncate cursor-pointer"
+                    title={userInfo?.walletAddressSol}
+                    onDoubleClick={() => {
+                      if (userInfo?.walletAddressSol) {
+                        navigator.clipboard.writeText(userInfo.walletAddressSol);
+                        // Show a temporary success message
+                        setSuccess(language === 'zh' ? '钱包地址已复制' : 'Wallet address copied');
+                        setTimeout(() => setSuccess(''), 2000);
+                      }
+                    }}
+                  >
+                    {userInfo?.walletAddressSol ? userInfo.walletAddressSol : t('profile.not.set')}
+                  </p>
+                  {/* Hover tooltip for wallet address - only show if wallet address exists */}
+                  {userInfo?.walletAddressSol && (
+                    <div className="absolute left-0 bottom-full mb-1 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
+                      {language === 'zh' ? '双击复制' : 'Double click to copy'}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* BSC Wallet Address */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {language === 'zh' ? 'BSC钱包地址' : 'BSC Wallet Address'}
+              </label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editForm.walletAddressBsc}
+                  onChange={(e) => handleInputChange('walletAddressBsc', e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  placeholder={language === 'zh' ? '请输入BSC钱包地址' : 'Enter BSC Wallet Address'}
+                />
+              ) : (
+                <div className="relative group">
+                  <p
+                    className="mt-1 text-gray-900 dark:text-white font-mono text-sm truncate cursor-pointer"
+                    title={userInfo?.walletAddressBsc}
+                    onDoubleClick={() => {
+                      if (userInfo?.walletAddressBsc) {
+                        navigator.clipboard.writeText(userInfo.walletAddressBsc);
+                        // Show a temporary success message
+                        setSuccess(language === 'zh' ? '钱包地址已复制' : 'Wallet address copied');
+                        setTimeout(() => setSuccess(''), 2000);
+                      }
+                    }}
+                  >
+                    {userInfo?.walletAddressBsc ? userInfo.walletAddressBsc : t('profile.not.set')}
+                  </p>
+                  {/* Hover tooltip for wallet address - only show if wallet address exists */}
+                  {userInfo?.walletAddressBsc && (
+                    <div className="absolute left-0 bottom-full mb-1 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
+                      {language === 'zh' ? '双击复制' : 'Double click to copy'}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
             <div>
@@ -1048,7 +1152,7 @@ export default function Profile() {
       </div>
 
       {/* QQ字段提示弹窗 */}
-      {showQQPromptModal && (
+      {showPromptModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
             <div className="mb-6">
@@ -1063,63 +1167,107 @@ export default function Profile() {
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-300">
-                {language === 'zh' 
-                  ? '为了更好地为您服务，请先完善以下QQ信息：' 
-                  : 'To better serve you, please complete the following QQ information:'}
+                {promptModalType === 'qq' ? 
+                  (language === 'zh' ? '为了更好地为您服务，请先完善以下QQ信息：' : 'To better serve you, please complete the following QQ information:')
+                  : (language === 'zh' ? '为了更好地为您服务，请先完善以下钱包地址信息：' : 'To better serve you, please complete the following wallet address information:')
+                }
               </p>
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {language === 'zh' ? 'QQ群号' : 'QQ Group'} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={editForm.qqGroup}
-                  onChange={(e) => handleInputChange('qqGroup', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={language === 'zh' ? '请输入QQ群号' : 'Enter QQ Group'}
-                />
-              </div>
+              {/* QQ信息输入 */}
+              {promptModalType === 'qq' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? 'QQ群号' : 'QQ Group'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.qqGroup}
+                      onChange={(e) => handleInputChange('qqGroup', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={language === 'zh' ? '请输入QQ群号' : 'Enter QQ Group'}
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {language === 'zh' ? 'QQ号' : 'QQ Number'} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={editForm.qqNumber}
-                  onChange={(e) => handleInputChange('qqNumber', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={language === 'zh' ? '请输入QQ号' : 'Enter QQ Number'}
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? 'QQ号' : 'QQ Number'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.qqNumber}
+                      onChange={(e) => handleInputChange('qqNumber', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={language === 'zh' ? '请输入QQ号' : 'Enter QQ Number'}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* 钱包地址输入 */}
+              {promptModalType === 'wallet' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? 'Solana钱包地址' : 'Solana Wallet Address'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.walletAddressSol}
+                      onChange={(e) => handleInputChange('walletAddressSol', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      placeholder={language === 'zh' ? '请输入Solana钱包地址' : 'Enter Solana Wallet Address'}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? 'BSC钱包地址' : 'BSC Wallet Address'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.walletAddressBsc}
+                      onChange={(e) => handleInputChange('walletAddressBsc', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      placeholder={language === 'zh' ? '请输入BSC钱包地址' : 'Enter BSC Wallet Address'}
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="mt-6 flex justify-end space-x-3">
               <button
-                onClick={() => setShowQQPromptModal(false)}
+                onClick={() => setShowPromptModal(false)}
                 className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
               >
                 {language === 'zh' ? '稍后填写' : 'Fill Later'}
               </button>
               <button
                 onClick={async () => {
-                  // 直接保存QQ信息
+                  // 保存信息
                   try {
                     setEditLoading(true);
-                    const updateData = {
-                      qqGroup: editForm.qqGroup,
-                      qqNumber: editForm.qqNumber
-                    };
+                    const updateData: any = {};
+                    
+                    // 根据弹窗类型添加相应的字段
+                    if (promptModalType === 'qq') {
+                      updateData.qqGroup = editForm.qqGroup;
+                      updateData.qqNumber = editForm.qqNumber;
+                    } else {
+                      updateData.walletAddressSol = editForm.walletAddressSol;
+                      updateData.walletAddressBsc = editForm.walletAddressBsc;
+                    }
+                    
                     await userService.updateMyInfo(updateData);
                     // 重新获取用户信息
                     await fetchUserInfo();
-                    setShowQQPromptModal(false);
+                    setShowPromptModal(false);
                     alert(language === 'zh' ? '信息保存成功！' : 'Information saved successfully!');
                   } catch (error: any) {
-                    console.error('保存QQ信息失败:', error);
+                    console.error('保存信息失败:', error);
                     alert(error.message || (language === 'zh' ? '保存失败，请重试' : 'Failed to save, please try again'));
                   } finally {
                     setEditLoading(false);
@@ -1683,6 +1831,145 @@ export default function Profile() {
                 className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
               >
                 {language === 'zh' ? '关闭' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 提示弹窗 */}
+      {showPromptModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
+            <div className="mb-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="ml-3 text-xl font-bold text-gray-900 dark:text-white">
+                  {language === 'zh' ? '完善个人资料' : 'Complete Your Profile'}
+                </h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300">
+                {promptModalType === 'qq' ? 
+                  (language === 'zh' ? '为了更好地为您服务，请先完善以下QQ信息：' : 'To better serve you, please complete the following QQ information:')
+                  : (language === 'zh' ? '为了更好地为您服务，请先完善以下钱包地址信息：' : 'To better serve you, please complete the following wallet address information:')
+                }
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {/* QQ信息输入 */}
+              {promptModalType === 'qq' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? 'QQ群号' : 'QQ Group'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.qqGroup}
+                      onChange={(e) => handleInputChange('qqGroup', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={language === 'zh' ? '请输入QQ群号' : 'Enter QQ Group'}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? 'QQ号' : 'QQ Number'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.qqNumber}
+                      onChange={(e) => handleInputChange('qqNumber', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={language === 'zh' ? '请输入QQ号' : 'Enter QQ Number'}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* 钱包地址输入 */}
+              {promptModalType === 'wallet' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? 'Solana钱包地址' : 'Solana Wallet Address'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.walletAddressSol}
+                      onChange={(e) => handleInputChange('walletAddressSol', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      placeholder={language === 'zh' ? '请输入Solana钱包地址' : 'Enter Solana Wallet Address'}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? 'BSC钱包地址' : 'BSC Wallet Address'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.walletAddressBsc}
+                      onChange={(e) => handleInputChange('walletAddressBsc', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      placeholder={language === 'zh' ? '请输入BSC钱包地址' : 'Enter BSC Wallet Address'}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowPromptModal(false)}
+                className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+              >
+                {language === 'zh' ? '稍后填写' : 'Fill Later'}
+              </button>
+              <button
+                onClick={async () => {
+                  // 保存信息
+                  try {
+                    setEditLoading(true);
+                    const updateData: any = {};
+                    
+                    // 根据弹窗类型添加相应的字段
+                    if (promptModalType === 'qq') {
+                      updateData.qqGroup = editForm.qqGroup;
+                      updateData.qqNumber = editForm.qqNumber;
+                    } else {
+                      updateData.walletAddressSol = editForm.walletAddressSol;
+                      updateData.walletAddressBsc = editForm.walletAddressBsc;
+                    }
+                    
+                    await userService.updateMyInfo(updateData);
+                    // 重新获取用户信息
+                    await fetchUserInfo();
+                    setShowPromptModal(false);
+                    alert(language === 'zh' ? '信息保存成功！' : 'Information saved successfully!');
+                  } catch (error: any) {
+                    console.error('保存信息失败:', error);
+                    alert(error.message || (language === 'zh' ? '保存失败，请重试' : 'Failed to save, please try again'));
+                  } finally {
+                    setEditLoading(false);
+                  }
+                }}
+                disabled={editLoading}
+                className="px-6 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-md hover:from-violet-700 hover:to-purple-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white inline-block mr-2"></div>
+                    {language === 'zh' ? '保存中...' : 'Saving...'}
+                  </>
+                ) : (
+                  language === 'zh' ? '保存' : 'Save'
+                )}
               </button>
             </div>
           </div>

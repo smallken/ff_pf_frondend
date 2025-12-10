@@ -14,13 +14,16 @@ export default function Home() {
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   
-  // QQ字段提示弹窗相关状态
-  const [showQQPromptModal, setShowQQPromptModal] = useState(false);
+  // 提示弹窗相关状态
+  const [showPromptModal, setShowPromptModal] = useState(false);
+  const [promptModalType, setPromptModalType] = useState<'qq' | 'wallet'>('qq'); // 弹窗类型：qq或wallet
   const [userInfo, setUserInfo] = useState<LoginUserVO | null>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editForm, setEditForm] = useState({
     qqGroup: '',
     qqNumber: '',
+    walletAddressSol: '',
+    walletAddressBsc: '',
     country: ''
   });
   
@@ -43,8 +46,22 @@ export default function Home() {
       setEditForm({
         qqGroup: user.qqGroup || '',
         qqNumber: user.qqNumber || '',
+        walletAddressSol: user.walletAddressSol || '',
+        walletAddressBsc: user.walletAddressBsc || '',
         country: user.country || ''
       });
+      
+      // 检查：如果用户是中国用户且QQ群号或QQ号为空，显示QQ类型的提示弹窗
+      if (user.country === 'China' && (!user.qqGroup || !user.qqNumber)) {
+        setPromptModalType('qq');
+        setShowPromptModal(true);
+      }
+      
+      // 检查：如果钱包地址为空，显示wallet类型的提示弹窗
+      else if (!user.walletAddressSol || !user.walletAddressBsc) {
+        setPromptModalType('wallet');
+        setShowPromptModal(true);
+      }
       
       // 检查：如果所在国家地区是中国，QQ群号和QQ号不能为空
       const isChina = user.country === 'China';
@@ -53,7 +70,8 @@ export default function Home() {
         const needQQNumber = !user.qqNumber || user.qqNumber.trim() === '';
         
         if (needQQGroup || needQQNumber) {
-          setShowQQPromptModal(true);
+          setPromptModalType('qq');
+          setShowPromptModal(true);
         }
       }
     } catch (error: any) {
@@ -615,8 +633,8 @@ export default function Home() {
 
       
 
-      {/* QQ字段提示弹窗 */}
-      {showQQPromptModal && (
+      {/* 提示弹窗 */}
+      {showPromptModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
             <div className="mb-6">
@@ -631,63 +649,107 @@ export default function Home() {
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-300">
-                {language === 'zh' 
-                  ? '为了更好地为您服务，请先完善以下QQ信息：' 
-                  : 'To better serve you, please complete the following QQ information:'}
+                {promptModalType === 'qq' ? 
+                  (language === 'zh' ? '为了更好地为您服务，请先完善以下QQ信息：' : 'To better serve you, please complete the following QQ information:')
+                  : (language === 'zh' ? '为了更好地为您服务，请先完善以下钱包地址信息：' : 'To better serve you, please complete the following wallet address information:')
+                }
               </p>
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {language === 'zh' ? 'QQ群号' : 'QQ Group'} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={editForm.qqGroup}
-                  onChange={(e) => handleInputChange('qqGroup', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={language === 'zh' ? '请输入QQ群号' : 'Enter QQ Group'}
-                />
-              </div>
+              {/* QQ信息输入 */}
+              {promptModalType === 'qq' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? 'QQ群号' : 'QQ Group'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.qqGroup}
+                      onChange={(e) => handleInputChange('qqGroup', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={language === 'zh' ? '请输入QQ群号' : 'Enter QQ Group'}
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {language === 'zh' ? 'QQ号' : 'QQ Number'} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={editForm.qqNumber}
-                  onChange={(e) => handleInputChange('qqNumber', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={language === 'zh' ? '请输入QQ号' : 'Enter QQ Number'}
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? 'QQ号' : 'QQ Number'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.qqNumber}
+                      onChange={(e) => handleInputChange('qqNumber', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={language === 'zh' ? '请输入QQ号' : 'Enter QQ Number'}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* 钱包地址输入 */}
+              {promptModalType === 'wallet' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? 'Solana钱包地址' : 'Solana Wallet Address'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.walletAddressSol}
+                      onChange={(e) => handleInputChange('walletAddressSol', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      placeholder={language === 'zh' ? '请输入Solana钱包地址' : 'Enter Solana Wallet Address'}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? 'BSC钱包地址' : 'BSC Wallet Address'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.walletAddressBsc}
+                      onChange={(e) => handleInputChange('walletAddressBsc', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      placeholder={language === 'zh' ? '请输入BSC钱包地址' : 'Enter BSC Wallet Address'}
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="mt-6 flex justify-end space-x-3">
               <button
-                onClick={() => setShowQQPromptModal(false)}
+                onClick={() => setShowPromptModal(false)}
                 className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
               >
                 {language === 'zh' ? '稍后填写' : 'Fill Later'}
               </button>
               <button
                 onClick={async () => {
-                  // 直接保存QQ信息
+                  // 保存信息
                   try {
                     setEditLoading(true);
-                    const updateData = {
-                      qqGroup: editForm.qqGroup,
-                      qqNumber: editForm.qqNumber
-                    };
+                    const updateData: any = {};
+                    
+                    // 根据弹窗类型添加相应的字段
+                    if (promptModalType === 'qq') {
+                      updateData.qqGroup = editForm.qqGroup;
+                      updateData.qqNumber = editForm.qqNumber;
+                    } else {
+                      updateData.walletAddressSol = editForm.walletAddressSol;
+                      updateData.walletAddressBsc = editForm.walletAddressBsc;
+                    }
+                    
                     await userService.updateMyInfo(updateData);
                     // 重新获取用户信息
                     await fetchUserInfo();
-                    setShowQQPromptModal(false);
+                    setShowPromptModal(false);
                     alert(language === 'zh' ? '信息保存成功！' : 'Information saved successfully!');
                   } catch (error: any) {
-                    console.error('保存QQ信息失败:', error);
+                    console.error('保存信息失败:', error);
                     alert(error.message || (language === 'zh' ? '保存失败，请重试' : 'Failed to save, please try again'));
                   } finally {
                     setEditLoading(false);

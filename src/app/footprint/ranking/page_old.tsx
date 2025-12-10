@@ -74,7 +74,7 @@ export default function Ranking() {
       twitterUsername: user.twitterUsername,
       userPoints,
       userLevel: calculateLevel(userPoints),
-      walletAddress: user.walletAddress,
+      walletAddressSol: user.walletAddressSol,
       rank: Math.max(totalCount, fullRankingData.length) + 1
     };
   };

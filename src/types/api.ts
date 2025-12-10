@@ -34,7 +34,8 @@ export interface User {
   userRole: string;
   userPoints?: number;
   userLevel?: number; // 用户等级：1-探索者，2-探路者，3-开路者，4-先驱者
-  walletAddress?: string;
+  walletAddressSol?: string; // Solana钱包地址
+  walletAddressBsc?: string; // BSC钱包地址
   createTime: string;
   updateTime: string;
 }
@@ -51,7 +52,8 @@ export interface LoginUserVO {
   userLevel?: number; // 用户等级：1-探索者，2-探路者，3-开路者，4-先驱者
   twitterUsername?: string;
   telegramUsername?: string;
-  walletAddress?: string;
+  walletAddressSol?: string; // Solana钱包地址
+  walletAddressBsc?: string; // BSC钱包地址
   country?: string; // 所在国家地区
   twitterFollowers?: number; // Twitter粉丝数
   qqGroup?: string; // QQ群号
@@ -68,7 +70,8 @@ export interface UserVO {
   userProfile?: string;
   twitterUsername?: string;
   telegramUsername?: string;
-  walletAddress?: string;
+  walletAddressSol?: string; // Solana钱包地址
+  walletAddressBsc?: string; // BSC钱包地址
   userRole: string;
   createTime: string;
 }
@@ -84,7 +87,8 @@ export interface RankingUserVO {
   weeklyPoints?: number;
   totalPoints?: number;
   userLevel: number;
-  walletAddress?: string;
+  walletAddressSol?: string; // Solana钱包地址
+  walletAddressBsc?: string; // BSC钱包地址
 }
 
 export interface AdminStatsVO {
@@ -154,7 +158,8 @@ export interface UserUpdateMyRequest {
   userAvatar?: string;
   twitterUsername?: string;
   telegramUsername?: string;
-  walletAddress?: string;
+  walletAddressSol?: string; // Solana钱包地址
+  walletAddressBsc?: string; // BSC钱包地址
   country?: string; // 所在国家地区
   twitterFollowers?: number; // Twitter粉丝数
   qqGroup?: string; // QQ群号
@@ -170,7 +175,6 @@ export interface ApplicationForm {
   email: string;
   twitterUsername: string;
   telegramUsername?: string;
-  walletAddress?: string;
   web3Role?: string;
   expertise?: string;
   portfolioLink?: string;
@@ -192,7 +196,6 @@ export interface ApplicationFormSubmitRequest {
   email: string;
   twitterUsername: string;
   telegramUsername?: string;
-  walletAddress?: string;
   web3Role?: string | string[];
   expertise?: string | string[];
   portfolioLink?: string;
@@ -215,7 +218,6 @@ export interface ActivityApplicationSubmitRequest {
   email: string;
   telegramUsername?: string;
   twitterUsername?: string;
-  walletAddress?: string;
   activityTheme: string;
   briefIntroduction?: string;
   activityType: string;
@@ -239,7 +241,6 @@ export interface ActivityApplication {
   email: string;
   telegramUsername?: string;
   twitterUsername?: string;
-  walletAddress?: string;
   activityTheme: string;
   briefIntroduction?: string;
   activityType: string;
@@ -284,7 +285,6 @@ export interface TaskSubmissionAddRequest {
   email: string;
   twitterUsername: string;
   telegramUsername?: string;
-  walletAddress?: string;
   tasks: TaskDetailDTO[];
 }
 
@@ -295,7 +295,6 @@ export interface TaskSubmissionVO {
   email: string;
   twitterUsername: string;
   telegramUsername?: string;
-  walletAddress?: string;
   tasks: TaskDetailDTO[];
   reviewStatus?: number; // 审核状态：0-未审核，1-审核通过，2-未通过
   reviewMessage?: string; // 审核意见
@@ -318,7 +317,6 @@ export interface TaskSubmissionEditRequest {
   email?: string;
   twitterUsername?: string;
   telegramUsername?: string;
-  walletAddress?: string;
   tasks?: TaskDetailDTO[];
 }
 

@@ -3155,7 +3155,7 @@ export default function Admin() {
                     <div>
                       <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.wallet')}：</span>
                       <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedSubmission.data as ApplicationForm).walletAddress || t('admin.review.not.filled')}
+                        {t('admin.review.not.filled')}
                       </span>
                     </div>
                     <div>
@@ -3315,14 +3315,7 @@ export default function Admin() {
                             </span>
                           </div>
                         )}
-                        {(selectedSubmission.data as ActivityApplication).walletAddress && (
-                          <div>
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">钱包地址：</span>
-                            <span className="text-sm text-gray-900 dark:text-white ml-2 font-mono">
-                              {(selectedSubmission.data as ActivityApplication).walletAddress}
-                            </span>
-                          </div>
-                        )}
+
                       </div>
                     </div>
 
@@ -3761,7 +3754,7 @@ export default function Admin() {
                     <div>
                       <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('profile.submission.wallet')}：</span>
                       <span className="text-sm text-gray-900 dark:text-white ml-2">
-                        {(selectedReviewedSubmission.data as ApplicationForm).walletAddress || t('admin.review.not.filled')}
+                        {t('admin.review.not.filled')}
                       </span>
                     </div>
                     <div>
@@ -4028,14 +4021,7 @@ export default function Admin() {
                             </span>
                           </div>
                         )}
-                        {(selectedReviewedSubmission.data as ActivityApplication).walletAddress && (
-                          <div>
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">钱包地址：</span>
-                            <span className="text-sm text-gray-900 dark:text-white ml-2 font-mono">
-                              {(selectedReviewedSubmission.data as ActivityApplication).walletAddress}
-                            </span>
-                          </div>
-                        )}
+
                       </div>
                     </div>
 

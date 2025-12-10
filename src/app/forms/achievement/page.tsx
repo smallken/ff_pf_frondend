@@ -40,7 +40,8 @@ export default function AchievementForm() {
         email: user.userEmail || '',
         twitterUsername: user.twitterUsername || '',
         telegramUsername: user.telegramUsername || '',
-        walletAddress: user.walletAddress || ''
+        walletAddressSol: user.walletAddressSol || '',
+        walletAddressBsc: user.walletAddressBsc || ''
       }));
     }
   }, [user, isAuthenticated]);
@@ -49,7 +50,8 @@ export default function AchievementForm() {
     email: '',
     twitterUsername: '',
     telegramUsername: '',
-    walletAddress: '',
+    walletAddressSol: '',
+    walletAddressBsc: '',
     tasks: [
       {
         submissionCategory: '',
@@ -123,7 +125,7 @@ export default function AchievementForm() {
       setError('Telegram用户名是必填项');
       return false;
     }
-    if (!formData.walletAddress.trim()) {
+    if (!formData.walletAddressSol.trim() && !formData.walletAddressBsc.trim()) {
       setError('钱包地址是必填项');
       return false;
     }
@@ -198,7 +200,8 @@ export default function AchievementForm() {
         email: formData.email,
         twitterUsername: formData.twitterUsername,
         telegramUsername: formData.telegramUsername,
-        walletAddress: formData.walletAddress,
+        walletAddressSol: formData.walletAddressSol,
+        walletAddressBsc: formData.walletAddressBsc,
         tasks: await Promise.all(formData.tasks.map(async (task) => {
           let screenshotPath = '';
           
@@ -580,25 +583,35 @@ export default function AchievementForm() {
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <label htmlFor="walletAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <div>
+                <label htmlFor="walletAddressSol" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <div className="flex items-center">
-                    {t('forms.field.wallet.both')} <span className="text-red-500">{t('forms.required')}</span>
-                    {user?.walletAddress && (
-                      <svg className="h-4 w-4 text-green-500 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <title>自动填充</title>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    )}
+                    Solana钱包地址 <span className="text-red-500">{t('forms.required')}</span>
                   </div>
                 </label>
                 <input
                   type="text"
-                  id="walletAddress"
-                  name="walletAddress"
+                  id="walletAddressSol"
+                  name="walletAddressSol"
                   required
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                  value={formData.walletAddress}
+                  value={formData.walletAddressSol}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="walletAddressBsc" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <div className="flex items-center">
+                    BSC钱包地址 <span className="text-red-500">{t('forms.required')}</span>
+                  </div>
+                </label>
+                <input
+                  type="text"
+                  id="walletAddressBsc"
+                  name="walletAddressBsc"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  value={formData.walletAddressBsc}
                   onChange={handleChange}
                 />
               </div>
