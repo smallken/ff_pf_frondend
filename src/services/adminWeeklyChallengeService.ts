@@ -9,6 +9,8 @@ export interface WeeklyRankingItem {
   weeklyPoints?: number;
   userPoints?: number;
   walletAddress?: string;
+  walletAddressSol?: string;
+  walletAddressBsc?: string;
 }
 
 export interface WeeklyRankingResponse {

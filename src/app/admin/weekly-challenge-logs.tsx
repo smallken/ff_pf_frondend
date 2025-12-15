@@ -215,14 +215,15 @@ export default function WeeklyChallengeLogsTab() {
         return;
       }
 
-      const headers = ['排名', '用户ID', '用户名', '推特', '周积分', '钱包地址'];
+      const headers = ['排名', '用户ID', '用户名', '推特', '周积分', 'Solana钱包地址', 'BSC钱包地址'];
       const rows = allRankingRecords.map((item) => [
         item.rank ?? '',
         item.id ?? '',
         item.userName ?? '',
         item.twitterUsername ?? '',
         item.weeklyPoints ?? 0,
-        item.walletAddress ?? '',
+        item.walletAddressSol ?? '',
+        item.walletAddressBsc ?? '',
       ]);
       const csvContent = [headers, ...rows]
         .map((row) =>
@@ -607,7 +608,8 @@ export default function WeeklyChallengeLogsTab() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">用户名</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">推特</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">周积分</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">钱包地址</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Solana钱包地址</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">BSC钱包地址</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
@@ -618,7 +620,8 @@ export default function WeeklyChallengeLogsTab() {
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.userName || '-'}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.twitterUsername || '-'}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-blue-600 dark:text-blue-300 font-semibold">{item.weeklyPoints ?? 0}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.walletAddress || '-'}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.walletAddressSol || '-'}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.walletAddressBsc || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
