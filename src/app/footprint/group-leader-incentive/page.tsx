@@ -405,9 +405,9 @@ export default function GroupLeaderIncentive() {
   const longTermConstructionLimit = 1;
   const weeklyPoints = taskOverview?.weeklyPoints ?? 0;
   
-  // 社区活跃任务：使用新的字段
-  const groupInternalSubmitted = taskOverview?.qqGroupApproved ?? 0; // 群内任务通过次数
-  const externalGroupSubmitted = taskOverview?.outGroupApproved ?? 0; // 外群任务通过次数
+  // 社区活跃任务：使用已提交数量字段
+  const groupInternalSubmitted = taskOverview?.qqGroupSubmitted ?? 0; // 群内任务已提交次数
+  const externalGroupSubmitted = taskOverview?.outGroupSubmitted ?? 0; // 外群任务已提交次数
   const groupInternalLimit = 3; // 群内活动至少3次
   const externalGroupLimit = 1; // 外部群至少1次
   // 社区活跃任务达标条件：群内≥3次 且 外部群≥1次
