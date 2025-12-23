@@ -58,6 +58,7 @@ export interface LoginUserVO {
   twitterFollowers?: number; // Twitter粉丝数
   qqGroup?: string; // QQ群号
   qqNumber?: string; // QQ号
+  groupNumber?: string; // 群编号
   createTime: string;
   updateTime: string;
 }
@@ -164,6 +165,7 @@ export interface UserUpdateMyRequest {
   twitterFollowers?: number; // Twitter粉丝数
   qqGroup?: string; // QQ群号
   qqNumber?: string; // QQ号
+  groupNumber?: string; // 群编号
   emailVerificationCode?: string;
 }
 
@@ -397,6 +399,8 @@ export interface CommunityTaskVO {
   weekCount: number;
   dateRange: string;
   createTime: string;
+  communityType?: number; // 1-群内任务，2-外部群任务
+  contentLink?: string;
 }
 
 export interface OriginalTaskVO {
@@ -431,11 +435,34 @@ export interface WeeklyTaskOverview {
   originalTasks: OriginalTaskVO[];
 }
 
+// CC积分相关类型
+export interface CcPointsVO {
+  id: number;
+  userId: number;
+  weekCount: number;
+  dateRange: string;
+  points: number;
+  status: 'completed' | 'in_progress';
+  createTime: string;
+  updateTime: string;
+}
+
+export interface CcPointsOverview {
+  totalCcPoints: number;
+  currentWeekCcPoints: number;
+  weekCount: number;
+  ccPointsHistory: CcPointsVO[];
+}
+
 export interface WeeklyTaskSubmitRequest {
   contentLink: string;
   screenshotUrl: string;
   /** 社群任务类型：1-TG群发言，2-AMA发言 */
   communityType?: number;
+  /** 周数 */
+  weekCount?: number;
+  /** 日期范围 */
+  dateRange?: string;
 }
 
 export interface OriginalTaskSubmitRequest {
@@ -460,4 +487,66 @@ export interface OriginalTaskUpdateRequest {
 export interface WeeklyTaskSubmitResponse {
   taskId: number;
   reviewStatus: number;
+}
+
+// 管理员任务列表类型（群主激励计划审核用）
+export interface AdminCommunicationTaskVO {
+  id: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  contentLink: string;
+  screenshot: string;
+  reviewStatus: number;
+  reviewMessage?: string;
+  weekCount: number;
+  dateRange: string;
+  createTime: string;
+}
+
+export interface AdminCommunityTaskVO {
+  id: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  screenshot: string;
+  reviewStatus: number;
+  reviewMessage?: string;
+  weekCount: number;
+  dateRange: string;
+  createTime: string;
+  communityType?: number; // 1-群内任务，2-外部群任务
+  contentLink?: string;
+}
+
+export interface AdminOriginalTaskVO {
+  id: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  contentLink: string;
+  screenshot: string;
+  browseNum: number;
+  likeNum: number;
+  commentNum: number;
+  retweetNum: number;
+  reviewStatus: number;
+  reviewMessage?: string;
+  weekCount: number;
+  dateRange: string;
+  createTime: string;
+}
+
+export interface AdminTaskListVO {
+  weekCount: number;
+  communicationTasks: AdminCommunicationTaskVO[];
+  communityTasks: AdminCommunityTaskVO[];
+  originalTasks: AdminOriginalTaskVO[];
+}
+
+// 管理员审核请求类型
+export interface AdminReviewTaskRequest {
+  taskId: number;
+  reviewStatus: number; // 1-通过，2-拒绝
+  reviewMessage?: string;
 }

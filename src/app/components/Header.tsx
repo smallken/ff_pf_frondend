@@ -23,19 +23,28 @@ export default function Header() {
   };
 
   const currentModule = getCurrentModule();
+  
+  // 判断是否为中国区用户
+  const isChinaUser = user?.country === 'China' || user?.country === '中国';
 
   // 获取模块特定的导航配置
   const getModuleConfig = () => {
     switch (currentModule) {
       case 'footprint':
+        // 基础导航项
+        const footprintNavItems = [
+          { href: '/footprint/honor', key: 'honor.title', color: 'blue' },
+          { href: '/footprint/ranking', key: 'ranking.title', color: 'emerald' },
+          { href: '/footprint/process', key: 'process.title', color: 'indigo' },
+          { href: '/footprint/weekly-challenge', key: 'weeklyChallenge.title', color: 'green' },
+        ];
+        // 只有中国区用户才显示群主激励计划
+        if (isChinaUser) {
+          footprintNavItems.push({ href: '/footprint/group-leader-incentive', key: { zh: '群主激励计划', en: 'Group Leader Incentive' } as any, color: 'purple' });
+        }
         return {
           logo: { icon: '👣', text: 'Flipflop Footprint', href: '/footprint' },
-          navItems: [
-            { href: '/footprint/honor', key: 'honor.title', color: 'blue' },
-            { href: '/footprint/ranking', key: 'ranking.title', color: 'emerald' },
-            { href: '/footprint/process', key: 'process.title', color: 'indigo' },
-            { href: '/footprint/weekly-challenge', key: 'weeklyChallenge.title', color: 'green' },
-          ]
+          navItems: footprintNavItems
         };
       case 'launch':
         return {
@@ -81,12 +90,12 @@ export default function Header() {
           <nav className={`hidden lg:flex ${currentModule === 'mint' ? 'justify-center flex-1 mx-8' : currentModule === 'pathport' ? 'justify-center flex-1 mx-8' : 'space-x-0.5'}`}>
             {moduleConfig.navItems.map((item) => {
               const displayText = (() => {
-                if (currentModule === 'footprint') {
+                if (typeof item.key === 'object') {
+                  // 如果 key 是对象，直接根据语言选择文本
+                  return (item.key as any)[language as 'zh' | 'en'];
+                } else if (currentModule === 'footprint') {
+                  // 如果是字符串 key，使用翻译函数
                   return t(item.key as string);
-                } else if (currentModule === 'pathport' || currentModule === 'launch' || currentModule === 'mint') {
-                  return typeof item.key === 'object' 
-                    ? (item.key as any)[language as 'zh' | 'en']
-                    : item.key;
                 } else {
                   return item.key as string;
                 }
@@ -241,12 +250,12 @@ export default function Header() {
                   'Gallery': '🎨',
                 };
                 const displayKey = (() => {
-                  if (currentModule === 'footprint') {
+                  if (typeof item.key === 'object') {
+                    // 如果 key 是对象，直接根据语言选择文本
+                    return (item.key as any)[language as 'zh' | 'en'];
+                  } else if (currentModule === 'footprint') {
+                    // 如果是字符串 key，使用翻译函数
                     return t(item.key as string);
-                  } else if (currentModule === 'pathport' || currentModule === 'launch' || currentModule === 'mint') {
-                    return typeof item.key === 'object' 
-                      ? (item.key as any)[language as 'zh' | 'en']
-                      : item.key;
                   } else {
                     return item.key as string;
                   }

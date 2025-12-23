@@ -18,11 +18,12 @@ import type {
   MonthlyPointVO,
   UnifiedSubmissionVO
 } from '../../types/api';
-import AdminMonthlyReward from '../components/AdminMonthlyReward';
+// import AdminMonthlyReward from '../components/AdminMonthlyReward'; // 已移除
 import WeeklyChallengeLogsTab from './weekly-challenge-logs';
 import OriginalTaskReview from './original-task-review';
 import UserManagement from './user-management';
 import { API_CONFIG } from '../../config/api';
+import GroupLeaderIncentiveReview from './group-leader-incentive-review'; // 新增群主激励计划审核模块
 
 // 统一的待审核表单类型
 interface PendingSubmission {
@@ -2275,44 +2276,14 @@ export default function Admin() {
                 原创任务
               </button>
               <button
-                onClick={() => setActiveTab('monthly-reward')}
+                onClick={() => setActiveTab('group-leader-incentive')}
                 className={`py-4 px-6 border-b-2 font-medium text-sm ${
-                  activeTab === 'monthly-reward'
-                    ? 'border-blue-500 text-blue-600'
+                  activeTab === 'group-leader-incentive'
+                    ? 'border-orange-500 text-orange-600'
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
-                月度奖励
-              </button>
-              <button
-                onClick={() => setActiveTab('launch-registrations')}
-                className={`py-4 px-6 border-b-2 font-medium text-sm ${
-                  activeTab === 'launch-registrations'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                Launch参赛登记
-              </button>
-              <button
-                onClick={() => setActiveTab('launch-dd-forms')}
-                className={`py-4 px-6 border-b-2 font-medium text-sm ${
-                  activeTab === 'launch-dd-forms'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                Launch DD问答
-              </button>
-              <button
-                onClick={() => setActiveTab('mint-forms')}
-                className={`py-4 px-6 border-b-2 font-medium text-sm ${
-                  activeTab === 'mint-forms'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                Mint大赛表单
+                群主激励计划
               </button>
             </nav>
           </div>
@@ -2325,6 +2296,11 @@ export default function Admin() {
 
         {activeTab === 'weekly-challenge-logs' && (
           <WeeklyChallengeLogsTab />
+        )}
+
+        {/* 群主激励计划审核 */}
+        {activeTab === 'group-leader-incentive' && (
+          <GroupLeaderIncentiveReview />
         )}
 
         {/* 原创任务审核 */}
@@ -3028,25 +3004,6 @@ export default function Admin() {
           </div>
         )}
 
-        {/* 月度奖励管理 */}
-        {activeTab === 'monthly-reward' && (
-          <AdminMonthlyReward />
-        )}
-
-        {/* Launch参赛登记管理 */}
-        {activeTab === 'launch-registrations' && (
-          <LaunchRegistrationsTab />
-        )}
-
-        {/* Launch DD问答管理 */}
-        {activeTab === 'launch-dd-forms' && (
-          <LaunchDDFormsTab />
-        )}
-
-        {/* Mint大赛表单管理 */}
-        {activeTab === 'mint-forms' && (
-          <MintFormsTab />
-        )}
       </div>
 
       {/* 审核弹窗 */}

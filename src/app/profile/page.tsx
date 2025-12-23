@@ -72,6 +72,7 @@ export default function Profile() {
     twitterFollowers: '',
     qqGroup: '',
     qqNumber: '',
+    groupNumber: '',
     emailVerificationCode: ''
   });
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
@@ -234,11 +235,12 @@ export default function Profile() {
         twitterFollowers: response.twitterFollowers?.toString() || '',
         qqGroup: response.qqGroup || '',
         qqNumber: response.qqNumber || '',
+        groupNumber: response.groupNumber || '',
         emailVerificationCode: ''
       });
       
-      // 检查：如果用户是中国用户且QQ群号或QQ号为空，显示QQ类型的提示弹窗
-      if (response.country === 'China' && (!response.qqGroup || !response.qqNumber)) {
+      // 检查：如果用户是中国用户且QQ群号、QQ号或群编号为空，显示QQ类型的提示弹窗
+      if (response.country === 'China' && (!response.qqGroup || !response.qqNumber || !response.groupNumber)) {
         setPromptModalType('qq');
         setShowPromptModal(true);
       }
@@ -275,6 +277,7 @@ export default function Profile() {
         twitterFollowers: userInfo.twitterFollowers?.toString() || '',
         qqGroup: userInfo.qqGroup || '',
         qqNumber: userInfo.qqNumber || '',
+        groupNumber: userInfo.groupNumber || '',
         emailVerificationCode: ''
       });
     }
@@ -378,7 +381,7 @@ export default function Profile() {
         return;
       }
 
-      // 验证：如果所在国家地区是中国，QQ群号和QQ号不能为空
+      // 验证：如果所在国家地区是中国，QQ群号、QQ号和群编号不能为空
       const isChina = editForm.country === 'China';
       if (isChina) {
         if (!editForm.qqGroup.trim()) {
@@ -388,6 +391,11 @@ export default function Profile() {
         }
         if (!editForm.qqNumber.trim()) {
           setError(language === 'zh' ? 'QQ号不能为空' : 'QQ Number cannot be empty');
+          setEditLoading(false);
+          return;
+        }
+        if (!editForm.groupNumber.trim()) {
+          setError(language === 'zh' ? '群编号不能为空' : 'Group Number cannot be empty');
           setEditLoading(false);
           return;
         }
@@ -411,7 +419,8 @@ export default function Profile() {
         country: editForm.country,
         twitterFollowers: editForm.twitterFollowers ? parseInt(editForm.twitterFollowers) : undefined,
         qqGroup: editForm.qqGroup,
-        qqNumber: editForm.qqNumber
+        qqNumber: editForm.qqNumber,
+        groupNumber: editForm.groupNumber
       };
 
       console.log('🔍 发送更新请求:', updateData);
@@ -941,6 +950,20 @@ export default function Profile() {
                     <p className="mt-1 text-gray-900 dark:text-white">{userInfo?.qqNumber || t('profile.not.set')}</p>
                   )}
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{language === 'zh' ? '群编号' : 'Group Number'}</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editForm.groupNumber}
+                      onChange={(e) => handleInputChange('groupNumber', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={language === 'zh' ? '请输入群编号' : 'Enter Group Number'}
+                    />
+                  ) : (
+                    <p className="mt-1 text-gray-900 dark:text-white">{userInfo?.groupNumber || t('profile.not.set')}</p>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -1203,6 +1226,19 @@ export default function Profile() {
                       placeholder={language === 'zh' ? '请输入QQ号' : 'Enter QQ Number'}
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? '群编号' : 'Group Number'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.groupNumber}
+                      onChange={(e) => handleInputChange('groupNumber', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={language === 'zh' ? '请输入群编号' : 'Enter Group Number'}
+                    />
+                  </div>
                 </>
               )}
 
@@ -1256,6 +1292,7 @@ export default function Profile() {
                     if (promptModalType === 'qq') {
                       updateData.qqGroup = editForm.qqGroup;
                       updateData.qqNumber = editForm.qqNumber;
+                      updateData.groupNumber = editForm.groupNumber;
                     } else {
                       updateData.walletAddressSol = editForm.walletAddressSol;
                       updateData.walletAddressBsc = editForm.walletAddressBsc;
@@ -1889,6 +1926,19 @@ export default function Profile() {
                       placeholder={language === 'zh' ? '请输入QQ号' : 'Enter QQ Number'}
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {language === 'zh' ? '群编号' : 'Group Number'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.groupNumber}
+                      onChange={(e) => handleInputChange('groupNumber', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={language === 'zh' ? '请输入群编号' : 'Enter Group Number'}
+                    />
+                  </div>
                 </>
               )}
 
@@ -1942,6 +1992,7 @@ export default function Profile() {
                     if (promptModalType === 'qq') {
                       updateData.qqGroup = editForm.qqGroup;
                       updateData.qqNumber = editForm.qqNumber;
+                      updateData.groupNumber = editForm.groupNumber;
                     } else {
                       updateData.walletAddressSol = editForm.walletAddressSol;
                       updateData.walletAddressBsc = editForm.walletAddressBsc;

@@ -142,6 +142,20 @@ export const API_ENDPOINTS = {
       ORIGINAL_UPDATE: (id: number | string) => `/weekly/task/original/${id}`,
       MY_OVERVIEW: '/weekly/task/my-overview',
     },
+    CC_POINTS: {
+      OVERVIEW: '/weekly/cc-points/overview',
+      BY_WEEK: '/weekly/cc-points/by-week',
+      HISTORY: '/weekly/cc-points/history',
+    },
+  },
+  // 管理员相关
+  ADMIN: {
+    WEEKLY_CHALLENGE: {
+      TASKS: '/admin/weekly-challenge/tasks',
+      REVIEW_COMMUNICATION: '/admin/weekly-challenge/review/communication',
+      REVIEW_COMMUNITY: '/admin/weekly-challenge/review/community',
+      RANKING: '/admin/weekly-challenge/ranking',
+    },
   },
 };
 
