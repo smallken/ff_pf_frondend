@@ -685,8 +685,8 @@ export default function WeeklyChallenge() {
         : 'Triple-click (retweet+like+comment) on this week\'s official tweet',
       points: language === 'zh' ? `每周提交次数上限：${communicationLimit} 次` : `Weekly submissions limit: ${communicationLimit}`,
       requirement: language === 'zh'
-        ? '提交要求：上传截图（含评论文字）+ 链接；必须包含推特名字（需与平台登记一致）；截图需包含转发/点赞/评论证明（每周最多 5 次）'
-        : 'Submission: Upload screenshot (with comment text) + link; Must contain Twitter username (match registered name); Screenshot must show retweet/like/comment proof (up to 5 times per week)',
+        ? '提交要求：上传截图（含评论文字）+ 链接；必须包含推特显示名称（需与个人中心登记的twitterName一致）；截图需包含转发/点赞/评论证明（每周最多 5 次）'
+        : 'Submission: Upload screenshot (with comment text) + link; Must contain Twitter display name (must match twitterName in profile); Screenshot must show retweet/like/comment proof (up to 5 times per week)',
       buttonText: language === 'zh' ? '上传并领取积分' : 'Upload & Claim Points',
       color: 'from-blue-500 to-cyan-500',
       onClick: () => openTaskModal('spread'),

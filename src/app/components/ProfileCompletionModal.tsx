@@ -10,11 +10,12 @@ export default function ProfileCompletionModal() {
   const { isAuthenticated, user } = useAuth();
   const { language } = useLanguage();
   const [showModal, setShowModal] = useState(false);
-  const [missingFields, setMissingFields] = useState<{country: boolean, twitterFollowers: boolean}>({
+  const [missingFields, setMissingFields] = useState<{country: boolean, twitterFollowers: boolean, twitterName: boolean}>({
     country: false,
-    twitterFollowers: false
+    twitterFollowers: false,
+    twitterName: false
   });
-  const [profileForm, setProfileForm] = useState({country: '', twitterFollowers: ''});
+  const [profileForm, setProfileForm] = useState({country: '', twitterFollowers: '', twitterName: ''});
   const [saving, setSaving] = useState(false);
   const [checked, setChecked] = useState(false);
 
@@ -27,19 +28,22 @@ export default function ProfileCompletionModal() {
 
       try {
         const userInfo = await userService.getLoginUser();
-        
-        // 检查country和twitterFollowers是否填写
+
+        // 检查country、twitterFollowers和twitterName是否填写
         const needCountry = !userInfo.country || (typeof userInfo.country === 'string' && userInfo.country.trim() === '');
         const needTwitterFollowers = userInfo.twitterFollowers === null || userInfo.twitterFollowers === undefined;
-        
-        if (needCountry || needTwitterFollowers) {
+        const needTwitterName = !userInfo.twitterName || (typeof userInfo.twitterName === 'string' && userInfo.twitterName.trim() === '');
+
+        if (needCountry || needTwitterFollowers || needTwitterName) {
           setMissingFields({
             country: needCountry,
-            twitterFollowers: needTwitterFollowers
+            twitterFollowers: needTwitterFollowers,
+            twitterName: needTwitterName
           });
           setProfileForm({
             country: userInfo.country || '',
-            twitterFollowers: userInfo.twitterFollowers?.toString() || ''
+            twitterFollowers: userInfo.twitterFollowers?.toString() || '',
+            twitterName: userInfo.twitterName || ''
           });
           setShowModal(true);
         }
@@ -76,7 +80,16 @@ export default function ProfileCompletionModal() {
         }
         updateData.twitterFollowers = parseInt(profileForm.twitterFollowers);
       }
-      
+
+      if (missingFields.twitterName) {
+        if (!profileForm.twitterName || profileForm.twitterName.trim() === '') {
+          alert(language === 'zh' ? '请填写Twitter显示名称' : 'Please fill in your Twitter display name');
+          setSaving(false);
+          return;
+        }
+        updateData.twitterName = profileForm.twitterName.trim();
+      }
+
       await userService.updateMyInfo(updateData);
       
       setShowModal(false);
@@ -156,6 +169,24 @@ export default function ProfileCompletionModal() {
                 placeholder={language === 'zh' ? '例如：1000' : 'e.g., 1000'}
                 min="0"
               />
+            </div>
+          )}
+
+          {missingFields.twitterName && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {language === 'zh' ? 'Twitter 显示名称' : 'Twitter Display Name'} <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={profileForm.twitterName}
+                onChange={(e) => setProfileForm({...profileForm, twitterName: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                placeholder={language === 'zh' ? '例如：Flipflop' : 'e.g., Flipflop'}
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {language === 'zh' ? '用于传播任务审核匹配，请填写Twitter个人资料中显示的名称' : 'Used for spread task verification, enter the name shown in your Twitter profile'}
+              </p>
             </div>
           )}
         </div>

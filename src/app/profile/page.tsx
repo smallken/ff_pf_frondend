@@ -65,6 +65,7 @@ export default function Profile() {
     userName: '',
     userEmail: '',
     twitterUsername: '',
+    twitterName: '',
     telegramUsername: '',
     walletAddressSol: '',
     walletAddressBsc: '',
@@ -228,6 +229,7 @@ export default function Profile() {
         userName: response.userName || '',
         userEmail: response.userEmail || '',
         twitterUsername: response.twitterUsername || '',
+        twitterName: response.twitterName || '',
         telegramUsername: response.telegramUsername || '',
         walletAddressSol: response.walletAddressSol || '',
         walletAddressBsc: response.walletAddressBsc || '',
@@ -270,6 +272,7 @@ export default function Profile() {
         userName: userInfo.userName || '',
         userEmail: userInfo.userEmail || '',
         twitterUsername: userInfo.twitterUsername || '',
+        twitterName: userInfo.twitterName || '',
         telegramUsername: userInfo.telegramUsername || '',
         walletAddressSol: userInfo.walletAddressSol || '',
         walletAddressBsc: userInfo.walletAddressBsc || '',
@@ -413,6 +416,7 @@ export default function Profile() {
         userName: editForm.userName,
         userEmail: editForm.userEmail,
         twitterUsername: editForm.twitterUsername,
+        twitterName: editForm.twitterName,
         telegramUsername: editForm.telegramUsername,
         walletAddressSol: editForm.walletAddressSol,
         walletAddressBsc: editForm.walletAddressBsc,
@@ -712,6 +716,28 @@ export default function Profile() {
                 />
               ) : (
                 <p className="mt-1 text-gray-900 dark:text-white">{userInfo?.twitterUsername || t('profile.not.set')}</p>
+              )}
+            </div>
+            {/* Twitter 显示名称 - 用于传播任务审核匹配 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {language === 'zh' ? 'Twitter 显示名称' : 'Twitter Display Name'}
+                <span className="ml-1 inline-block cursor-help group" title={language === 'zh' ? '用于传播任务审核匹配' : 'Used for spread task verification'}>
+                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+              </label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editForm.twitterName}
+                  onChange={(e) => handleInputChange('twitterName', e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={language === 'zh' ? '例如：Flipflop' : 'e.g., Flipflop'}
+                />
+              ) : (
+                <p className="mt-1 text-gray-900 dark:text-white">{userInfo?.twitterName || t('profile.not.set')}</p>
               )}
             </div>
             <div>

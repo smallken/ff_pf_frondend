@@ -51,6 +51,7 @@ export interface LoginUserVO {
   totalPoints?: number; // 总积分（从totalPoint表获取）
   userLevel?: number; // 用户等级：1-探索者，2-探路者，3-开路者，4-先驱者
   twitterUsername?: string;
+  twitterName?: string; // 推特显示名称（昵称，用于审核匹配）
   telegramUsername?: string;
   walletAddressSol?: string; // Solana钱包地址
   walletAddressBsc?: string; // BSC钱包地址
@@ -158,6 +159,7 @@ export interface UserUpdateMyRequest {
   userProfile?: string;
   userAvatar?: string;
   twitterUsername?: string;
+  twitterName?: string; // 推特显示名称（昵称，用于审核匹配）
   telegramUsername?: string;
   walletAddressSol?: string; // Solana钱包地址
   walletAddressBsc?: string; // BSC钱包地址
