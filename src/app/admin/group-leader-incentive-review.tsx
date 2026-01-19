@@ -29,7 +29,7 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
   // 状态管理
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [currentWeek, setCurrentWeek] = useState<number>(selectedWeek || 0);
+  const [currentWeek, setCurrentWeek] = useState<number>(0);
   const [reviewStatusFilter, setReviewStatusFilter] = useState<number | undefined>(FILTER_OPTIONS.PENDING);
   const [activeTab, setActiveTab] = useState<'pending' | 'reviewed' | 'pointsLog' | 'ranking'>('pending');
   
@@ -37,7 +37,6 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
   const [rankingRecords, setRankingRecords] = useState<CcPointsRankingItem[]>([]);
   const [rankingLoading, setRankingLoading] = useState(false);
   const [rankingError, setRankingError] = useState('');
-  const [rankingWeek, setRankingWeek] = useState<string>('');
   const [rankingWeekCount, setRankingWeekCount] = useState<number | undefined>();
   
   // 积分日志状态
@@ -46,7 +45,6 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
   const [pointsLogError, setPointsLogError] = useState('');
   const [pointsLogPage, setPointsLogPage] = useState(1);
   const [pointsLogTotal, setPointsLogTotal] = useState(0);
-  const [pointsLogWeekFilter, setPointsLogWeekFilter] = useState<number | undefined>(undefined);
   const pointsLogPageSize = 10;
   
   // 任务数据 - 使用新的CcTaskVO类型
@@ -54,6 +52,13 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
   const [qqGroupTasks, setQqGroupTasks] = useState<CcTaskVO[]>([]); // 群内任务
   const [outGroupTasks, setOutGroupTasks] = useState<CcTaskVO[]>([]); // 外群任务
   const [originalTasks, setOriginalTasks] = useState<CcTaskVO[]>([]); // 长期建设
+  
+  // 用于生成周次选项的所有周次数据
+  const [allWeeksData, setAllWeeksData] = useState<{
+    tasks: CcTaskVO[];
+    logs: CcPointsLogVO[];
+    rankingWeeks: number[];
+  }>({ tasks: [], logs: [], rankingWeeks: [] });
   
   // 审核状态
   const [reviewForm, setReviewForm] = useState({
@@ -83,6 +88,32 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
     }
   }, []);
   
+  // 加载所有周次数据（用于生成周次选项）
+  const fetchAllWeeksData = useCallback(async () => {
+    try {
+      // 获取所有周次的任务数据
+      const allTaskList = await ccIncentiveService.getAdminTaskList(undefined, undefined);
+      const allTasks = [
+        ...(allTaskList.groupSizeTasks || []),
+        ...(allTaskList.qqGroupTasks || []),
+        ...(allTaskList.outGroupTasks || []),
+        ...(allTaskList.originalTasks || [])
+      ];
+      
+      // 获取所有周次的日志数据（只获取第一页）
+      const allLogsResult = await ccIncentiveService.getPointsLogList(undefined, 1, 100);
+      const allLogs = allLogsResult.records || [];
+      
+      setAllWeeksData({
+        tasks: allTasks,
+        logs: allLogs,
+        rankingWeeks: [] // 排行榜周次在加载时单独更新
+      });
+    } catch (err: any) {
+      console.error('获取所有周次数据失败:', err);
+    }
+  }, []);
+  
   // 加载任务数据
   const fetchTasks = useCallback(async () => {
     try {
@@ -100,11 +131,6 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
       setQqGroupTasks(taskList.qqGroupTasks || []);
       setOutGroupTasks(taskList.outGroupTasks || []);
       setOriginalTasks(taskList.originalTasks || []);
-      
-      // 如果没有指定周次，使用返回的周次
-      if (currentWeek === 0 && taskList.currentWeek) {
-        setCurrentWeek(taskList.currentWeek);
-      }
     } catch (err: any) {
       console.error('获取任务数据失败:', err);
       setError(err.message || (language === 'zh' ? '获取任务数据失败' : 'Failed to load task data.'));
@@ -120,7 +146,7 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
       setPointsLogError('');
       
       const result = await ccIncentiveService.getPointsLogList(
-        pointsLogWeekFilter,
+        currentWeek > 0 ? currentWeek : undefined,
         pointsLogPage,
         pointsLogPageSize
       );
@@ -133,7 +159,7 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
     } finally {
       setPointsLogLoading(false);
     }
-  }, [language, pointsLogWeekFilter, pointsLogPage]);
+  }, [language, currentWeek, pointsLogPage]);
   
   // 审核任务
   const handleReviewTask = useCallback(async () => {
@@ -197,25 +223,63 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
     }
   }, []);
   
-  // 周选择器选项
+  // 周选择器选项 - 根据所有周次数据生成，不受当前筛选影响
   const weekOptions = useMemo(() => {
-    // 生成选项，包括"所有周"
     const options = [
       {
         value: 0,
         label: language === 'zh' ? '所有周' : 'All Weeks',
       },
     ];
-    // 从第1周到第12周
-    for (let i = 1; i <= 12; i++) {
-      options.push({
-        value: i,
-        label: language === 'zh' ? `第${i}周` : `Week ${i}`,
+    
+    const uniqueWeeks = new Set<number>();
+    
+    // 根据不同的页签从allWeeksData中提取周次
+    if (activeTab === 'pending') {
+      // 待审核页签：只显示有待审核任务的周次
+      allWeeksData.tasks.forEach(task => {
+        if (task.weekCount && task.reviewStatus === REVIEW_STATUS.PENDING) {
+          uniqueWeeks.add(task.weekCount);
+        }
       });
+    } else if (activeTab === 'reviewed') {
+      // 已审核页签：只显示有已审核任务的周次
+      allWeeksData.tasks.forEach(task => {
+        if (task.weekCount && task.reviewStatus !== REVIEW_STATUS.PENDING) {
+          uniqueWeeks.add(task.weekCount);
+        }
+      });
+    } else if (activeTab === 'pointsLog') {
+      // 审核日志页签：从所有日志数据中提取
+      allWeeksData.logs.forEach(log => {
+        if (log.weekCount) {
+          uniqueWeeks.add(log.weekCount);
+        }
+      });
+    } else if (activeTab === 'ranking') {
+      // 排行榜页签：从排行榜周次数据中提取
+      allWeeksData.rankingWeeks.forEach(week => {
+        uniqueWeeks.add(week);
+      });
+      // 同时添加当前显示的周次
+      if (rankingWeekCount) {
+        uniqueWeeks.add(rankingWeekCount);
+      }
     }
     
+    // 将唯一周次转换为数组并排序（倒序，最新的周在前）
+    const sortedWeeks = Array.from(uniqueWeeks).sort((a, b) => b - a);
+    
+    // 添加有数据的周次选项
+    sortedWeeks.forEach(week => {
+      options.push({
+        value: week,
+        label: language === 'zh' ? `第${week}周` : `Week ${week}`,
+      });
+    });
+    
     return options;
-  }, [language]);
+  }, [language, activeTab, allWeeksData, rankingWeekCount]);
   
   // 切换页签时更新筛选条件
   useEffect(() => {
@@ -226,6 +290,11 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
       setReviewStatusFilter(undefined); // 获取全部，然后在前端过滤
     }
   }, [activeTab]);
+  
+  // 初始化时加载所有周次数据
+  useEffect(() => {
+    fetchAllWeeksData();
+  }, [fetchAllWeeksData]);
   
   // 加载初始数据
   useEffect(() => {
@@ -247,17 +316,19 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
       setRankingLoading(true);
       setRankingError('');
       
-      let weekCountParam: number | undefined;
-      if (rankingWeek.trim()) {
-        const parsed = parseInt(rankingWeek.trim(), 10);
-        if (!Number.isNaN(parsed) && parsed > 0) {
-          weekCountParam = parsed;
-        }
-      }
-      
-      const result = await ccIncentiveService.getCcPointsRanking(weekCountParam);
+      const result = await ccIncentiveService.getCcPointsRanking(
+        currentWeek > 0 ? currentWeek : undefined
+      );
       setRankingRecords(result.records || []);
       setRankingWeekCount(result.weekCount);
+      
+      // 更新排行榜周次到allWeeksData
+      if (result.weekCount) {
+        setAllWeeksData(prev => ({
+          ...prev,
+          rankingWeeks: [...new Set([...prev.rankingWeeks, result.weekCount])]
+        }));
+      }
     } catch (err: any) {
       console.error('获取CC积分排行榜失败:', err);
       setRankingError(err.message || (language === 'zh' ? '获取排行榜失败' : 'Failed to load ranking.'));
@@ -265,14 +336,14 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
     } finally {
       setRankingLoading(false);
     }
-  }, [language, rankingWeek]);
+  }, [language, currentWeek]);
 
-  // 切换到排行榜页签时自动加载数据
+  // 切换到排行榜页签时自动加载数据，周次改变时也重新加载
   useEffect(() => {
     if (activeTab === 'ranking') {
       fetchRanking();
     }
-  }, [activeTab]);
+  }, [activeTab, fetchRanking]);
 
   // 导出排行榜数据
   const handleDownloadRanking = useCallback(() => {
@@ -315,7 +386,7 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
   
   // 当选择的周改变时重新加载数据
   useEffect(() => {
-    if (selectedWeek && selectedWeek !== currentWeek) {
+    if (selectedWeek !== undefined && selectedWeek !== currentWeek) {
       setCurrentWeek(selectedWeek);
     }
   }, [selectedWeek, currentWeek]);
@@ -501,21 +572,6 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
       {/* 积分日志页签内容 */}
       {activeTab === 'pointsLog' && (
         <div>
-          {/* 积分日志筛选器 */}
-          <div className="mb-4">
-            <input
-              type="number"
-              value={pointsLogWeekFilter ?? ''}
-              onChange={(e) => {
-                const value = e.target.value ? parseInt(e.target.value, 10) : undefined;
-                setPointsLogWeekFilter(Number.isNaN(value as any) ? undefined : value);
-                setPointsLogPage(1);
-              }}
-              placeholder={language === 'zh' ? '按周次筛选' : 'Filter by week'}
-              className="px-3 py-2 border rounded-md bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
-            />
-          </div>
-          
           {pointsLogLoading ? (
             <div className="text-center py-8 text-gray-500">{language === 'zh' ? '加载中...' : 'Loading...'}</div>
           ) : pointsLogs.length === 0 ? (
@@ -592,42 +648,20 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
       {/* CC积分排行榜页签内容 */}
       {activeTab === 'ranking' && (
         <div>
-          {/* 排行榜筛选器和导出按钮 */}
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
-            <div className="flex items-end gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {language === 'zh' ? '周次' : 'Week'}
-                </label>
-                <input
-                  type="number"
-                  value={rankingWeek}
-                  onChange={(e) => setRankingWeek(e.target.value)}
-                  placeholder={language === 'zh' ? '不填默认最新周' : 'Leave empty for latest'}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                />
-              </div>
-              <button
-                onClick={fetchRanking}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-              >
-                {language === 'zh' ? '查询' : 'Search'}
-              </button>
-            </div>
-            <div className="flex items-center gap-3">
-              {typeof rankingWeekCount === 'number' && rankingWeekCount > 0 && (
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  {language === 'zh' ? `当前显示第 ${rankingWeekCount} 周` : `Showing Week ${rankingWeekCount}`}
-                </span>
-              )}
-              <button
-                onClick={handleDownloadRanking}
-                disabled={!rankingRecords.length}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {language === 'zh' ? '导出本周数据' : 'Export Week Data'}
-              </button>
-            </div>
+          {/* 排行榜导出按钮 */}
+          <div className="flex justify-end items-center mb-6 gap-3">
+            {typeof rankingWeekCount === 'number' && rankingWeekCount > 0 && (
+              <span className="text-sm text-gray-600 dark:text-gray-300">
+                {language === 'zh' ? `当前显示第 ${rankingWeekCount} 周` : `Showing Week ${rankingWeekCount}`}
+              </span>
+            )}
+            <button
+              onClick={handleDownloadRanking}
+              disabled={!rankingRecords.length}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {language === 'zh' ? '导出本周数据' : 'Export Week Data'}
+            </button>
           </div>
 
           {rankingError && (
