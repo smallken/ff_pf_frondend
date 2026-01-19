@@ -199,15 +199,18 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
   
   // 周选择器选项
   const weekOptions = useMemo(() => {
-    // 生成最近12周的选项
-    const options = [];
-    const current = new Date();
-    
-    for (let i = 0; i < 12; i++) {
-      const weekNumber = Math.ceil((current.getDay() + 1 + current.getDate()) / 7) - i;
+    // 生成选项，包括"所有周"
+    const options = [
+      {
+        value: 0,
+        label: language === 'zh' ? '所有周' : 'All Weeks',
+      },
+    ];
+    // 从第1周到第12周
+    for (let i = 1; i <= 12; i++) {
       options.push({
-        value: weekNumber,
-        label: language === 'zh' ? `第${weekNumber}周` : `Week ${weekNumber}`,
+        value: i,
+        label: language === 'zh' ? `第${i}周` : `Week ${i}`,
       });
     }
     
@@ -693,6 +696,9 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
                   {language === 'zh' ? '任务类型' : 'Task Type'}
                 </th>
                 <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  {language === 'zh' ? '周次' : 'Week'}
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   {language === 'zh' ? '内容链接' : 'Content Link'}
                 </th>
                 <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -714,7 +720,7 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {allFilteredTasks.length === 0 ? (
                 <tr>
-                  <td colSpan={activeTab === 'reviewed' ? 7 : 6} className="px-4 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <td colSpan={activeTab === 'reviewed' ? 8 : 7} className="px-4 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                     {language === 'zh' ? '暂无任务' : 'No tasks available'}
                   </td>
                 </tr>
@@ -737,6 +743,9 @@ const GroupLeaderIncentiveReview: React.FC<GroupLeaderIncentiveReviewProps> = ({
                       }`}>
                         {getTaskTypeText(task.taskType)}
                       </span>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                      {language === 'zh' ? `第${task.weekCount}周` : `Week ${task.weekCount}`}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">
                       {task.contentLink ? (
