@@ -2160,32 +2160,32 @@ export default function Admin() {
   //   }
   // }, [reviewedFilters.user, reviewedFilters.dateRange, reviewedFilters.status, reviewedFormType, isAuthenticated, user?.userRole, activeTab]);
 
-  useEffect(() => {
-    if (!monthsPrefetchedRef.current.pending) {
-      collectPendingSubmissionsForDownload().finally(() => {
-        monthsPrefetchedRef.current.pending = true;
-      });
-    }
-    if (!monthsPrefetchedRef.current.reviewed) {
-      collectReviewedSubmissionsForDownload().finally(() => {
-        monthsPrefetchedRef.current.reviewed = true;
-      });
-    }
-  }, []);
+  // 临时禁用预取下载数据功能，避免大量请求
+  // useEffect(() => {
+  //   if (!monthsPrefetchedRef.current.pending) {
+  //     collectPendingSubmissionsForDownload().finally(() => {
+  //       monthsPrefetchedRef.current.pending = true;
+  //     });
+  //   }
+  //   if (!monthsPrefetchedRef.current.reviewed) {
+  //     collectReviewedSubmissionsForDownload().finally(() => {
+  //       monthsPrefetchedRef.current.reviewed = true;
+  //     });
+  //   }
+  // }, []);
 
   useEffect(() => {
     if (isAuthenticated && user?.userRole === 'admin') {
       if (activeTab === 'forms') {
-        fetchPendingSubmissions(1, pendingFormType); // 加载当前类型的待审核表单
+        fetchPendingSubmissions(pendingCurrentPage, pendingFormType); // 加载当前类型的待审核表单
       } else if (activeTab === 'reviewed') {
-        // 切换到已审核表单时重置分页状态
-        setReviewedCurrentPage(1);
         const sortField = reviewedSortConfig?.key || 'updateTime';
         const sortOrder = reviewedSortConfig?.direction || 'desc';
-        fetchReviewedSubmissions(1, reviewedFormType, sortField, sortOrder);
+        fetchReviewedSubmissions(reviewedCurrentPage, reviewedFormType, sortField, sortOrder);
       }
       // 月度奖励模块的数据获取在组件内部处理
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, user?.userRole, activeTab, pendingFormType, reviewedFormType, reviewedFilters.user, reviewedFilters.dateRange, reviewedFilters.status, reviewedSortConfig?.key, reviewedSortConfig?.direction]);
 
   // 权限检查
