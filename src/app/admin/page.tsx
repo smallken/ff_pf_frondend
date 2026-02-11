@@ -2128,7 +2128,7 @@ export default function Admin() {
       }
       // 每周挑战数据和月度奖励模块的数据获取在各自组件内部处理
     }
-  }, [isAuthenticated, user, activeTab]);
+  }, [isAuthenticated, user?.userRole, activeTab]);
   
   // 注释掉本地排序，因为后端已经返回排序好的数据
   // useEffect(() => {
@@ -2186,7 +2186,7 @@ export default function Admin() {
       }
       // 月度奖励模块的数据获取在组件内部处理
     }
-  }, [isAuthenticated, user, activeTab, pendingFormType, reviewedFormType, reviewedFilters.user, reviewedFilters.dateRange, reviewedFilters.status, reviewedSortConfig?.key, reviewedSortConfig?.direction]);
+  }, [isAuthenticated, user?.userRole, activeTab, pendingFormType, reviewedFormType, reviewedFilters.user, reviewedFilters.dateRange, reviewedFilters.status, reviewedSortConfig?.key, reviewedSortConfig?.direction]);
 
   // 权限检查
   if (!isAuthenticated) {
