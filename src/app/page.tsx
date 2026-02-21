@@ -67,7 +67,7 @@ export default function PathPortHome() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'popu' | 'com2u' | 'taptap'>('popu');
+  const [activeTab, setActiveTab] = useState<'popu' | 'com2u'>('popu');
   const [activeSection, setActiveSection] = useState<string>('');
 
   const handleCardClick = (card: typeof moduleCards[0]) => {
@@ -98,7 +98,7 @@ export default function PathPortHome() {
   // Scroll spy to highlight active section
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['shillus', 'coming-soon'];
+      const sections = ['shillus', 'taptap', 'coming-soon'];
       const scrollPosition = window.scrollY + 200;
 
       for (const sectionId of sections) {
@@ -142,6 +142,21 @@ export default function PathPortHome() {
                   activeSection === 'shillus' ? 'bg-white' : 'bg-blue-500'
                 }`}></span>
                 <span>{language === 'zh' ? 'ShillUs' : 'ShillUs'}</span>
+              </div>
+            </button>
+            <button
+              onClick={() => scrollToSection('taptap')}
+              className={`group relative px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 text-left ${
+                activeSection === 'taptap'
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-cyan-50 dark:hover:bg-gray-700'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${
+                  activeSection === 'taptap' ? 'bg-white' : 'bg-cyan-500'
+                }`}></span>
+                <span>{language === 'zh' ? '点点赚' : 'Tap-Tap-Earn'}</span>
               </div>
             </button>
             <button
@@ -384,6 +399,53 @@ export default function PathPortHome() {
             </div>
           </section>
 
+          {/* Tap-Tap-Earn Section */}
+          <section id="taptap" className="relative mb-20 scroll-mt-20">
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-indigo-500/20 dark:from-cyan-500/15 dark:via-blue-500/10 dark:to-indigo-500/15 blur-3xl rounded-3xl"></div>
+            <div className="relative overflow-hidden rounded-3xl border border-white/30 dark:border-gray-700/40 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl shadow-2xl">
+              <div className="absolute -top-32 -right-24 w-72 h-72 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-full blur-3xl"></div>
+              <div className="absolute -bottom-24 -left-20 w-64 h-64 bg-gradient-to-br from-blue-400/25 to-indigo-500/15 rounded-full blur-3xl"></div>
+
+              <div className="relative px-4 py-6 sm:px-8 sm:py-10 md:px-12 md:py-12">
+                {/* Header */}
+                <div className="text-center mb-6 sm:mb-8">
+                  <div className="inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-cyan-500/15 to-blue-500/20 border border-white/40 dark:border-gray-700/50 rounded-full text-xs md:text-sm font-semibold text-cyan-700 dark:text-cyan-200 uppercase tracking-wide mb-6">
+                    <span className="w-2 h-2 mr-2 rounded-full bg-cyan-500 animate-pulse"></span>
+                    {language === 'zh' ? '点点赚计划' : 'Tap-Tap-Earn Program'}
+                  </div>
+                  <h2 className="text-xl sm:text-2xl md:text-4xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 dark:from-cyan-300 dark:via-blue-300 dark:to-indigo-300 bg-clip-text text-transparent mb-3 sm:mb-4">
+                    {language === 'zh' ? '点点赚是CDN（内容分发网络），让项目方轻松获取社区增长与社媒增长' : 'Tap-Tap-Earn is CDN (Content Delivery Network) helping project parties build up get community increase and social media increase'}
+                  </h2>
+                </div>
+
+                {/* Global Coverage */}
+                <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 dark:from-cyan-500/20 dark:to-blue-500/20 border border-cyan-300/50 dark:border-cyan-600/50 mb-6 sm:mb-8">
+                  <h3 className="text-base sm:text-lg font-bold text-cyan-900 dark:text-cyan-200 mb-3 sm:mb-4 text-center">{language === 'zh' ? '全球社区覆盖' : 'Global Community Coverage'}</h3>
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {[{ zh: '非洲', en: 'Africa' }, { zh: '印度', en: 'India' }, { zh: '东南亚', en: 'Southeast Asia' }, { zh: '中国', en: 'China' }, { zh: '日韩', en: 'Japan-Korea' }, { zh: '欧洲', en: 'Europe' }, { zh: '北美', en: 'North America' }].map((region, index) => (
+                      <span key={index} className="inline-flex items-center px-4 py-2 bg-white/60 dark:bg-gray-800/60 border border-cyan-300/50 dark:border-cyan-600/50 rounded-full text-sm font-medium text-cyan-900 dark:text-cyan-200">🌍 {region[language as 'zh' | 'en']}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* CTA Button */}
+                <div className="text-center">
+                  <a
+                    href="https://tap.ffpp.space"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition-shadow duration-300"
+                  >
+                    {language === 'zh' ? '立即体验' : 'Try Now'}
+                    <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Coming Soon Programs - Tabbed Section */}
           <section id="coming-soon" className="relative mb-20 scroll-mt-20">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/10 to-blue-500/20 dark:from-purple-500/15 dark:via-pink-500/10 dark:to-blue-500/15 blur-3xl rounded-3xl"></div>
@@ -425,16 +487,6 @@ export default function PathPortHome() {
                       }`}
                     >
                       Com2U
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('taptap')}
-                      className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 ${
-                        activeTab === 'taptap'
-                          ? 'bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white shadow-lg'
-                          : 'text-gray-600 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400'
-                      }`}
-                    >
-                      Tap-Tap-Earn
                     </button>
                   </div>
                 </div>
@@ -535,27 +587,6 @@ export default function PathPortHome() {
                       </div>
                       <div className="text-center">
                         <span className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white rounded-full font-semibold shadow-lg">{language === 'zh' ? '即将上线...' : 'Coming Soon...'}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tap-Tap-Earn Content */}
-                  {activeTab === 'taptap' && (
-                    <div className="animate-fadeIn">
-                      <div className="text-center mb-6 sm:mb-8">
-                        <h3 className="text-xl sm:text-2xl md:text-4xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 dark:from-cyan-300 dark:via-blue-300 dark:to-indigo-300 bg-clip-text text-transparent mb-3 sm:mb-4">{language === 'zh' ? '点点赚计划' : 'Tap-Tap-Earn Program'}</h3>
-                        <p className="text-base sm:text-lg md:text-xl text-gray-700 dark:text-gray-200 leading-relaxed px-2">{language === 'zh' ? '点点赚是CDN（内容分发网络），让项目方轻松获取社区增长与社媒增长' : 'Tap-Tap-Earn is CDN (Content Delivery Network) helping project parties build up get community increase and social media increase'}</p>
-                      </div>
-                      <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 dark:from-cyan-500/20 dark:to-blue-500/20 border border-cyan-300/50 dark:border-cyan-600/50 mb-6 sm:mb-8">
-                        <h4 className="text-base sm:text-lg font-bold text-cyan-900 dark:text-cyan-200 mb-3 sm:mb-4 text-center">{language === 'zh' ? '全球社区覆盖' : 'Global Community Coverage'}</h4>
-                        <div className="flex flex-wrap justify-center gap-3">
-                          {[{ zh: '非洲', en: 'Africa' }, { zh: '印度', en: 'India' }, { zh: '东南亚', en: 'Southeast Asia' }, { zh: '中国', en: 'China' }, { zh: '日韩', en: 'Japan-Korea' }, { zh: '欧洲', en: 'Europe' }, { zh: '北美', en: 'North America' }].map((region, index) => (
-                            <span key={index} className="inline-flex items-center px-4 py-2 bg-white/60 dark:bg-gray-800/60 border border-cyan-300/50 dark:border-cyan-600/50 rounded-full text-sm font-medium text-cyan-900 dark:text-cyan-200">🌍 {region[language as 'zh' | 'en']}</span>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <span className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white rounded-full font-semibold shadow-lg">{language === 'zh' ? '即将上线...' : 'Coming Soon...'}</span>
                       </div>
                     </div>
                   )}
