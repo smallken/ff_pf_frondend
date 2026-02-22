@@ -6,7 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { Button } from '../../components/reactbits/ButtonSimple';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/reactbits/Card';
-import { formService, userService } from '@/services';
+import { formService, userService, fileService } from '@/services';
 import { ccIncentiveService, CC_TASK_TYPES, type CcTaskOverviewVO } from '@/services/ccIncentiveService';
 import { adminOriginalTaskService, type OriginalTaskConfigVO } from '@/services/adminOriginalTaskService';
 import type { OriginalTaskVO, RankingUserVO, CcPointsVO } from '@/types/api';
@@ -238,37 +238,14 @@ export default function GroupLeaderIncentive() {
   // 截图上传函数
   const uploadTaskScreenshot = useCallback(async (file: File): Promise<string> => {
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('biz', 'task_screenshot');
+      // 使用后端服务上传文件
+      const result = await fileService.uploadTaskFile(file);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      let result: any = null;
-      try {
-        result = await response.json();
-      } catch (parseError) {
-        console.error('❌ 上传响应解析失败:', parseError);
+      if (!result || !result.url) {
+        throw new Error(language === 'zh' ? '上传失败，请稍后重试。' : 'Upload failed, please try again later.');
       }
 
-      if (!response.ok) {
-        const message =
-          (result && (result.error || result.message)) ||
-          (language === 'zh' ? '上传失败，请稍后重试。' : 'Upload failed, please try again later.');
-        throw new Error(message);
-      }
-
-      const url: string | undefined =
-        result?.url ||
-        result?.data?.url ||
-        (typeof result?.data === 'string' ? result.data : undefined);
-
-      if (!url) {
-        throw new Error(language === 'zh' ? '上传成功但未获取到文件地址。' : 'Upload succeeded but no file URL returned.');
-      }
+      const url = result.url;
 
       return url;
     } catch (error: any) {

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../../contexts/AuthContext';
-import { taskSubmissionService } from '../../../services';
+import { taskSubmissionService, fileService } from '../../../services';
 import CustomDateInput from '../../components/CustomDateInput';
 
 const SUBMISSION_DEADLINE = new Date('2025-10-19T16:00:00Z');
@@ -205,29 +205,15 @@ export default function AchievementForm() {
         tasks: await Promise.all(formData.tasks.map(async (task) => {
           let screenshotPath = '';
           
-          // 如果有截图文件，先上传到Vercel Blob
+          // 如果有截图文件，先上传到后端服务器
           if (task.screenshot) {
             try {
-              // 使用API路由上传文件
-              const formData = new FormData();
-              formData.append('file', task.screenshot);
-              formData.append('biz', 'task_screenshot');
-              
-              const response = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-              });
-              
-              if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || (language === 'zh' ? '上传失败' : 'Upload failed'));
-              }
-              
-              const result = await response.json();
+              // 使用后端服务上传文件
+              const result = await fileService.uploadTaskFile(task.screenshot);
               screenshotPath = result.url;
-              console.log('📸 截图上传到Vercel Blob成功:', screenshotPath);
+              console.log('📸 截图上传成功:', screenshotPath);
             } catch (error) {
-              console.error('❌ 截图上传到Vercel Blob失败:', error);
+              console.error('❌ 截图上传失败:', error);
               const errorMessage = error instanceof Error ? error.message : (language === 'zh' ? '未知错误' : 'Unknown error');
               throw new Error(language === 'zh' ? `截图上传失败: ${errorMessage}` : `Screenshot upload failed: ${errorMessage}`);
             }

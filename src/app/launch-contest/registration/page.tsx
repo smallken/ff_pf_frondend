@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { launchContestService, LaunchContestRegistrationData } from '../../../services/launchContestService';
+import { fileService } from '../../../services';
 import SuccessModal from '../../components/SuccessModal';
 
 export default function LaunchRegistration() {
@@ -83,24 +84,10 @@ export default function LaunchRegistration() {
       // 先上传Logo文件到Vercel Blob
       let tokenLogoUrl = '';
       if (formData.tokenLogo) {
-        console.log('🔄 开始上传代币Logo文件到Vercel Blob...');
-        
-        // 使用前端API路由上传到Vercel Blob
-        const logoFormData = new FormData();
-        logoFormData.append('file', formData.tokenLogo);
-        logoFormData.append('biz', 'token_logo');
-        
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: logoFormData,
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || (language === 'zh' ? '代币Logo上传失败' : 'Token logo upload failed'));
-        }
-        
-        const result = await response.json();
+        console.log('🔄 开始上传代币Logo文件...');
+
+        // 使用后端服务上传文件
+        const result = await fileService.uploadFile(formData.tokenLogo, 'token_logo');
         tokenLogoUrl = result.url;
       }
 
